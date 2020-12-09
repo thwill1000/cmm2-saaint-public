@@ -1,5 +1,6 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
+' Added Commands 73, 74, 76, 85 Bill
 
 Option Explicit On
 Option Default Integer
@@ -127,6 +128,7 @@ Function get_cond$(code, num)
     Case 18 : s$ = "-ORIG"
     Case 19 : s$ = "CT="
     Case Else: s$ = "Huh?"
+'    Case Else: s$ = "<"+str$(code)+">" ' "Huh?"
   End Select
   get_cond$ = s$ + " " + Str$(num)
 End Function
@@ -165,8 +167,12 @@ Function get_cmd$(c)
     Case 70: s$ = "CLS"
     Case 71: s$ = "SAVEz"
     Case 72: s$ = "EXx,x"
+    Case 73: s$ = "CONT"
+    Case 74: s$ = "AGETx"
+    Case 76: s$ = "DspRM"
+    case 85: s$ = "SAYwCR"
     Case 102 To 149 : s$ = "MSG:" + Str$(c - 50)
-    Case Else: s$ = "Huh?"
+    Case Else: s$ = "<"+str$(c)+">" '"Huh?" Bill
   End Select
   get_cmd$ = s$
 End Function
@@ -234,7 +240,8 @@ Sub dump_objects(fd)
   Local i, s$
 
   Print #fd, "OBJECTS"
-  Print #fd, "-------"
+  Print #fd, "--------"
+  Print #fd, "No    Rm" ' Added this - Bill
   Print #fd
 
   For i = 0 To il

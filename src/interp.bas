@@ -1,6 +1,7 @@
 ' Scott Adams Adventure Game Interpreter for Colour Maximite 2
 ' Original TRS-80 Level II BASIC code (c) Scott Adams 1978
 ' MMBasic port for CMM2 by Thomas Hugo Williams 2020
+' v1
 
 Option Explicit On
 Option Default Integer
@@ -11,6 +12,8 @@ Option Default Integer
 #Include "persist.inc"
 #Include "strings.inc"
 #Include "util.inc"
+' Removed the following line to make the program stand alone
+' #Include "../../common/welcome.inc"
 
 CON.WIDTH = 80
 
@@ -35,6 +38,8 @@ Const VERB_DEBUG_OFF  = -9
 Const VERB_FIXED_SEED = -10
 
 Dim STORY$ = "pirate"
+dim CONT = 0 ' Flag that, when set will cause the next insruction(s) to be executed
+             ' if they begin with both a verb and noun = zero Bill
 
 ' These global variables hold the current game state
 Dim lx ' light duration
@@ -53,7 +58,9 @@ Dim ip ' action parameter pointer
 Mode 2
 main()
 Pause 2000
-End
+' Replaced the following line with END to make stand alone
+' we.end_program()
+end
 
 Sub main()
   adv.read(FIL.PROG_DIR$ + "/" + STORY$ + ".dat")
@@ -150,12 +157,20 @@ End Sub
 Sub game_loop()
   Local noun, nstr$, verb
 
-  Cls
-  describe_room()
+  if not CONT then ' Bill
+    Cls
+    describe_room()
+  end if
 
   Do
-    do_actions() ' handle automatic actions
-    prompt_for_command(verb, noun, nstr$)
+    if NOT CONT THEN ' Bill
+      do_actions() ' handle automatic actions
+      prompt_for_command(verb, noun, nstr$)
+    ELSE
+      verb = 0
+      noun = 0
+      nstr$ = ""
+    end if
     do_actions(verb, noun, nstr$) ' handle player actions
     If state = STATE_CONTINUE Then update_light()
   Loop While state = STATE_CONTINUE
@@ -243,24 +258,29 @@ Sub do_actions(verb, noun, nstr$)
   For a = 0 to cl
     av = Int(ca(a, 0) / 150) ' action - verb
     an = ca(a, 0) - av * 150 ' action - noun
-
+    if av or an <> 0 then CONT = 0 ' Bill
     ' Stop processing automatic actions (verb == 0) when we reach the first
     ' non-zero action verb.
-    If verb = 0 And av <> 0 Then Exit Sub
+    if not CONT THEN ' Bill
+      If verb = 0 And av <> 0 Then Exit Sub
 
-    If av = 0 And verb = 0 Then
-      ' Automatic action, 'an' is the probability
-      process_action = pseudo%(100) <= an
-    ElseIf av = verb And (an = noun Or an = 0) Then
-      ' Verb and noun match, or action noun is 'ANY'
+      If av = 0 And verb = 0 Then
+        ' Automatic action, 'an' is the probability
+        process_action = pseudo%(100) <= an
+      ElseIf av = verb And (an = noun Or an = 0) Then
+        ' Verb and noun match, or action noun is 'ANY'
+        process_action = 1
+      Else
+        process_action = 0
+      EndIf
+    ELSE
       process_action = 1
-    Else
-      process_action = 0
-    EndIf
+    END IF
 
     If process_action Then
       If process_conditions(a) Then
-        do_commands(a)
+        do_commands(a, nstr$)
+        if CONT then do_commands(a + 1, "")
         result = ACTION_PERFORMED
       Else
         result = ACTION_NOT_YET
@@ -308,7 +328,7 @@ Function process_conditions(a)
 End Function
 
 ' @param  a  current action index
-Sub do_commands(a)
+Sub do_commands(a, nstr$)
   Local cmd(3)
 
   ip = 0 ' reset parameter pointer
@@ -317,10 +337,10 @@ Sub do_commands(a)
   cmd(2) = Int(ca(a, 7) / 150)
   cmd(3) = ca(a, 7) - cmd(2) * 150
 
-  do_command(a, cmd(0))
-  do_command(a, cmd(1))
-  do_command(a, cmd(2))
-  do_command(a, cmd(3))
+  do_command(a, cmd(0), nstr$)
+  do_command(a, cmd(1), nstr$)
+  do_command(a, cmd(2), nstr$)
+  do_command(a, cmd(3), nstr$)
 End Sub
 
 Sub go_direction(noun)
@@ -404,7 +424,7 @@ Function evaluate_condition(code, value)
 End Function
 
 ' @param  a  current action index
-Sub do_command(a, cmd)
+Sub do_command(a, cmd, nstr$)
   Local i, p, x, y
 
   Select Case cmd
@@ -525,7 +545,7 @@ Sub do_command(a, cmd)
       con.println(Str$(Int(x/tt*100)) + ".")
       If x = tt Then
         con.println("WELL DONE !!!")
-        do_command(a, 63)
+        do_command(a, 63, nstr$)
       EndIf
 
     Case 66
@@ -572,6 +592,34 @@ Sub do_command(a, cmd)
       p = ia(x)           ' p = location of object 1
       ia(x) = ia(y)
       ia(y) = p
+
+    case 73
+      ' CONT Bill
+      ' This command sets a flag to allow more than four commands to be executed
+      ' When an action entry with a non-zero verb or noun is encountered,
+      ' the continue flag is cleared
+      CONT = 1
+
+    Case 74
+      ' AGETx Bill
+      ' Pick up the Par #1 object even if it exceeds the limit (mx).
+      ' The object may be in this room, or in any other room.
+      p = get_parameter(a)
+      ia(p) = -1
+
+    Case 76
+      ' DspRM -- This is a direct copy of Command 64 Bill
+      ' Display the current room.
+      ' This checks if the darkness flag-bit (15) is set and the artificial
+      ' light (object 9) is not available.
+      ' If there is light, it displays the room description, the objects in
+      ' the room and any obvious exits.
+      describe_room()
+
+    case 85
+      ' SAYwCR Bill
+      ' This says the noun (second word) input by the player and starts a new line
+      con.println(ucase$(nstr$))
 
     Case 102 To 149
       ' Display corresponding message.
