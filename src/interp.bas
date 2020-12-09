@@ -15,7 +15,8 @@ Option Default Integer
 ' Removed the following line to make the program stand alone
 ' #Include "../../common/welcome.inc"
 
-CON.WIDTH = 80
+con.HEIGHT = 33
+con.WIDTH  = 80
 
 Const STATE_CONTINUE = 0
 Const STATE_QUIT     = 1
@@ -37,9 +38,7 @@ Const VERB_DEBUG_ON   = -8
 Const VERB_DEBUG_OFF  = -9
 Const VERB_FIXED_SEED = -10
 
-Dim STORY$ = "pirate"
-dim CONT = 0 ' Flag that, when set will cause the next insruction(s) to be executed
-             ' if they begin with both a verb and noun = zero Bill
+Const STORY$ = Choice(Mm.CmdLine$ = "", "adv01", Mm.CmdLine$)
 
 ' These global variables hold the current game state
 Dim lx ' light duration
@@ -51,6 +50,8 @@ Dim sf ' status flags
 
 Dim state
 Dim debug
+Dim continue_flag = 0 ' Flag that, when set will cause the next action(s) to be
+                      ' processed if they begin with both a verb and noun = 0.
 
 ' TODO: This shouldn't be global
 Dim ip ' action parameter pointer
@@ -72,27 +73,30 @@ Sub main()
     con.close_all()
   Loop While state <> STATE_QUIT
 
-  con.println("Goodbye!")
+  con.endl()
+  con.println("Goodbye!", 1)
   con.close_all()
 End Sub
 
 Sub show_intro(f$)
-  Local i, k$
+  Local i, k$, ftitle$
+
+  ftitle$ = FIL.PROG_DIR$ + "/" + STORY$ + ".tit"
+  If Not fil.exists%(ftitle$) Then ftitle$ = FIL.PROG_DIR + "/default.tit"
 
   Cls
   con.lines = 0
   Colour RGB(White)
-  con.print_file(FIL.PROG_DIR$ + "/" + STORY$ + ".tit", 1)
+  con.print_file(ftitle$, 1)
   Colour RGB(Green)
   con.println()
-  con.println("S  Start the game             ", 1)
+  con.println("S  Start a new game           ", 1)
   con.println("R  Restore a saved game       ", 1)
   con.println("C  Show credits               ", 1)
   con.println("I  Instructions on how to play", 1)
   con.println("Q  Quit                       ", 1)
   con.println()
-  con.println("Adventure Game Interpreter for Colour Maximite 2", 1)
-  con.println("Version 1.0", 1)
+  con.println("Version 2.0a", 1)
 
   Do While Inkey$ <> "" : Loop
   Do
@@ -106,9 +110,14 @@ Sub show_intro(f$)
       Case Else : k$ = ""
     End Select
   Loop Until k$ <> ""
+
+  con.lines = 0
 End Sub
 
 Sub show_credits()
+  Local f$ = FIL.PROG_DIR$ + "/" + STORY$ + ".cre"
+  If Not fil.exists%(f$) Then f$ = FIL.PROG_DIR + "/default.cre"
+
   Cls
   con.lines = 0
   Colour RGB(White)
@@ -117,7 +126,7 @@ Sub show_credits()
   con.println("=======", 1)
   con.println()
   Colour RGB(Green)
-  con.print_file(FIL.PROG_DIR$ + "/" + STORY$ + ".cre", 1)
+  con.print_file(f$, 1)
   con.println()
   Colour RGB(White)
   con.println("Press any key to continue", 1)
@@ -127,6 +136,9 @@ Sub show_credits()
 End Sub
 
 Sub show_instructions()
+  Local f$ = FIL.PROG_DIR$ + "/" + STORY$ + ".ins"
+  If Not fil.exists%(f$) Then f$ = FIL.PROG_DIR + "/default.ins"
+
   Cls
   con.lines = 0
   Colour RGB(White)
@@ -135,7 +147,7 @@ Sub show_instructions()
   con.println("===========", 1)
   con.println()
   Colour RGB(Green)
-  con.print_file(FIL.PROG_DIR$ + "/" + STORY$ + ".ins", 1)
+  con.print_file(f$, 1)
   con.println()
   Colour RGB(White)
   con.println("Press any key to continue", 1)
@@ -157,21 +169,13 @@ End Sub
 Sub game_loop()
   Local noun, nstr$, verb
 
-  if not CONT then ' Bill
-    Cls
-    describe_room()
-  end if
+  Cls
+  describe_room()
 
   Do
-    if NOT CONT THEN ' Bill
-      do_actions() ' handle automatic actions
-      prompt_for_command(verb, noun, nstr$)
-    ELSE
-      verb = 0
-      noun = 0
-      nstr$ = ""
-    end if
-    do_actions(verb, noun, nstr$) ' handle player actions
+    do_automatic_actions()
+    If state = STATE_CONTINUE Then prompt_for_command(verb, noun, nstr$)
+    If state = STATE_CONTINUE Then do_player_actions(verb, noun, nstr$)
     If state = STATE_CONTINUE Then update_light()
   Loop While state = STATE_CONTINUE
 End Sub
@@ -216,7 +220,7 @@ Sub describe_room()
   con.print("Visible items: ")
   print_object_list(r, "None")
 
-  con.println("<" + String$(CON.WIDTH - 2, "-") + ">")
+  con.println("<" + String$(con.WIDTH - 2, "-") + ">")
   con.println()
 
   Colour RGB(Green)
@@ -244,8 +248,38 @@ Sub print_object_list(rm, none$)
   con.println(".")
 End Sub
 
-Sub do_actions(verb, noun, nstr$)
-  Local a, an, av, process_action, result
+Sub do_automatic_actions()
+  Local a, av, an, process_action
+
+  continue_flag = 0
+
+  For a = 0 to cl
+    ' The 'verb' of an automatic action is zero,
+    ' If we reach a non-zero verb then we stop processing automatic actions.
+    av = Int(ca(a, 0) / 150)
+    If av <> 0 Then Exit Sub
+
+    ' The 'noun' of the automatic action.
+    ' If this is non-zero then we clear the CONTinue flag.
+    an = ca(a, 0) - av * 150
+    If an <> 0 Then continue_flag = 0
+
+    ' If the CONTinue flag is not set then 'noun' is the probability of the
+    ' action occurring.
+    If Not continue_flag Then
+      If pseudo%(100) > an Then Continue For ' Did not occur, try the next action.
+    EndIf
+
+    If Not process_conditions(a) Then Continue For ' Conditions not passed, try the next action.
+
+    do_commands(a)
+  Next
+
+End Sub
+
+Sub do_player_actions(verb, noun, nstr$)
+
+  continue_flag = 0
 
   ' Handle "go <direction>"
   If verb = 1 And noun < 7 Then
@@ -253,56 +287,49 @@ Sub do_actions(verb, noun, nstr$)
     Exit Sub
   EndIf
 
-  result = ACTION_UNKNOWN
+  Local a, an, av, result = ACTION_UNKNOWN
 
   For a = 0 to cl
     av = Int(ca(a, 0) / 150) ' action - verb
     an = ca(a, 0) - av * 150 ' action - noun
-    if av or an <> 0 then CONT = 0 ' Bill
-    ' Stop processing automatic actions (verb == 0) when we reach the first
-    ' non-zero action verb.
-    if not CONT THEN ' Bill
-      If verb = 0 And av <> 0 Then Exit Sub
 
-      If av = 0 And verb = 0 Then
-        ' Automatic action, 'an' is the probability
-        process_action = pseudo%(100) <= an
-      ElseIf av = verb And (an = noun Or an = 0) Then
-        ' Verb and noun match, or action noun is 'ANY'
-        process_action = 1
-      Else
-        process_action = 0
-      EndIf
-    ELSE
-      process_action = 1
-    END IF
+    If continue_flag Then
+      ' If the CONTinue flag is set but the verb or noun is non-zero then the
+      ' player action is complete.
+      If (av <> 0) Or (an <> 0) Then Exit For
 
-    If process_action Then
-      If process_conditions(a) Then
-        do_commands(a, nstr$)
-        if CONT then do_commands(a + 1, "")
-        result = ACTION_PERFORMED
-      Else
-        result = ACTION_NOT_YET
-      EndIf
+    ElseIf av <> verb Then
+      ' Verb doesn't match, try the next action.
+      Continue For
+
+    ElseIf (an <> 0) And (an <> noun) Then
+      ' Noun doesn't match (or isn't 'ANY'), try the next action.
+      Continue For
+
     EndIf
 
-    ' Stop processing actions when a non-automatic action is performed.
-    If verb <> 0 And result = ACTION_PERFORMED Then Exit For
+    result = ACTION_NOT_YET
+    If Not process_conditions(a) Then Continue For ' Conditions not passed, try the next action.
 
-  Next a
+    do_commands(a, nstr$)
+    result = ACTION_PERFORMED
+
+    ' Stop processing player actions when an action is performed and the CONTinue
+    ' flag is not set.
+    If Not continue_flag Then Exit For
+  Next
 
   ' Whilst the action table contains some specialist pickup and drop handling
   ' the general case is handled by this code.
   If result = ACTION_UNKNOWN Then
     If verb = 10 Then
-      do_get(nstr$)
+      do_get(noun, nstr$)
       result = ACTION_PERFORMED
     ElseIf verb = 18 Then
-      do_drop(nstr$)
+      do_drop(noun, nstr$)
       result = ACTION_PERFORMED
     EndIf
-  EndIf
+   EndIf
 
   Select Case result
     Case ACTION_UNKNOWN : con.println("I don't understand your command.")
@@ -521,6 +548,8 @@ Sub do_command(a, cmd, nstr$)
     Case 63
       ' FINI
       ' Tell the player the game is over and ask if they want to play again.
+      If con.fd_out > 0 Then record_off()
+      If con.fd_in > 0 Then replay_off()
       Local s$ = prompt$("The game is now over, would you like to play again [Y|n]? ")
       If LCase$(s$) = "n" Then state = STATE_QUIT Else state = STATE_RESTART
 
@@ -598,7 +627,7 @@ Sub do_command(a, cmd, nstr$)
       ' This command sets a flag to allow more than four commands to be executed
       ' When an action entry with a non-zero verb or noun is encountered,
       ' the continue flag is cleared
-      CONT = 1
+      continue_flag = 1
 
     Case 74
       ' AGETx Bill
@@ -619,7 +648,7 @@ Sub do_command(a, cmd, nstr$)
     case 85
       ' SAYwCR Bill
       ' This says the noun (second word) input by the player and starts a new line
-      con.println(ucase$(nstr$))
+      con.println(Chr$(34) + nstr$ + Chr$(34))
 
     Case 102 To 149
       ' Display corresponding message.
@@ -739,13 +768,6 @@ Sub parse(s$, verb, noun, nstr$)
 
   verb = lookup_word(Left$(vstr$, ln), 0)
   noun = lookup_word(Left$(nstr$, ln), 1)
-
-  If noun <> 0 Then
-    nstr$ = LCase$(nv_str$(noun, 1)) ' to use correct synonym
-  Else
-    nstr$ = Left$(nstr$, ln)
-  EndIf
-
 End Sub
 
 Function lookup_meta_command(vstr$, nstr$)
@@ -772,7 +794,6 @@ Function lookup_meta_command(vstr$, nstr$)
   lookup_meta_command = verb
 End Function
 
-
 ' @param  word$  word to lookup
 ' @param  dict   dictionary to look in, 0 for verbs and 1 for nouns
 Function lookup_word(word$, dict)
@@ -798,8 +819,8 @@ Function lookup_word(word$, dict)
 End Function
 
 ' Picks up the object identified by 'nstr$'
-Sub do_get(nstr$)
-  Local carried = 0, i, k
+Sub do_get(noun, nstr$)
+  Local carried = 0, i, k, obj$ = obj_name$(noun, nstr$)
 
   If nstr$ = "" Then con.println("What?") : Exit Sub
 
@@ -809,7 +830,7 @@ Sub do_get(nstr$)
   If carried >= mx Then con.println("I've too much to carry!") : Exit Sub
 
   For i = 0 To il
-    If LCase$(obj_noun$(i)) = nstr$ Then
+    If obj_noun$(i) = obj$ Then
       If ia(i) = r Then
         ia(i) = -1
         k = 3
@@ -827,7 +848,16 @@ Sub do_get(nstr$)
   EndIf
 End Sub
 
-' Gets the noun for referring to the given object.
+' Gets an object name corresponding to a 'noun' and/or 'nstr$' supplied by the player.
+Function obj_name$(noun, nstr$)
+  If noun <> 0 Then
+    obj_name$ = LCase$(nv_str$(noun, 1)) ' to use correct synonym
+  Else
+    obj_name$ = LCase$(Left$(nstr$, ln))
+  EndIf
+End Function
+
+' Gets the (lower-case) noun for referring to the given object.
 Function obj_noun$(i)
   Local en, st
 
@@ -835,20 +865,18 @@ Function obj_noun$(i)
   If st > 1 Then
     en = InStr(st + 1, ia_str$(i), "/")
     If en < st + 1 Then Error "Missing trailing '/'"
-    obj_noun$ = Mid$(ia_str$(i), st + 1, en - st - 1)
+    obj_noun$ = LCase$(Mid$(ia_str$(i), st + 1, en - st - 1))
   EndIf
 
   If Len(obj_noun$) > ln Then Error "Object noun too long: " + obj_noun$
 End Function
 
-' Drops the object identified by 'nstr$'
-Sub do_drop(nstr$)
-  Local i, k = 0
-
-  If nstr$ = "" Then con.println("What?") : Exit Sub
+' Drops the object identified by 'noun' and/or 'nstr$'
+Sub do_drop(noun, nstr$)
+  Local i, k = 0, obj$ = obj_name$(noun, nstr$)
 
   For i = 0 To il
-    If LCase$(obj_noun$(i)) = nstr$ Then
+    If obj_noun$(i) = obj$ Then
       If ia(i) = -1 Then
         ia(i) = r
         k = 3

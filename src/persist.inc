@@ -52,7 +52,7 @@ End Function
 ' Gets the path to the file corresponding to saved game slot 'i'.
 Function save_file$(i)
   If i < 1 Or i > 10 Then Error "Invalid saved game number"
-  save_file$ = SAVE_DIR$ + "/" + Left$(STORY$, 6) + Str$(i) + ".sav"
+  save_file$ = SAVE_DIR$ + "/" + Left$(STORY$, 5) + "_" + Str$(i) + ".sav"
 End Function
 
 ' Restores game state from a file.
@@ -198,7 +198,7 @@ End Function
 ' Gets the path to the file corresponding to script slot 'i'.
 Function script_file$(i)
   If i < 1 Or i > 10 Then Error "Invalid script number"
-  script_file$ = SCRIPT_DIR$ + "/" + Left$(STORY$, 6) + Str$(i) + ".scr"
+  script_file$ = SCRIPT_DIR$ + "/" + Left$(STORY$, 5) + "_" + Str$(i) + ".scr"
 End Function
 
 Sub record_off()

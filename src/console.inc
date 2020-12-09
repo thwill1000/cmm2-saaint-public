@@ -12,8 +12,10 @@ Dim con.fd_in  ' file descriptor to read input from
 Dim con.fd_out ' file descriptor to echo input to
 
 '!comment_if INLINE_CONSTANTS
-Dim CON.HEIGHT = 50
-Dim CON.WIDTH = 100
+Const con.CR$ = Chr$(13)
+Const con.LF$ = Chr$(10)
+Dim con.HEIGHT = 50
+Dim con.WIDTH = 100
 '!endif
 
 ' @param  p$  prompt
@@ -24,8 +26,13 @@ Function con.in$(p$, echo)
   con.flush()
 
   Line Input #con.fd_in, s$
+
+  ' If we read from a file then echo what we read.
   If con.fd_in > 0 Then con.println(s$)
-  con.lines = 0
+
+  ' If we read from the console when clear con.lines.
+  If con.fd_in = 0 Then con.lines = 0
+
   con.x = 1
   If con.fd_in > 0 Then
     If Eof(#con.fd_in) Then Close #con.fd_in : con.fd_in = 0
@@ -47,19 +54,35 @@ End Function
 ' console. As a result calling this function will probably not print the
 ' entirety of s$; ' the last 'word' or part thereof may be left in con.buf$.
 Sub con.print(s$)
+  Local c$, i
+
   con.count = 0
 
-  If Len(s$) = 1 Then
-    If (s$ = " ") Xor con.space Then con.flush() : con.space = (s$ = " ")
-    con.buf$ = con.buf$ + s$
-  Else
-    Local c$, i
-    For i = 1 To Len(s$)
-      c$ = Mid$(s$, i, 1)
-      If (c$ = " ") Xor con.space Then con.flush() : con.space = (c$ = " ")
-      con.buf$ = con.buf$ + c$
-    Next i
-  EndIf
+  For i = 1 To Len(s$)
+    c$ = Mid$(s$, i, 1)
+    Select Case c$
+      Case con.CR$:
+        ' Ignore carriage returns
+
+      Case con.LF$:
+        con.endl()
+        con.count = 0
+        con.space = 0
+
+      Case " ":
+        If Not con.space Then con.flush() : con.space = 1
+        Cat con.buf$, " "
+
+      Case "`":
+        If con.space Then con.flush() : con.space = 0
+        Cat con.buf$, "'"
+
+      Case Else:
+        If con.space Then con.flush() : con.space = 0
+        Cat con.buf$, c$
+
+    End Select
+  Next
 End Sub
 
 ' Writes con.buf$ to the console and clears it.
@@ -70,7 +93,7 @@ Sub con.flush()
   If con.spin Then Print Chr$(8); " "; Chr$(8); : con.spin = 0
 
   Do
-    If con.x = 1 And con.lines > CON.HEIGHT - 2 Then
+    If con.x = 1 And con.lines > con.HEIGHT - 2 Then
       Print "[MORE] ";
       Do While Inkey$ <> "" : Loop
       Do While Inkey$ = "" : Loop
@@ -78,7 +101,7 @@ Sub con.flush()
       con.lines = 0
     EndIf
 
-    If con.x + Len(con.buf$) > CON.WIDTH + 1 Then
+    If con.x + Len(con.buf$) > con.WIDTH + 1 Then
       Print
       con.lines = con.lines + 1
       con.x = 1
@@ -102,7 +125,7 @@ Sub con.endl()
     ' If the story outputs 10 or more empty lines then we assume it was trying
     ' to clear the screen
     Local i
-    For i = 0 To CON.HEIGHT - con.count - 1 : Print : Next i
+    For i = 0 To con.HEIGHT - con.count - 1 : Print : Next i
     con.count = -999 ' to avoid any unnecessary additional empty lines
     con.lines = 0
     Exit Sub
@@ -119,7 +142,7 @@ Sub con.println(s$, center)
   If Len(s$) > 0 Then
     If center Then
       If con.x <> 1 Then Error "Cannot center text unless on a new line."
-      If Len(s$) < CON.WIDTH Then con.print(Space$((CON.WIDTH - Len(s$)) \ 2) + s$)
+      If Len(s$) < con.WIDTH Then con.print(Space$((con.WIDTH - Len(s$)) \ 2) + s$)
     Else
       con.print(s$)
     EndIf

@@ -1,0 +1,25 @@
+The Scott Adams' Adventure Interpreter for the Colour Maximite 2
+was written by Thomas Williams with the assistance of Bill McKinley
+in 2020.
+
+Although it consists almost entirely of new code it is derived
+*with permission* from:
+
+ - Scott Adams' "Pirate Adventure" for TRS-80 published in
+   BYTE Magazine Volume 05 Number 12 - December 1980
+
+ - Source-code for a BASIC version of "Adventureland" provided
+   to the authors by Scott Adams.
+
+The authors would also like to thank Alan Moluf and Bruce Hanson
+for documenting the data file format used by Scott Adams' adventure
+games:
+
+     https://github.com/pdxiv/LuaScott/blob/master/doc/
+       The_ADVENTURE_Data_Base_Format_(1980).md
+
+IMPORTANT! Game data (.dat) file are (c) their respective authors and
+should not be distributed without permission.
+
+Please read the LICENSE file for further details about modifying and
+distributing this program.
