@@ -128,7 +128,6 @@ Function get_cond$(code, num)
     Case 18 : s$ = "-ORIG"
     Case 19 : s$ = "CT="
     Case Else: s$ = "Huh?"
-'    Case Else: s$ = "<"+str$(code)+">" ' "Huh?"
   End Select
   get_cond$ = s$ + " " + Str$(num)
 End Function
@@ -167,12 +166,24 @@ Function get_cmd$(c)
     Case 70: s$ = "CLS"
     Case 71: s$ = "SAVEz"
     Case 72: s$ = "EXx,x"
-    Case 73: s$ = "CONT"
+    Case 73: s$ = "CONT" ' Added from here to 88 (I think) - Bill
     Case 74: s$ = "AGETx"
+    case 75: s$ = "BYx<-x"
     Case 76: s$ = "DspRM"
+    case 77: s$ = "CT-1"
+    case 78: s$ = "DspCT"
+    case 79: s$ = "CT<-n"
+    case 80: s$ = "EXRM0"
+    case 81: s$ = "EXm,CT"
+    case 82: s$ = "CT+n"
+    case 83: s$ = "CT-n"
+    case 84: s$ = "SAYw"
     case 85: s$ = "SAYwCR"
+    case 86: s$ = "SAYCR"
+    case 87: s$ = "EXc,CR"
+    case 88: s$ = "DELAY"
     Case 102 To 149 : s$ = "MSG:" + Str$(c - 50)
-    Case Else: s$ = "<"+str$(c)+">" '"Huh?" Bill
+    Case Else: s$ = "<"+str$(c)+">" '"Huh?" - Bill
   End Select
   get_cmd$ = s$
 End Function

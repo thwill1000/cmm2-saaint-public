@@ -38,13 +38,16 @@ Const VERB_DEBUG_ON   = -8
 Const VERB_DEBUG_OFF  = -9
 Const VERB_FIXED_SEED = -10
 
-Const STORY$ = Choice(Mm.CmdLine$ = "", "adv01", Mm.CmdLine$)
+Const STORY$ = Choice(Mm.CmdLine$ = "", "adv14b", Mm.CmdLine$)
 
 ' These global variables hold the current game state
-Dim lx ' light duration
-Dim df ' dark flag
-Dim r  ' current room
-Dim sf ' status flags
+Dim lx              ' light duration
+Dim df              ' dark flag
+Dim r               ' current room
+Dim sf              ' status flags
+dim counter         ' counter - Bill
+dim alt_counter(7)  ' alternate counters
+dim alt_room(5)     ' alternate room registers
 ' And ia() which contains the current object locations,
 ' but is declared by adv.read()
 
@@ -443,6 +446,21 @@ Function evaluate_condition(code, value)
     Case 14
       ' Passes if object <value> is in the store room (0)
       pass = (ia(value) = 0)
+    case 15
+      ' Passes if counter <= the number - Bill
+      pass = counter <= value
+    case 16
+      ' Passes if counter > the number - Bill
+      pass = counter > value
+    case 17
+      ' Passes if the numbered object is is the room it started in - Bill
+      pass = ia(value) = i2(value)
+    case 18
+      ' Passes if the numbered object is not in the room it started in - Bill
+      pass = ia(value) <> i2(value)
+    case 19
+      ' Passes if the counter is equal to the number - Bill
+      pass = counter = value
     Case Else
       Error "Unknown condition: " + Str$(code)
   End Select
@@ -518,6 +536,9 @@ Sub do_command(a, cmd, nstr$)
       p = get_parameter(a)
       sf = sf Or 1 << p
 
+  ' Case 59
+      ' x->RM0 See CMD 55
+
     Case 60
       ' CLRz
       ' Clear the Par #1 flag-bit.
@@ -553,7 +574,7 @@ Sub do_command(a, cmd, nstr$)
       Local s$ = prompt$("The game is now over, would you like to play again [Y|n]? ")
       If LCase$(s$) = "n" Then state = STATE_QUIT Else state = STATE_RESTART
 
-    Case 64
+    Case 64, 76
       ' DspRM
       ' Display the current room.
       ' This checks if the darkness flag-bit (15) is set and the artificial
@@ -616,39 +637,113 @@ Sub do_command(a, cmd, nstr$)
       ' This command exchanges the room locations of the Par #1 object and the
       ' Par #2 object. If the objects in the current room change, the new
       ' description will be displayed.
-      x = get_parameter(a) ' x = object 1
-      y = get_parameter(a) ' y = object 2
-      p = ia(x)           ' p = location of object 1
+      x = get_parameter(a)  ' x = object 1
+      y = get_parameter(a)  ' y = object 2
+      p = ia(x)             ' p = location of object 1
       ia(x) = ia(y)
       ia(y) = p
 
     case 73
-      ' CONT Bill
+      ' CONT - Bill
       ' This command sets a flag to allow more than four commands to be executed
       ' When an action entry with a non-zero verb or noun is encountered,
       ' the continue flag is cleared
       continue_flag = 1
 
     Case 74
-      ' AGETx Bill
+      ' AGETx - Bill
       ' Pick up the Par #1 object even if it exceeds the limit (mx).
       ' The object may be in this room, or in any other room.
       p = get_parameter(a)
       ia(p) = -1
 
-    Case 76
-      ' DspRM -- This is a direct copy of Command 64 Bill
-      ' Display the current room.
-      ' This checks if the darkness flag-bit (15) is set and the artificial
-      ' light (object 9) is not available.
-      ' If there is light, it displays the room description, the objects in
-      ' the room and any obvious exits.
-      describe_room()
+    case 75
+      ' - Bill - it doesn't seem necessary that this command should display the room
+      ' Put the Par #1 object in the same place as the Par #2 object.
+      ' If the Par #2 object is being carried, this will pick up the
+      ' Par #1 object too, regardless of the carry limit.
+      ' If this changes the objects in the current room, the room will be displayed again.
+      x = get_parameter(a)   ' x = object 1
+      y = get_parameter(a)   ' y = object 2
+      ia(x) = ia(y)
+
+  '  Case 76
+      ' DspRM -- This is a direct copy of Command 64 - Bill
+
+    case 77
+      ' CT-1 -- This subtracts 1 from the counter - Bill
+      counter = counter -1
+
+    case 78
+      ' DspCT -- This displays the counter value - Bill
+      con.print(" " + str$(counter) + " ")
+
+    case 79
+      ' CT<-n -- This sets the counter to the Par #1 value - Bill
+      p = get_parameter(a)
+      counter = p
+
+    case 80
+      ' - Bill
+      ' This exchanges the values of the current room register with the alt room register 0.
+      ' This should be followed by a GOTOy command if the alt room register 0 had not already been set.
+      x = r
+      r = alt_room(0)
+      alt_room(0) = x
+
+    case 81
+      ' EXm,CT -- Exchanges the values of counter and the Par #1 alt_counter - Bill
+      ' The TIME LIMIT (or light level) may be accessed as alternate counter 8
+      p = get_parameter(a)
+      x = counter
+      select case p
+        case 0 to 7
+          counter = alt_counter(p)
+          alt_counter(p) = x
+        case 8  ' light level
+          counter = lx
+          lx = x
+        case else
+          Error "illegal Counter: " + Str$(p)
+      end select
+
+    case 82
+      ' CT+n -- This adds the Par #1 value to the counter - Bill
+      p = get_parameter(a)
+      counter = counter + p
+
+    case 83
+      ' CT-n -- This subtracts the Par #1 value from the counter - Bill
+      p = get_parameter(a)
+      counter = counter - p
+
+    case 84
+      ' SAYw - Bill
+      ' This says the noun (second word) input by the player
+      con.print(Chr$(34) + nstr$ + Chr$(34))
 
     case 85
-      ' SAYwCR Bill
+      ' SAYwCR - Bill
       ' This says the noun (second word) input by the player and starts a new line
       con.println(Chr$(34) + nstr$ + Chr$(34))
+
+    case 86
+      ' SAYCR This just starts a new line - Bill
+      con.println("")
+
+    case 87
+      ' - Bill
+      ' This exchanges the values of the current room register with the Par #1 alt room register.
+      p = get_parameter(a)
+      x = r
+      r = alt_room(p)
+      alt_room(p) = x
+      print "***** CMD 87 just executed *****"
+
+    case 88
+      ' DELAY - Bill
+      ' Delay for approximately 1 second
+      pause 1000
 
     Case 102 To 149
       ' Display corresponding message.

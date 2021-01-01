@@ -33,7 +33,7 @@ Function do_save()
 
   ' Write file header
   Print #1, "SAINT save file"
-  Print #1, "1"
+  Print #1, "2"
   Print #1, Date$ + " " + Time$
   Print #1, s$
 
@@ -43,6 +43,9 @@ Function do_save()
   Print #1, Str$(r)           ' current room
   Print #1, Str$(lx)          ' light duration
   For i = 0 To il : Print #1, Str$(ia(i)) : Next i ' object locations
+  print #1, str$(counter)      ' counter - Bill
+  For i = 0 To 7 : Print #1, Str$(alt_counter(i)) : Next i ' alternate counters
+  For i = 0 To 5 : Print #1, Str$(alt_room(i)) : Next i ' alternate rooms
 
   Close #1
 
@@ -58,7 +61,7 @@ End Function
 ' Restores game state from a file.
 ' @return 1 on success, otherwise 0.
 Function do_restore()
-  Local err$, f$, i, game, s$, values(4 + il)
+  Local err$, f$, i, game, s$, values(19 + il)
 
   con.println()
   con.println("Select saved game to restore:")
@@ -81,7 +84,7 @@ Function do_restore()
   Line Input #1, s$
   con.println("Restoring '" + s$ + "' ...")
 
-  For i = 0 To 4 + il
+  For i = 0 To 19 + il
     Line Input #1, s$
     If s$ = "" Then err$ = "missing data" : Exit For
     values(i) = Val(s$)
@@ -95,6 +98,9 @@ Function do_restore()
     r  = values(2)
     lx = values(3)
     For i = 4 To il + 4 : ia(i - 4) = values(i) : Next i
+    counter = values(il + 5)  ' added counters and alt_rooms - Bill
+    For i = il + 6 To il + 13 : alt_counter(i - il - 6) = values(i) : Next i
+    For i = il + 14 To il + 19 : alt_room(i - il - 14) = values(i) : Next i
 
     do_restore = 1
   Else
