@@ -16,12 +16,12 @@ Dim lt ' Time limit
 Dim ml ' Highest message number
 Dim tr ' Treasure room
 
-dim as string temp, temp1, temp2, temp3
-dim flag as integer
-dim string crlf$ = chr$(10) + chr$(13)
+Dim As String temp, temp1, temp2, temp3
+Dim flag As Integer
+Dim crlf$ = Chr$(10) + Chr$(13)
 
 Sub adv.read(f$)
-  Open f$ For Input AS 1
+  Open f$ For Input As 1
   Input #1, il ' read the first bit of data and disregard it.
   Input #1, il
   Input #1, cl
@@ -47,125 +47,128 @@ Sub adv.read(f$)
   Local i, j
   ' Read action table.
   For i = 0 To cl
-    for j = 0 to 7
-      Input #1,ca(i,j)
-    next j
+    For j = 0 To 7
+      Input #1, ca(i, j)
+    Next j
   Next i
 
   ' Read vocabulary table -Bill
   ' Revised because not all files have the vocab list in multiples of 2
   For i = 0 To nl
-    For j = 0 TO 1
-      Input #1,nv_str$(i,j)
-    next j
-  next i
+    For j = 0 To 1
+      Input #1, nv_str$(i, j)
+    Next j
+  Next i
 
   ' Read rooms.
-  For i = 0 TO rl
-    Input #1, rm(i,0)
-    Input #1, rm(i,1)
-    Input #1, rm(i,2)
-    Input #1, rm(i,3)
-    Input #1, rm(i,4)
-    Input #1, rm(i,5)
+  For i = 0 To rl
+    Input #1, rm(i, 0)
+    Input #1, rm(i, 1)
+    Input #1, rm(i, 2)
+    Input #1, rm(i, 3)
+    Input #1, rm(i, 4)
+    Input #1, rm(i, 5)
     ' Room descriptions sometimes span multiple lines
     ' Need to remove leading and trailing quotes
-    line input #1, rs$(i)
-    if left$(rs$(i),1) = chr$(34) then rs$(i) = right$(rs$(i),len(rs$(i))-1)
-    if right$(rs$(i),1) = chr$(34) then
-      rs$(i) = left$(rs$(i),len(rs$(i))-1)
-    else
+    Line Input #1, rs$(i)
+    If Left$(rs$(i), 1) = Chr$(34) Then rs$(i) = Right$(rs$(i), Len(rs$(i)) - 1)
+    If Right$(rs$(i), 1) = Chr$(34) Then
+      rs$(i) = Left$(rs$(i), Len(rs$(i)) - 1)
+    Else
       temp = rs$(i)
-      line input #1, rs$(i)
+      Line Input #1, rs$(i)
       temp = temp + crlf$ + rs$(i)
-      if right$(temp,1) = chr$(34) then
-        temp = left$(temp,len(temp)-1) ' strip off the leading quote
-      else
-        line input #1, rs$(i)
+      If Right$(temp, 1) = Chr$(34) Then
+        temp = Left$(temp, Len(temp) - 1) ' strip off the leading quote
+      Else
+        Line Input #1, rs$(i)
         temp = temp + crlf$ + rs$(i) ' concatenate the next line
-        if right$(temp,1) = chr$(34) then
-          temp = left$(temp,len(temp)-1) ' sttip off the trailing quote
-        else
-          print "Error reading room data!"
-          print temp
-          end
-        endif
-      endif
-    rs$(i) = temp
-    endif
+        If Right$(temp, 1) = Chr$(34) Then
+          temp = Left$(temp, Len(temp) - 1) ' sttip off the trailing quote
+        Else
+          Print "Error reading room data!"
+          Print temp
+          End
+        EndIf
+      EndIf
+      rs$(i) = temp
+    EndIf
   Next i
 
   ' Read messages and trim off any leading and trailing quotes
   ' some messages are spanning multiple lines so need to concatenate them
   flag = 0
-  For i = 0 TO ml : Line Input #1, ms$(i)
-    if left$(ms$(i),1) = chr$(34) then ms$(i) = right$(ms$(i),len(ms$(i))-1)
-    if right$(ms$(i),1) = chr$(34) then
-      ms$(i) = left$(ms$(i),len(ms$(i))-1)
-    else
+  For i = 0 To ml : Line Input #1, ms$(i)
+    If Left$(ms$(i), 1) = Chr$(34) Then ms$(i) = Right$(ms$(i), Len(ms$(i)) - 1)
+    If Right$(ms$(i), 1) = Chr$(34) Then
+      ms$(i) = Left$(ms$(i), Len(ms$(i)) - 1)
+    Else
       temp = ms$(i)
-      line input #1, ms$(i)
-      if temp = "" then ' some lines just contain a quote
+      Line Input #1, ms$(i)
+      If temp = "" Then ' some lines just contain a quote
         temp = temp + crlf$ + ms$(i)
-      else
+      Else
         temp = temp + ms$(i)
-      endif
-      if right$(temp,1) = chr$(34) then
-        temp = left$(temp,len(temp)-1)
-      else
-        line input #1, ms$(i)
+      EndIf
+      If Right$(temp, 1) = Chr$(34) Then
+        temp = Left$(temp, Len(temp) - 1)
+      Else
+        Line Input #1, ms$(i)
         temp = temp + crlf$ + ms$(i)
-        if right$(temp,1) = chr$(34) then
-          temp = left$(temp,len(temp)-1)
-          else
+        If Right$(temp, 1) = Chr$(34) Then
+          temp = Left$(temp, Len(temp) - 1)
+        Else
           j = 0
-          DO
-            line input #1, ms$(i)
+          Do
+            Line Input #1, ms$(i)
             temp = temp + crlf$ + ms$(i)
-            if right$(temp,1) = chr$(34) then
-              temp = left$(temp,len(temp)-1)
+            If Right$(temp, 1) = Chr$(34) Then
+              temp = Left$(temp, Len(temp) - 1)
               flag = 1
-            ELSE
+            Else
               j = j + 1
-            endif
-          loop until flag = 1 or j = 6
-          if j = 6 then print " Error reading messages" : end
-        endif
-      endif
+            EndIf
+          Loop Until flag = 1 Or j = 6
+          If j = 6 Then Print " Error reading messages" : End
+        EndIf
+      EndIf
       ms$(i) = temp
-    endif
+    EndIf
   Next i
 
-' Read objects, remove quotes and separate the location
-For i = 0 TO il : line Input #1, ia_str$(i)
-  temp = ia_str$(i)
-  flag = 0
-  for j = len(temp) to 2 step -1
-    if mid$(temp,j,1) = chr$(34) then
-      flag = 1
-      exit for
-    endif
-  next j
-  if flag = 0 then ' no quote
-    line Input #1, ia_str$(i)
-    temp = temp + " " + ia_str$(i)
-  endif
+  ' Read objects, remove quotes and separate the location
+  For i = 0 To il
+    Line Input #1, ia_str$(i)
+    temp = ia_str$(i)
+    flag = 0
+    For j = Len(temp) To 2 Step - 1
+      If Mid$(temp, j, 1) = Chr$(34) Then
+        flag = 1
+        Exit For
+      EndIf
+    Next j
+    If flag = 0 Then ' no quote
+      Line Input #1, ia_str$(i)
+      temp = temp + " " + ia_str$(i)
+    EndIf
 
-  for j= len(temp)-1 to 1 step -1
-    temp3 = mid$(temp,j,1)
-  if temp3 = " " then
-    temp1 = left$(temp, j-1)
-    temp2 = right$(temp, len(temp) - j)
-    exit for
-  end if
-  next j
-  if left$(temp1,1) = chr$(34) then temp1 = right$(temp1,len(temp1)-1):
-  if right$(temp1,1) = chr$(34) then temp1 = left$(temp1,len(temp1)-1):
-  if temp1 = " " then temp1 = ""
-  ia_str$(i) = temp1
-  ia(i) = val(temp2)
-  if ia(i) = 255 then ia(i) = -1 ' Some files use 255 as -1 - Bill
-  i2(i)=ia(i)
-Next i
-Close #1
+    For j = Len(temp) - 1 To 1 Step - 1
+      temp3 = Mid$(temp, j, 1)
+      If temp3 = " " Then
+        temp1 = Left$(temp, j - 1)
+        temp2 = Right$(temp, Len(temp) - j)
+        Exit For
+      EndIf
+    Next j
+
+    If Left$(temp1, 1) = Chr$(34) Then temp1 = Right$(temp1, Len(temp1) - 1) :
+    If Right$(temp1, 1) = Chr$(34) Then temp1 = Left$(temp1, Len(temp1) - 1) :
+    If temp1 = " " Then temp1 = ""
+    ia_str$(i) = temp1
+    ia(i) = Val(temp2)
+    If ia(i) = 255 Then ia(i) = -1 ' Some files use 255 as -1 - Bill
+    i2(i) = ia(i)
+  Next i
+
+  Close #1
 End Sub

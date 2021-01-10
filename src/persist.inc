@@ -43,7 +43,7 @@ Function do_save()
   Print #1, Str$(r)           ' current room
   Print #1, Str$(lx)          ' light duration
   For i = 0 To il : Print #1, Str$(ia(i)) : Next i ' object locations
-  print #1, str$(counter)      ' counter - Bill
+  Print #1, Str$(counter)     ' counter - Bill
   For i = 0 To 7 : Print #1, Str$(alt_counter(i)) : Next i ' alternate counters
   For i = 0 To 5 : Print #1, Str$(alt_room(i)) : Next i ' alternate rooms
 

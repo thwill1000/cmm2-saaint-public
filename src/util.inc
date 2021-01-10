@@ -10,7 +10,7 @@ Function pseudo%(range%)
   Static x% = Timer ' 7
   Static a% = 1103515245
   Static c% = 12345
-  Static m% = 2^31
+  Static m% = 2 ^ 31
 
   If range% = 0 Then
     x% = Timer

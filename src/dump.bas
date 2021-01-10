@@ -87,7 +87,7 @@ Sub dump_action(fd, i)
   Else
     n$ = get_noun$(noun)
     v$ = get_verb$(verb)
-  End If
+  EndIf
 
   Print #fd, str.rpad$(Str$(i) + ":", 6);
   Print #fd, str.rpad$(v$, 6);
@@ -127,7 +127,7 @@ Function get_cond$(code, num)
     Case 17 : s$ = "ORIG"
     Case 18 : s$ = "-ORIG"
     Case 19 : s$ = "CT="
-    Case Else: s$ = "Huh?"
+    Case Else : s$ = "Huh?"
   End Select
   get_cond$ = s$ + " " + Str$(num)
 End Function
@@ -145,45 +145,45 @@ Function get_cmd$(c)
   Select Case c
     Case 0 : s$ = "0"
     Case 1 To 51 : s$ = "MSG:" + Str$(c)
-    Case 52: s$ = "GETx"
-    Case 53: s$ = "DROPx"
-    Case 54: s$ = "GOTOy"
-    Case 55: s$ = "x->RM0"
-    Case 56: s$ = "NIGHT"
-    Case 57: s$ = "DAY"
-    Case 58: s$ = "SETz"
-    Case 59: s$ = "x->RM0" ' same as 55
-    Case 60: s$ = "CLRz"
-    Case 61: s$ = "DEAD"
-    Case 62: s$ = "x->y"
-    Case 63: s$ = "FINI"
-    Case 64: s$ = "DspRM"
-    Case 65: s$ = "SCORE"
-    Case 66: s$ = "INV"
-    Case 67: s$ = "SET0"
-    Case 68: s$ = "CLR0"
-    Case 69: s$ = "FILL"
-    Case 70: s$ = "CLS"
-    Case 71: s$ = "SAVEz"
-    Case 72: s$ = "EXx,x"
-    Case 73: s$ = "CONT" ' Added from here to 88 (I think) - Bill
-    Case 74: s$ = "AGETx"
-    case 75: s$ = "BYx<-x"
-    Case 76: s$ = "DspRM"
-    case 77: s$ = "CT-1"
-    case 78: s$ = "DspCT"
-    case 79: s$ = "CT<-n"
-    case 80: s$ = "EXRM0"
-    case 81: s$ = "EXm,CT"
-    case 82: s$ = "CT+n"
-    case 83: s$ = "CT-n"
-    case 84: s$ = "SAYw"
-    case 85: s$ = "SAYwCR"
-    case 86: s$ = "SAYCR"
-    case 87: s$ = "EXc,CR"
-    case 88: s$ = "DELAY"
+    Case 52 : s$ = "GETx"
+    Case 53 : s$ = "DROPx"
+    Case 54 : s$ = "GOTOy"
+    Case 55 : s$ = "x->RM0"
+    Case 56 : s$ = "NIGHT"
+    Case 57 : s$ = "DAY"
+    Case 58 : s$ = "SETz"
+    Case 59 : s$ = "x->RM0" ' same as 55
+    Case 60 : s$ = "CLRz"
+    Case 61 : s$ = "DEAD"
+    Case 62 : s$ = "x->y"
+    Case 63 : s$ = "FINI"
+    Case 64 : s$ = "DspRM"
+    Case 65 : s$ = "SCORE"
+    Case 66 : s$ = "INV"
+    Case 67 : s$ = "SET0"
+    Case 68 : s$ = "CLR0"
+    Case 69 : s$ = "FILL"
+    Case 70 : s$ = "CLS"
+    Case 71 : s$ = "SAVEz"
+    Case 72 : s$ = "EXx,x"
+    Case 73 : s$ = "CONT" ' Added from here to 88 (I think) - Bill
+    Case 74 : s$ = "AGETx"
+    Case 75 : s$ = "BYx<-x"
+    Case 76 : s$ = "DspRM"
+    Case 77 : s$ = "CT-1"
+    Case 78 : s$ = "DspCT"
+    Case 79 : s$ = "CT<-n"
+    Case 80 : s$ = "EXRM0"
+    Case 81 : s$ = "EXm,CT"
+    Case 82 : s$ = "CT+n"
+    Case 83 : s$ = "CT-n"
+    Case 84 : s$ = "SAYw"
+    Case 85 : s$ = "SAYwCR"
+    Case 86 : s$ = "SAYCR"
+    Case 87 : s$ = "EXc,CR"
+    Case 88 : s$ = "DELAY"
     Case 102 To 149 : s$ = "MSG:" + Str$(c - 50)
-    Case Else: s$ = "<"+str$(c)+">" '"Huh?" - Bill
+    Case Else : s$ = "<" + Str$(c) + ">" '"Huh?" - Bill
   End Select
   get_cmd$ = s$
 End Function
@@ -211,7 +211,7 @@ Sub dump_rooms(fd)
     s$ = rs$(i)
     If s$ = "" Then
       If i = 0 Then s$ = "<storeroom>" Else s$ = "<empty>"
-    End If
+    EndIf
     Print #fd, str.rpad$(Str$(i) + ":", 6) s$
     Print #fd, "      Exits: ";
     count = 0
@@ -227,7 +227,7 @@ Sub dump_rooms(fd)
           Case 4 : Print #fd, "Up";
           Case 5 : Print #fd, "Down";
         End Select
-      End If
+      EndIf
     Next j
     If count = 0 Then Print #fd, "None" Else Print #fd
   Next i

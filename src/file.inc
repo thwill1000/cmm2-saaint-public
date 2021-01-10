@@ -28,7 +28,7 @@ End Function
 '
 ' @return 1 if the file exists, otherwise 0
 Function fil.exists%(f$)
-  fil.exists% = LCase$(Dir$(f$, ALL)) = LCase$(fil.get_name$(f$))
+  fil.exists% = LCase$(Dir$(f$, All)) = LCase$(fil.get_name$(f$))
 End Function
 
 ' Makes directory 'f$' if it does not already exist.

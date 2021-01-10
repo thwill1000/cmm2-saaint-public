@@ -45,9 +45,9 @@ Dim lx              ' light duration
 Dim df              ' dark flag
 Dim r               ' current room
 Dim sf              ' status flags
-dim counter         ' counter - Bill
-dim alt_counter(7)  ' alternate counters
-dim alt_room(5)     ' alternate room registers
+Dim counter         ' counter - Bill
+Dim alt_counter(7)  ' alternate counters
+Dim alt_room(5)     ' alternate room registers
 ' And ia() which contains the current object locations,
 ' but is declared by adv.read()
 
@@ -64,7 +64,7 @@ main()
 Pause 2000
 ' Replaced the following line with END to make stand alone
 ' we.end_program()
-end
+End
 
 Sub main()
   adv.read(FIL.PROG_DIR$ + "/" + STORY$ + ".dat")
@@ -89,9 +89,9 @@ Sub show_intro(f$)
 
   Cls
   con.lines = 0
-  Colour RGB(White)
+  Colour Rgb(White)
   con.print_file(ftitle$, 1)
-  Colour RGB(Green)
+  Colour Rgb(Green)
   con.println()
   con.println("S  Start a new game           ", 1)
   con.println("R  Restore a saved game       ", 1)
@@ -123,17 +123,17 @@ Sub show_credits()
 
   Cls
   con.lines = 0
-  Colour RGB(White)
+  Colour Rgb(White)
   con.println()
   con.println("CREDITS", 1)
   con.println("=======", 1)
   con.println()
-  Colour RGB(Green)
+  Colour Rgb(Green)
   con.print_file(f$, 1)
   con.println()
-  Colour RGB(White)
+  Colour Rgb(White)
   con.println("Press any key to continue", 1)
-  Colour RGB(Green)
+  Colour Rgb(Green)
   Do While Inkey$ <> "" : Loop
   Do While Inkey$ = "" : Loop
 End Sub
@@ -144,17 +144,17 @@ Sub show_instructions()
 
   Cls
   con.lines = 0
-  Colour RGB(White)
+  Colour Rgb(White)
   con.println()
   con.println("HOW TO PLAY", 1)
   con.println("===========", 1)
   con.println()
-  Colour RGB(Green)
+  Colour Rgb(Green)
   con.print_file(f$, 1)
   con.println()
-  Colour RGB(White)
+  Colour Rgb(White)
   con.println("Press any key to continue", 1)
-  Colour RGB(Green)
+  Colour Rgb(Green)
   Do While Inkey$ <> "" : Loop
   Do While Inkey$ = "" : Loop
 End Sub
@@ -193,7 +193,7 @@ Sub describe_room()
     Exit Sub
   EndIf
 
-  Colour RGB(White)
+  Colour Rgb(White)
 
   If Mm.Info(VPOS) > 0 Then con.println()
 '  Cls
@@ -226,7 +226,7 @@ Sub describe_room()
   con.println("<" + String$(con.WIDTH - 2, "-") + ">")
   con.println()
 
-  Colour RGB(Green)
+  Colour Rgb(Green)
 
 End Sub
 
@@ -256,7 +256,7 @@ Sub do_automatic_actions()
 
   continue_flag = 0
 
-  For a = 0 to cl
+  For a = 0 To cl
     ' The 'verb' of an automatic action is zero,
     ' If we reach a non-zero verb then we stop processing automatic actions.
     av = Int(ca(a, 0) / 150)
@@ -292,7 +292,7 @@ Sub do_player_actions(verb, noun, nstr$)
 
   Local a, an, av, result = ACTION_UNKNOWN
 
-  For a = 0 to cl
+  For a = 0 To cl
     av = Int(ca(a, 0) / 150) ' action - verb
     an = ca(a, 0) - av * 150 ' action - noun
 
@@ -332,12 +332,12 @@ Sub do_player_actions(verb, noun, nstr$)
       do_drop(noun, nstr$)
       result = ACTION_PERFORMED
     EndIf
-   EndIf
+  EndIf
 
   Select Case result
     Case ACTION_UNKNOWN : con.println("I don't understand your command.")
     Case ACTION_NOT_YET : con.println("I can't do that yet.")
-    Case Else :           If con.lines = 0 And state = STATE_CONTINUE Then con.println("OK.")
+    Case Else           : If con.lines = 0 And state = STATE_CONTINUE Then con.println("OK.")
   End Select
 
 End Sub
@@ -375,7 +375,7 @@ End Sub
 
 Sub go_direction(noun)
   Local l = df
-  If l Then l = df And ia(9) <> R and ia(9) <> - 1
+  If l Then l = df And ia(9) <> r And ia(9) <> -1
   If l Then con.println("Dangerous to move in the dark!")
   If noun < 1 Then con.println("Give me a direction too.") : Exit Sub
   Local k = rm(r, noun - 1)
@@ -422,10 +422,10 @@ Function evaluate_condition(code, value)
       pass = (r <> value)
     Case 8
       ' Passes if numbered flag-bit set.
-      pass = (sf And Int(2^value + 0.5)) <> 0
+      pass = (sf And Int(2 ^ value + 0.5)) <> 0
     Case 9
       ' Passes if numbered flag-bit clear.
-      pass = (sf And Int(2^value + 0.5)) = 0
+      pass = (sf And Int(2 ^ value + 0.5)) = 0
     Case 10
       ' Passes if the player is carrying anything.
       For i = 0 To il
@@ -446,19 +446,19 @@ Function evaluate_condition(code, value)
     Case 14
       ' Passes if object <value> is in the store room (0)
       pass = (ia(value) = 0)
-    case 15
+    Case 15
       ' Passes if counter <= the number - Bill
       pass = counter <= value
-    case 16
+    Case 16
       ' Passes if counter > the number - Bill
       pass = counter > value
-    case 17
+    Case 17
       ' Passes if the numbered object is is the room it started in - Bill
       pass = ia(value) = i2(value)
-    case 18
+    Case 18
       ' Passes if the numbered object is not in the room it started in - Bill
       pass = ia(value) <> i2(value)
-    case 19
+    Case 19
       ' Passes if the counter is equal to the number - Bill
       pass = counter = value
     Case Else
@@ -592,7 +592,7 @@ Sub do_command(a, cmd, nstr$)
         If ia(i) = tr And Left$(ia_str$(i), 1) = "*" Then x = x + 1
       Next i
       con.print("I've stored " + Str$(x) + " treasures. On a scale of 0 to 100 that rates a ")
-      con.println(Str$(Int(x/tt*100)) + ".")
+      con.println(Str$(Int(x / tt * 100)) + ".")
       If x = tt Then
         con.println("WELL DONE !!!")
         do_command(a, 63, nstr$)
@@ -643,7 +643,7 @@ Sub do_command(a, cmd, nstr$)
       ia(x) = ia(y)
       ia(y) = p
 
-    case 73
+    Case 73
       ' CONT - Bill
       ' This command sets a flag to allow more than four commands to be executed
       ' When an action entry with a non-zero verb or noun is encountered,
@@ -657,7 +657,7 @@ Sub do_command(a, cmd, nstr$)
       p = get_parameter(a)
       ia(p) = -1
 
-    case 75
+    Case 75
       ' - Bill - it doesn't seem necessary that this command should display the room
       ' Put the Par #1 object in the same place as the Par #2 object.
       ' If the Par #2 object is being carried, this will pick up the
@@ -670,20 +670,20 @@ Sub do_command(a, cmd, nstr$)
   '  Case 76
       ' DspRM -- This is a direct copy of Command 64 - Bill
 
-    case 77
+    Case 77
       ' CT-1 -- This subtracts 1 from the counter - Bill
-      counter = counter -1
+      counter = counter - 1
 
-    case 78
+    Case 78
       ' DspCT -- This displays the counter value - Bill
-      con.print(" " + str$(counter) + " ")
+      con.print(" " + Str$(counter) + " ")
 
-    case 79
+    Case 79
       ' CT<-n -- This sets the counter to the Par #1 value - Bill
       p = get_parameter(a)
       counter = p
 
-    case 80
+    Case 80
       ' - Bill
       ' This exchanges the values of the current room register with the alt room register 0.
       ' This should be followed by a GOTOy command if the alt room register 0 had not already been set.
@@ -691,59 +691,59 @@ Sub do_command(a, cmd, nstr$)
       r = alt_room(0)
       alt_room(0) = x
 
-    case 81
+    Case 81
       ' EXm,CT -- Exchanges the values of counter and the Par #1 alt_counter - Bill
       ' The TIME LIMIT (or light level) may be accessed as alternate counter 8
       p = get_parameter(a)
       x = counter
-      select case p
-        case 0 to 7
+      Select Case p
+        Case 0 To 7
           counter = alt_counter(p)
           alt_counter(p) = x
-        case 8  ' light level
+        Case 8  ' light level
           counter = lx
           lx = x
-        case else
+        Case Else
           Error "illegal Counter: " + Str$(p)
-      end select
+      End Select
 
-    case 82
+    Case 82
       ' CT+n -- This adds the Par #1 value to the counter - Bill
       p = get_parameter(a)
       counter = counter + p
 
-    case 83
+    Case 83
       ' CT-n -- This subtracts the Par #1 value from the counter - Bill
       p = get_parameter(a)
       counter = counter - p
 
-    case 84
+    Case 84
       ' SAYw - Bill
       ' This says the noun (second word) input by the player
       con.print(Chr$(34) + nstr$ + Chr$(34))
 
-    case 85
+    Case 85
       ' SAYwCR - Bill
       ' This says the noun (second word) input by the player and starts a new line
       con.println(Chr$(34) + nstr$ + Chr$(34))
 
-    case 86
+    Case 86
       ' SAYCR This just starts a new line - Bill
       con.println("")
 
-    case 87
+    Case 87
       ' - Bill
       ' This exchanges the values of the current room register with the Par #1 alt room register.
       p = get_parameter(a)
       x = r
       r = alt_room(p)
       alt_room(p) = x
-      print "***** CMD 87 just executed *****"
+      Print "***** CMD 87 just executed *****"
 
-    case 88
+    Case 88
       ' DELAY - Bill
       ' Delay for approximately 1 second
-      pause 1000
+      Pause 1000
 
     Case 102 To 149
       ' Display corresponding message.
@@ -760,15 +760,15 @@ End Sub
 ' @param   a   current action index
 ' @global  ip  parameter pointer
 Function get_parameter(a)
- Local code, value
+  Local code, value
 
- Do
-   ip = ip + 1
-   value = Int(ca(a, ip) / 20)
-   code = ca(a, ip) - value * 20
- Loop While code <> 0
+  Do
+    ip = ip + 1
+    value = Int(ca(a, ip) / 20)
+    code = ca(a, ip) - value * 20
+  Loop While code <> 0
 
- get_parameter = value
+  get_parameter = value
 End Function
 
 Sub prompt_for_command(verb, noun, nstr$)
@@ -800,9 +800,9 @@ End Sub
 
 Function prompt$(s$, echo)
   con.print(s$)
-  Colour RGB(White)
+  Colour Rgb(White)
   prompt$ = con.in$("", echo)
-  Colour RGB(Green)
+  Colour Rgb(Green)
 End Function
 
 Sub print_state()
@@ -843,7 +843,7 @@ Sub parse(s$, verb, noun, nstr$)
 
   ' Hack to allow use of common abbreviations, and avoid typing 'go'.
   If nstr$ = "" Then
-    Select Case vstr$:
+    Select Case vstr$
       Case "n", "north" : vstr$ = "go" : nstr$ = "north"
       Case "s", "south" : vstr$ = "go" : nstr$ = "south"
       Case "e", "east"  : vstr$ = "go" : nstr$ = "east"

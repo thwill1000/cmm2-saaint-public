@@ -61,23 +61,23 @@ Sub con.print(s$)
   For i = 1 To Len(s$)
     c$ = Mid$(s$, i, 1)
     Select Case c$
-      Case con.CR$:
+      Case con.CR$ :
         ' Ignore carriage returns
 
-      Case con.LF$:
+      Case con.LF$ :
         con.endl()
         con.count = 0
         con.space = 0
 
-      Case " ":
+      Case " " :
         If Not con.space Then con.flush() : con.space = 1
         Cat con.buf$, " "
 
-      Case "`":
+      Case "`" :
         If con.space Then con.flush() : con.space = 0
         Cat con.buf$, "'"
 
-      Case Else:
+      Case Else :
         If con.space Then con.flush() : con.space = 0
         Cat con.buf$, c$
 
@@ -194,7 +194,7 @@ Sub con.open_out(fd, f$)
 End Sub
 
 Sub con.close_out()
-  If con.fd_out<> 0 Then Close #con.fd_out
+  If con.fd_out <> 0 Then Close #con.fd_out
   con.fd_out = 0
 End Sub
 
