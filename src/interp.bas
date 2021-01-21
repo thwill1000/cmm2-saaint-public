@@ -1,7 +1,8 @@
-' Scott Adams Adventure Game Interpreter for Colour Maximite 2
-' Original TRS-80 Level II BASIC code (c) Scott Adams 1978
-' MMBasic port for CMM2 by Thomas Hugo Williams 2020
-' v1
+' Scott Adams Adventure Game Interpreter
+' For Colour Maximite 2, MMBasic 5.06
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Developed with the assistance of Bill McKinley
+' Based on original TRS-80 Level II BASIC code (c) 1978 Scott Adams
 
 Option Explicit On
 Option Default Integer
@@ -12,8 +13,6 @@ Option Default Integer
 #Include "persist.inc"
 #Include "strings.inc"
 #Include "util.inc"
-' Removed the following line to make the program stand alone
-' #Include "../../common/welcome.inc"
 
 con.HEIGHT = 33
 con.WIDTH  = 80
@@ -45,9 +44,9 @@ Dim lx              ' light duration
 Dim df              ' dark flag
 Dim r               ' current room
 Dim sf              ' status flags
-Dim counter         ' counter - Bill
-Dim alt_counter(7)  ' alternate counters
-Dim alt_room(5)     ' alternate room registers
+Dim counter         ' main counter
+Dim alt_counter(7)  ' 8 alternate counters
+Dim alt_room(5)     ' 6 alternate room registers
 ' And ia() which contains the current object locations,
 ' but is declared by adv.read()
 
@@ -438,7 +437,8 @@ Function evaluate_condition(code, value)
         If ia(i) = -1 Then pass = 0 : Exit For
       Next i
     Case 12
-      ' Passes if object <number> is not available; i.e. not carried or in the current room.
+      ' Passes if object <value> is not available;
+      ' i.e. not carried or in the current room.
       pass = (ia(value) <> -1) And (ia(value) <> r)
     Case 13
       ' Passes if object <value> is not in the store room (0)
@@ -447,20 +447,20 @@ Function evaluate_condition(code, value)
       ' Passes if object <value> is in the store room (0)
       pass = (ia(value) = 0)
     Case 15
-      ' Passes if counter <= the number - Bill
-      pass = counter <= value
+      ' Passes if counter <= the value.
+      pass = (counter <= value)
     Case 16
-      ' Passes if counter > the number - Bill
-      pass = counter > value
+      ' Passes if counter > the value.
+      pass = (counter > value)
     Case 17
-      ' Passes if the numbered object is is the room it started in - Bill
-      pass = ia(value) = i2(value)
+      ' Passes if the numbered object is is the room it started in.
+      pass = (ia(value) = i2(value))
     Case 18
-      ' Passes if the numbered object is not in the room it started in - Bill
-      pass = ia(value) <> i2(value)
+      ' Passes if the numbered object is not in the room it started in.
+      pass = (ia(value) <> i2(value))
     Case 19
-      ' Passes if the counter is equal to the number - Bill
-      pass = counter = value
+      ' Passes if the counter is equal to the value.
+      pass = (counter = value)
     Case Else
       Error "Unknown condition: " + Str$(code)
   End Select
@@ -537,7 +537,8 @@ Sub do_command(a, cmd, nstr$)
       sf = sf Or 1 << p
 
   ' Case 59
-      ' x->RM0 See CMD 55
+      ' x->RM
+      ' This command also moves the Par #1 object to room 0 (the storeroom), like command 55.
 
     Case 60
       ' CLRz
@@ -644,56 +645,66 @@ Sub do_command(a, cmd, nstr$)
       ia(y) = p
 
     Case 73
-      ' CONT - Bill
-      ' This command sets a flag to allow more than four commands to be executed
-      ' When an action entry with a non-zero verb or noun is encountered,
-      ' the continue flag is cleared
+      ' CONT
+      ' This command sets a flag to allow more than four commands to be executed. When all the
+      ' commands in this action entry have been performed, the commands in the next action entry
+      ' will also be executed if the verb and noun are both zero. The condition fields of the new
+      ' action entry will contain the parameters for the commands in the new action entry. When an
+      ' action entry with a non-zero verb or noun is encountered, the continue flag is cleared.
       continue_flag = 1
 
     Case 74
-      ' AGETx - Bill
-      ' Pick up the Par #1 object even if it exceeds the limit (mx).
-      ' The object may be in this room, or in any other room.
+      ' AGETx
+      ' Always pick up the Par #1 object, even if that would cause the carry limit to be exceeded.
+      ' Otherwise, this is like command 52, GETx.
       p = get_parameter(a)
       ia(p) = -1
 
     Case 75
-      ' - Bill - it doesn't seem necessary that this command should display the room
-      ' Put the Par #1 object in the same place as the Par #2 object.
-      ' If the Par #2 object is being carried, this will pick up the
-      ' Par #1 object too, regardless of the carry limit.
-      ' If this changes the objects in the current room, the room will be displayed again.
-      x = get_parameter(a)   ' x = object 1
-      y = get_parameter(a)   ' y = object 2
+      ' BYx<-x
+      ' Put the Par #1 object in the same place as the Par #2 object. If the Par #2 object is being
+      ' carried, this will pick up the Par #1 object too, regardless of the carry limit.
+      ' TODO: Is it necessary to explicitly display the room again if this changes the objects in
+      '       the current room, or should that have been explicitly encoded in the action list?
+      x = get_parameter(a) ' x = object 1
+      y = get_parameter(a) ' y = object 2
       ia(x) = ia(y)
 
   '  Case 76
-      ' DspRM -- This is a direct copy of Command 64 - Bill
+      ' DspRM
+      ' This displays the current room, just like command 64.
 
     Case 77
-      ' CT-1 -- This subtracts 1 from the counter - Bill
+      ' CT-1
+      ' This subtracts 1 from the counter value.
       counter = counter - 1
 
     Case 78
-      ' DspCT -- This displays the counter value - Bill
+      ' DspCT
+      ' This displays the current value of the counter.
       con.print(" " + Str$(counter) + " ")
 
     Case 79
-      ' CT<-n -- This sets the counter to the Par #1 value - Bill
+      ' CT<-n
+      ' This sets the counter to the Par #1 value.
       p = get_parameter(a)
       counter = p
 
     Case 80
-      ' - Bill
-      ' This exchanges the values of the current room register with the alt room register 0.
-      ' This should be followed by a GOTOy command if the alt room register 0 had not already been set.
+      ' EXRM0
+      ' This exchanges the values of the current room register with the alternate room register 0.
+      ' This may be used to save the room a player came from in order to put him back there later.
+      ' This should be followed by a GOTOy command if the alternate room register 0 had not already
+      ' been set.
       x = r
       r = alt_room(0)
       alt_room(0) = x
 
     Case 81
-      ' EXm,CT -- Exchanges the values of counter and the Par #1 alt_counter - Bill
-      ' The TIME LIMIT (or light level) may be accessed as alternate counter 8
+      ' EXm,CT
+      ' This command exchanges the values of the counter and the Par #1 alternate counter. There
+      ' are eight alternate counters numbered from 0 to 7. Also, the time limit may be accessed as
+      ' alternate counter 8.
       p = get_parameter(a)
       x = counter
       Select Case p
@@ -704,49 +715,53 @@ Sub do_command(a, cmd, nstr$)
           counter = lx
           lx = x
         Case Else
-          Error "illegal Counter: " + Str$(p)
+          Error "illegal counter: " + Str$(p)
       End Select
 
     Case 82
-      ' CT+n -- This adds the Par #1 value to the counter - Bill
+      ' CT+n
+      ' This adds the Par #1 value to the counter.
       p = get_parameter(a)
       counter = counter + p
 
     Case 83
-      ' CT-n -- This subtracts the Par #1 value from the counter - Bill
+      ' CT-n
+      ' This subtracts the Par #1 value from the counter.
       p = get_parameter(a)
       counter = counter - p
 
     Case 84
-      ' SAYw - Bill
-      ' This says the noun (second word) input by the player
+      ' SAYw
+      ' This says the noun (second word) input by the player.
       con.print(Chr$(34) + nstr$ + Chr$(34))
 
     Case 85
-      ' SAYwCR - Bill
-      ' This says the noun (second word) input by the player and starts a new line
+      ' SAYwCR
+      ' This says the noun (second word) input by the player and starts a new line.
       con.println(Chr$(34) + nstr$ + Chr$(34))
 
     Case 86
-      ' SAYCR This just starts a new line - Bill
-      con.println("")
+      ' SAYCR
+      ' This just starts a new line on the display.
+      con.println()
 
     Case 87
-      ' - Bill
-      ' This exchanges the values of the current room register with the Par #1 alt room register.
+      ' EXc,CR
+      ' This exchanges the values of the current room register with the Par #1 alternate room
+      ' register. This may be used to remember more than one room. There are six alternate room
+      ' registers numbered from 0 to 5.
       p = get_parameter(a)
       x = r
       r = alt_room(p)
       alt_room(p) = x
-      Print "***** CMD 87 just executed *****"
 
     Case 88
-      ' DELAY - Bill
-      ' Delay for approximately 1 second
+      ' DELAY
+      ' This command delays about 1 second before going on to the next command.
       Pause 1000
 
     Case 102 To 149
-      ' Display corresponding message.
+      ' Display messages 52-99.
       If debug Then con.print("[" + Str$(cmd - 50) + "] ")
       con.println(ms$(cmd - 50))
 

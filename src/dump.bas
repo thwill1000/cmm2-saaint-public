@@ -1,6 +1,7 @@
-' Copyright (c) 2020 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
-' Added Commands 73, 74, 76, 85 Bill
+' Write human-readable dump of adventure data files in ScottFree format.
+' For Colour Maximite 2, MMBasic 5.06
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Developed with the assistance of Bill McKinley
 
 Option Explicit On
 Option Default Integer
@@ -24,9 +25,6 @@ Sub main()
   dump(fd)
   Close #fd
 End Sub
-
-' Copyright (c) 2020 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
 
 Sub dump(fd)
   Print #fd, "Max object index:       " Str$(il)
@@ -127,7 +125,7 @@ Function get_cond$(code, num)
     Case 17 : s$ = "ORIG"
     Case 18 : s$ = "-ORIG"
     Case 19 : s$ = "CT="
-    Case Else : s$ = "Huh?"
+    Case Else : s$ = "<Unknown: " + Str$(code) + ">"
   End Select
   get_cond$ = s$ + " " + Str$(num)
 End Function
@@ -166,7 +164,7 @@ Function get_cmd$(c)
     Case 70 : s$ = "CLS"
     Case 71 : s$ = "SAVEz"
     Case 72 : s$ = "EXx,x"
-    Case 73 : s$ = "CONT" ' Added from here to 88 (I think) - Bill
+    Case 73 : s$ = "CONT"
     Case 74 : s$ = "AGETx"
     Case 75 : s$ = "BYx<-x"
     Case 76 : s$ = "DspRM"
@@ -183,7 +181,7 @@ Function get_cmd$(c)
     Case 87 : s$ = "EXc,CR"
     Case 88 : s$ = "DELAY"
     Case 102 To 149 : s$ = "MSG:" + Str$(c - 50)
-    Case Else : s$ = "<" + Str$(c) + ">" '"Huh?" - Bill
+    Case Else : s$ = "<Unknown: " + Str$(c) + ">"
   End Select
   get_cmd$ = s$
 End Function

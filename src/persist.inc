@@ -1,5 +1,7 @@
-' Copyright (c) 2019-20 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' Implementation of Save/Restore and Record/Replay for SAAINT
+' For Colour Maximite 2, MMBasic 5.06
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Developed with the assistance of Bill McKinley
 
 Const SAVE_DIR$   = FIL.PROG_DIR$ + "/saves"
 Const SCRIPT_DIR$ = FIL.PROG_DIR$ + "/scripts"
@@ -33,19 +35,19 @@ Function do_save()
 
   ' Write file header
   Print #1, "SAINT save file"
-  Print #1, "2"
+  Print #1, "2"                                          ' file format version
   Print #1, Date$ + " " + Time$
   Print #1, s$
 
   ' Write state
-  Print #1, "&b" Bin$(sf, 32) ' status flags
-  Print #1, Str$(df)          ' dark flag
-  Print #1, Str$(r)           ' current room
-  Print #1, Str$(lx)          ' light duration
-  For i = 0 To il : Print #1, Str$(ia(i)) : Next i ' object locations
-  Print #1, Str$(counter)     ' counter - Bill
-  For i = 0 To 7 : Print #1, Str$(alt_counter(i)) : Next i ' alternate counters
-  For i = 0 To 5 : Print #1, Str$(alt_room(i)) : Next i ' alternate rooms
+  Print #1, "&b" Bin$(sf, 32)                            ' status flags
+  Print #1, Str$(df)                                     ' dark flag
+  Print #1, Str$(r)                                      ' current room
+  Print #1, Str$(lx)                                     ' light duration
+  For i = 0 To il : Print #1, Str$(ia(i)) : Next         ' object locations
+  Print #1, Str$(counter)                                ' counter
+  For i = 0 To 7 : Print #1, Str$(alt_counter(i)) : Next ' alternate counters
+  For i = 0 To 5 : Print #1, Str$(alt_room(i)) : Next    ' alternate rooms
 
   Close #1
 
@@ -97,10 +99,10 @@ Function do_restore()
     df = values(1)
     r  = values(2)
     lx = values(3)
-    For i = 4 To il + 4 : ia(i - 4) = values(i) : Next i
-    counter = values(il + 5)  ' added counters and alt_rooms - Bill
-    For i = il + 6 To il + 13 : alt_counter(i - il - 6) = values(i) : Next i
-    For i = il + 14 To il + 19 : alt_room(i - il - 14) = values(i) : Next i
+    For i = 4 To il + 4 : ia(i - 4) = values(i) : Next
+    counter = values(il + 5)
+    For i = il + 6 To il + 13 : alt_counter(i - il - 6) = values(i) : Next
+    For i = il + 14 To il + 19 : alt_room(i - il - 14) = values(i) : Next
 
     do_restore = 1
   Else

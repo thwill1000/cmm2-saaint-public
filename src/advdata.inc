@@ -1,8 +1,8 @@
-' Scott Adams Adventure Game Interpreter for Colour Maximite 2
-' Original TRS-80 Level II BASIC code (c) Scott Adams 1978
-' MMBasic port for CMM2 by Thomas Hugo Williams 2020
-' Modified to suit some found .dat files. Bill McKinley
-' Each item of data is on a separate line so each one needs its own INPUT statement
+' Read adventure data files in ScottFree format.
+' For Colour Maximite 2, MMBasic 5.06
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Developed with the assistance of Bill McKinley
+' Based on original TRS-80 Level II BASIC code (c) 1978 Scott Adams
 
 Dim il ' Highest numbered object 0..il
 Dim cl ' Highest action number 0..cl
@@ -52,8 +52,7 @@ Sub adv.read(f$)
     Next j
   Next i
 
-  ' Read vocabulary table -Bill
-  ' Revised because not all files have the vocab list in multiples of 2
+  ' Read vocabulary table.
   For i = 0 To nl
     For j = 0 To 1
       Input #1, nv_str$(i, j)
@@ -68,8 +67,9 @@ Sub adv.read(f$)
     Input #1, rm(i, 3)
     Input #1, rm(i, 4)
     Input #1, rm(i, 5)
-    ' Room descriptions sometimes span multiple lines
-    ' Need to remove leading and trailing quotes
+
+    ' Room descriptions sometimes span multiple lines.
+    ' Need to remove leading and trailing quotes.
     Line Input #1, rs$(i)
     If Left$(rs$(i), 1) = Chr$(34) Then rs$(i) = Right$(rs$(i), Len(rs$(i)) - 1)
     If Right$(rs$(i), 1) = Chr$(34) Then
@@ -95,8 +95,8 @@ Sub adv.read(f$)
     EndIf
   Next i
 
-  ' Read messages and trim off any leading and trailing quotes
-  ' some messages are spanning multiple lines so need to concatenate them
+  ' Read messages and trim off any leading and trailing quotes.
+  ' Some messages span multiple lines in the .dat file and need to be concatenated.
   flag = 0
   For i = 0 To ml : Line Input #1, ms$(i)
     If Left$(ms$(i), 1) = Chr$(34) Then ms$(i) = Right$(ms$(i), Len(ms$(i)) - 1)
@@ -136,7 +136,7 @@ Sub adv.read(f$)
     EndIf
   Next i
 
-  ' Read objects, remove quotes and separate the location
+  ' Read objects, remove quotes and separate the location.
   For i = 0 To il
     Line Input #1, ia_str$(i)
     temp = ia_str$(i)
@@ -161,12 +161,12 @@ Sub adv.read(f$)
       EndIf
     Next j
 
-    If Left$(temp1, 1) = Chr$(34) Then temp1 = Right$(temp1, Len(temp1) - 1) :
-    If Right$(temp1, 1) = Chr$(34) Then temp1 = Left$(temp1, Len(temp1) - 1) :
+    If Left$(temp1, 1) = Chr$(34) Then temp1 = Right$(temp1, Len(temp1) - 1)
+    If Right$(temp1, 1) = Chr$(34) Then temp1 = Left$(temp1, Len(temp1) - 1)
     If temp1 = " " Then temp1 = ""
     ia_str$(i) = temp1
     ia(i) = Val(temp2)
-    If ia(i) = 255 Then ia(i) = -1 ' Some files use 255 as -1 - Bill
+    If ia(i) = 255 Then ia(i) = -1 ' Some files use 255 as -1
     i2(i) = ia(i)
   Next i
 
