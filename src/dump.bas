@@ -6,8 +6,12 @@
 Option Explicit On
 Option Default Integer
 
+#Include "splib/system.inc"
+#Include "splib/array.inc"
+#Include "splib/list.inc"
+#Include "splib/string.inc"
+#Include "splib/file.inc"
 #Include "advent.inc"
-#Include "strings.inc"
 
 main()
 End

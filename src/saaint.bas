@@ -7,12 +7,14 @@
 Option Explicit On
 Option Default Integer
 
+#Include "splib/system.inc"
+#Include "splib/array.inc"
+#Include "splib/list.inc"
+#Include "splib/string.inc"
+#Include "splib/file.inc"
 #Include "advent.inc"
 #Include "console.inc"
-#Include "file.inc"
 #Include "persist.inc"
-#Include "strings.inc"
-#Include "util.inc"
 
 con.HEIGHT = 33
 con.WIDTH  = 80
@@ -269,7 +271,7 @@ Sub do_automatic_actions()
     ' If the CONTinue flag is not set then 'noun' is the probability of the
     ' action occurring.
     If Not continue_flag Then
-      If pseudo%(100) > an Then Continue For ' Did not occur, try the next action.
+      If sys.pseudo%(100) > an Then Continue For ' Did not occur, try the next action.
     EndIf
 
     If Not process_conditions(a) Then Continue For ' Conditions not passed, try the next action.
@@ -805,7 +807,7 @@ Sub prompt_for_command(verb, noun, nstr$)
       Case VERB_DUMP_STATE : print_state()
       Case VERB_DEBUG_ON   : con.println("OK.") : debug = 1
       Case VERB_DEBUG_OFF  : con.println("OK.") : debug = 0
-      Case VERB_FIXED_SEED : con.println("OK.") : _ = pseudo%(-7)
+      Case VERB_FIXED_SEED : con.println("OK.") : _ = sys.pseudo%(-7)
       Case Else            : Exit Do ' Handle 'verb' in calling code.
     End Select
 
@@ -838,11 +840,10 @@ Sub print_state()
 End Sub
 
 Sub parse(s$, verb, noun, nstr$)
-  Local tmp$ = s$
   Local vstr$
 
-  vstr$ = LCase$(str.next_token$(tmp$))
-  nstr$ = LCase$(str.next_token$(tmp$))
+  vstr$ = LCase$(str.next_token$(s$, " ", 1))
+  nstr$ = LCase$(str.next_token$())
 
   ' Handle empty input.
   If vstr$ = "" Then verb = VERB_NONE : Exit Sub
@@ -851,7 +852,7 @@ Sub parse(s$, verb, noun, nstr$)
   If Left$(vstr$, 1) = "#" Then verb = VERB_NONE : Exit Sub
 
   ' Reject commands of more than two words.
-  If str.next_token$(tmp$) <> "" Then verb = VERB_TOO_MANY : Exit Sub
+  If str.next_token$() <> sys.NO_DATA$ Then verb = VERB_TOO_MANY : Exit Sub
 
   verb = lookup_meta_command(vstr$, nstr$)
   If verb <> 0 Then Exit Sub

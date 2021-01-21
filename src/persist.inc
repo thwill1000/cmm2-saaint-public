@@ -3,8 +3,14 @@
 ' Copyright (c) 2020-2021 Thomas Hugo Williams
 ' Developed with the assistance of Bill McKinley
 
-Const SAVE_DIR$   = FIL.PROG_DIR$ + "/saves"
-Const SCRIPT_DIR$ = FIL.PROG_DIR$ + "/scripts"
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("file")
+sys.provides("persist")
+If sys.err$ <> "" Then Error sys.err$
+
+Const SAVE_DIR$   = fil.PROG_DIR$ + "/saves"
+Const SCRIPT_DIR$ = fil.PROG_DIR$ + "/scripts"
 
 ' Saves the current game state to a file.
 ' @return 1 on success, otherwise 0.

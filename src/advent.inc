@@ -4,6 +4,12 @@
 ' Developed with the assistance of Bill McKinley
 ' Based on original TRS-80 Level II BASIC code (c) 1978 Scott Adams
 
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("file", "string")
+sys.provides("advent")
+If sys.err$ <> "" Then Error sys.err$
+
 Dim il ' Highest numbered object 0..il
 Dim cl ' Highest action number 0..cl
 Dim nl ' Highest vocabulary number 0..nl
@@ -18,7 +24,6 @@ Dim tr ' Treasure room
 
 Dim As String temp, temp1, temp2, temp3
 Dim flag As Integer
-Dim crlf$ = Chr$(10) + Chr$(13)
 
 Sub advent.read(f$)
   Open f$ For Input As 1
@@ -77,12 +82,12 @@ Sub advent.read(f$)
     Else
       temp = rs$(i)
       Line Input #1, rs$(i)
-      temp = temp + crlf$ + rs$(i)
+      temp = temp + sys.CRLF$ + rs$(i)
       If Right$(temp, 1) = Chr$(34) Then
         temp = Left$(temp, Len(temp) - 1) ' strip off the leading quote
       Else
         Line Input #1, rs$(i)
-        temp = temp + crlf$ + rs$(i) ' concatenate the next line
+        temp = temp + sys.CRLF$ + rs$(i) ' concatenate the next line
         If Right$(temp, 1) = Chr$(34) Then
           temp = Left$(temp, Len(temp) - 1) ' sttip off the trailing quote
         Else
@@ -106,7 +111,7 @@ Sub advent.read(f$)
       temp = ms$(i)
       Line Input #1, ms$(i)
       If temp = "" Then ' some lines just contain a quote
-        temp = temp + crlf$ + ms$(i)
+        temp = temp + sys.CRLF$ + ms$(i)
       Else
         temp = temp + ms$(i)
       EndIf
@@ -114,14 +119,14 @@ Sub advent.read(f$)
         temp = Left$(temp, Len(temp) - 1)
       Else
         Line Input #1, ms$(i)
-        temp = temp + crlf$ + ms$(i)
+        temp = temp + sys.CRLF$ + ms$(i)
         If Right$(temp, 1) = Chr$(34) Then
           temp = Left$(temp, Len(temp) - 1)
         Else
           j = 0
           Do
             Line Input #1, ms$(i)
-            temp = temp + crlf$ + ms$(i)
+            temp = temp + sys.CRLF$ + ms$(i)
             If Right$(temp, 1) = Chr$(34) Then
               temp = Left$(temp, Len(temp) - 1)
               flag = 1
