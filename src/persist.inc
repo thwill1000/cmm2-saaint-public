@@ -9,8 +9,8 @@ sys.requires("file")
 sys.provides("persist")
 If sys.err$ <> "" Then Error sys.err$
 
-Const SAVE_DIR$   = fil.PROG_DIR$ + "/saves"
-Const SCRIPT_DIR$ = fil.PROG_DIR$ + "/scripts"
+Const SAVE_DIR$   = fil.PROG_DIR$ + "/../saves"
+Const SCRIPT_DIR$ = fil.PROG_DIR$ + "/../scripts"
 
 ' Saves the current game state to a file.
 ' @return 1 on success, otherwise 0.
@@ -40,8 +40,8 @@ Function do_save()
   Open f$ For Output As #1
 
   ' Write file header
-  Print #1, "SAINT save file"
-  Print #1, "2"                                          ' file format version
+  Print #1, "SAAINT save file"
+  Print #1, "2" ' file format version
   Print #1, Date$ + " " + Time$
   Print #1, s$
 
@@ -63,7 +63,8 @@ End Function
 ' Gets the path to the file corresponding to saved game slot 'i'.
 Function save_file$(i)
   If i < 1 Or i > 10 Then Error "Invalid saved game number"
-  save_file$ = SAVE_DIR$ + "/" + Left$(STORY$, 5) + "_" + Str$(i) + ".sav"
+  Local name$ = fil.trim_extension$(fil.get_name$(advent.file$))
+  save_file$ = SAVE_DIR$ + "/" + name$ + "_" + Str$(i) + ".sav"
 End Function
 
 ' Restores game state from a file.
@@ -212,7 +213,8 @@ End Function
 ' Gets the path to the file corresponding to script slot 'i'.
 Function script_file$(i)
   If i < 1 Or i > 10 Then Error "Invalid script number"
-  script_file$ = SCRIPT_DIR$ + "/" + Left$(STORY$, 5) + "_" + Str$(i) + ".scr"
+  Local name$ = fil.trim_extension$(fil.get_name$(advent.file$))
+  script_file$ = SCRIPT_DIR$ + "/" + name$ + "_" + Str$(i) + ".scr"
 End Function
 
 Sub record_off()

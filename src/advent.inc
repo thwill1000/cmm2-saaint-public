@@ -10,6 +10,11 @@ sys.requires("file", "string")
 sys.provides("advent")
 If sys.err$ <> "" Then Error sys.err$
 
+Const advent.DIR$ = fil.PROG_DIR$ + "/../adventures"
+Const advent.FD% = 1
+
+Dim advent.file$
+
 Dim il ' Highest numbered object 0..il
 Dim cl ' Highest action number 0..cl
 Dim nl ' Highest vocabulary number 0..nl
@@ -22,23 +27,69 @@ Dim lt ' Time limit
 Dim ml ' Highest message number
 Dim tr ' Treasure room
 
-Dim As String temp, temp1, temp2, temp3
-Dim flag As Integer
+Dim advent.buf$
+Dim advent.buf_ptr%
+
+Function advent.find$()
+  Local f$ = Choice(Mm.CmdLine$ = "", "adv01", Mm.CmdLine$)
+
+  f$ = str.unquote$(str.trim$(f$))
+  If LCase$(fil.get_extension$(f$)) <> ".dat" Then Cat f$, ".dat"
+
+  ' Is f$ just a simple absolute or relative path to the file ?
+  If fil.exists%(f$) Then
+    ' Do nothing.
+
+  ' Is f$ a path relative to advent.DIR$ ?
+  ElseIf fil.exists%(advent.DIR$ + "/" + f$) Then
+    f$ = advent.DIR$ +  "/" + f$
+
+  ' Is f$ a path relative to a sub-directory of advent.DIR$ ?
+  Else
+    Local num_dirs% = fil.count_files%(advent.DIR$, "*", "Dir")
+    Local all_dirs$(num_dirs% - 1) Length 128
+    fil.get_files(advent.DIR$, "*", "Dir", all_dirs$())
+    Local i%
+    For i% = 0 To num_dirs% - 1
+      If fil.exists%(advent.DIR$ + "/" + all_dirs$(i%) + "/" + f$) Then
+        f$ = advent.DIR$ + "/" + all_dirs$(i%) + "/" + f$
+        Exit For
+      EndIf
+    Next
+  EndIf
+
+  If Not fil.exists%(f$) Then Error "File not found: " + f$
+
+  advent.find$ = f$
+End Function
 
 Sub advent.read(f$)
-  Open f$ For Input As 1
-  Input #1, il ' read the first bit of data and disregard it.
-  Input #1, il
-  Input #1, cl
-  Input #1, nl
-  Input #1, rl
-  Input #1, mx
-  Input #1, ar
-  Input #1, tt
-  Input #1, ln
-  Input #1, lt
-  Input #1, ml
-  Input #1, tr
+  advent.file$ = f$
+  Open advent.file$ For Input As advent.FD%
+  advent.buf$ = ""
+  advent.buf_ptr% = 1
+  advent.read_header()
+  advent.read_action_table()
+  advent.read_vocab_table()
+  advent.read_rooms()
+  advent.read_messages()
+  advent.read_objects()
+  Close #1
+End Sub
+
+Sub advent.read_header()
+  il = advent.read_int%() ' we disregard the first integer
+  il = advent.read_int%()
+  cl = advent.read_int%()
+  nl = advent.read_int%()
+  rl = advent.read_int%()
+  mx = advent.read_int%()
+  ar = advent.read_int%()
+  tt = advent.read_int%()
+  ln = advent.read_int%()
+  lt = advent.read_int%()
+  ml = advent.read_int%()
+  tr = advent.read_int%()
 
   Dim ca(cl, 7)      ' action table
   Dim nv_str$(nl, 1) ' vocabulary table - verbs at index 0, nouns at index 1
@@ -48,132 +99,131 @@ Sub advent.read(f$)
   Dim rs$(rl)        ' room descriptions
   Dim rm(rl, 5)      ' room exits: N, S, E, W, U, D
   Dim ms$(ml)        ' messages table
+End Sub
 
+Function advent.read_int%()
+  Local ch%, s$
+
+  ' Look for opening minus-sign or digit.
+  Do
+    ch% = advent.peek_char%()
+    Select Case ch%
+      Case 10, 13, 32
+        Inc advent.buf_ptr%
+      Case 45 ' minus sign
+        s$ = "-"
+        Inc advent.buf_ptr%
+        Exit Do
+      Case 48 To 57 ' digits
+        Exit Do
+      Case Else
+        Error "looking for integer, found: " + Chr$(ch$)
+    End Select
+  Loop
+
+  ' Accumulate digits.
+  Do
+    ch% = advent.peek_char%()
+    Inc advent.buf_ptr%
+    Select Case ch%
+      Case 48 To 57 : Cat s$, Chr$(ch%)
+      Case Else     : Exit Do
+    End Select
+  Loop
+
+  advent.read_int% = Val(s$)
+End Function
+
+Function advent.peek_char%()
+  If advent.buf_ptr% > Len(advent.buf$) Then
+    advent.buf_ptr% = 1
+    advent.buf$ = Input$(255, #advent.FD%)
+  EndIf
+  advent.peek_char% = Peek(Var advent.buf$, advent.buf_ptr%)
+End Function
+
+' Reads a quoted string that might be spread over several lines.
+Function advent.read_string$()
+  Local ch%, s$
+
+  ' Look for opening quote.
+  Do
+    ch% = advent.peek_char%()
+    Select Case ch%
+      Case 10, 13, 32 ' line-feed, carriage-return and space
+        Inc advent.buf_ptr%
+      Case 34 ' double quotation mark
+        Inc advent.buf_ptr%
+        Exit Do
+      Case Else
+        Error "looking for opening-quote, found: " + Chr$(ch%)
+    End Select
+  Loop
+
+  ' Accumulate string until find closing quote.
+  Do
+    ch% = advent.peek_char%()
+    Inc advent.buf_ptr%
+    Select Case ch%
+      Case 10 ' \n - line feed
+        Cat s$, sys.CRLF$
+      Case 13 ' \r - carriage return
+        If advent.peek_char%() <> 10 Then Cat s$, sys.CRLF$
+      Case 34
+        Exit Do
+      Case Else
+        Cat s$, Chr$(ch%)
+    End Select
+  Loop
+
+  advent.read_string$ = s$
+End Function
+
+Sub advent.read_action_table()
   Local i, j
-  ' Read action table.
   For i = 0 To cl
     For j = 0 To 7
-      Input #1, ca(i, j)
+      ca(i, j) = advent.read_int%()
     Next j
   Next i
+End Sub
 
-  ' Read vocabulary table.
+Sub advent.read_vocab_table()
+  Local i
   For i = 0 To nl
-    For j = 0 To 1
-      Input #1, nv_str$(i, j)
-    Next j
-  Next i
+    nv_str$(i, 0) = advent.read_string$() ' verb
+    nv_str$(i, 1) = advent.read_string$() ' noun
+  Next
+End Sub
 
-  ' Read rooms.
+Sub advent.read_rooms()
+  Local i, j
   For i = 0 To rl
-    Input #1, rm(i, 0)
-    Input #1, rm(i, 1)
-    Input #1, rm(i, 2)
-    Input #1, rm(i, 3)
-    Input #1, rm(i, 4)
-    Input #1, rm(i, 5)
+    For j = 0 To 5
+      rm(i, j) = advent.read_int%()
+    Next
+    rs$(i) = advent.read_string$()
+  Next
+End Sub
 
-    ' Room descriptions sometimes span multiple lines.
-    ' Need to remove leading and trailing quotes.
-    Line Input #1, rs$(i)
-    If Left$(rs$(i), 1) = Chr$(34) Then rs$(i) = Right$(rs$(i), Len(rs$(i)) - 1)
-    If Right$(rs$(i), 1) = Chr$(34) Then
-      rs$(i) = Left$(rs$(i), Len(rs$(i)) - 1)
-    Else
-      temp = rs$(i)
-      Line Input #1, rs$(i)
-      temp = temp + sys.CRLF$ + rs$(i)
-      If Right$(temp, 1) = Chr$(34) Then
-        temp = Left$(temp, Len(temp) - 1) ' strip off the leading quote
-      Else
-        Line Input #1, rs$(i)
-        temp = temp + sys.CRLF$ + rs$(i) ' concatenate the next line
-        If Right$(temp, 1) = Chr$(34) Then
-          temp = Left$(temp, Len(temp) - 1) ' sttip off the trailing quote
-        Else
-          Print "Error reading room data!"
-          Print temp
-          End
-        EndIf
-      EndIf
-      rs$(i) = temp
-    EndIf
-  Next i
+Sub advent.read_messages()
+  Local i
+  For i = 0 To ml
+    ms$(i) = advent.read_string$()
+  Next
+End Sub
 
-  ' Read messages and trim off any leading and trailing quotes.
-  ' Some messages span multiple lines in the .dat file and need to be concatenated.
-  flag = 0
-  For i = 0 To ml : Line Input #1, ms$(i)
-    If Left$(ms$(i), 1) = Chr$(34) Then ms$(i) = Right$(ms$(i), Len(ms$(i)) - 1)
-    If Right$(ms$(i), 1) = Chr$(34) Then
-      ms$(i) = Left$(ms$(i), Len(ms$(i)) - 1)
-    Else
-      temp = ms$(i)
-      Line Input #1, ms$(i)
-      If temp = "" Then ' some lines just contain a quote
-        temp = temp + sys.CRLF$ + ms$(i)
-      Else
-        temp = temp + ms$(i)
-      EndIf
-      If Right$(temp, 1) = Chr$(34) Then
-        temp = Left$(temp, Len(temp) - 1)
-      Else
-        Line Input #1, ms$(i)
-        temp = temp + sys.CRLF$ + ms$(i)
-        If Right$(temp, 1) = Chr$(34) Then
-          temp = Left$(temp, Len(temp) - 1)
-        Else
-          j = 0
-          Do
-            Line Input #1, ms$(i)
-            temp = temp + sys.CRLF$ + ms$(i)
-            If Right$(temp, 1) = Chr$(34) Then
-              temp = Left$(temp, Len(temp) - 1)
-              flag = 1
-            Else
-              j = j + 1
-            EndIf
-          Loop Until flag = 1 Or j = 6
-          If j = 6 Then Print " Error reading messages" : End
-        EndIf
-      EndIf
-      ms$(i) = temp
-    EndIf
-  Next i
-
-  ' Read objects, remove quotes and separate the location.
+Sub advent.read_objects()
+  Local i
   For i = 0 To il
-    Line Input #1, ia_str$(i)
-    temp = ia_str$(i)
-    flag = 0
-    For j = Len(temp) To 2 Step - 1
-      If Mid$(temp, j, 1) = Chr$(34) Then
-        flag = 1
-        Exit For
-      EndIf
-    Next j
-    If flag = 0 Then ' no quote
-      Line Input #1, ia_str$(i)
-      temp = temp + " " + ia_str$(i)
-    EndIf
-
-    For j = Len(temp) - 1 To 1 Step - 1
-      temp3 = Mid$(temp, j, 1)
-      If temp3 = " " Then
-        temp1 = Left$(temp, j - 1)
-        temp2 = Right$(temp, Len(temp) - j)
-        Exit For
-      EndIf
-    Next j
-
-    If Left$(temp1, 1) = Chr$(34) Then temp1 = Right$(temp1, Len(temp1) - 1)
-    If Right$(temp1, 1) = Chr$(34) Then temp1 = Left$(temp1, Len(temp1) - 1)
-    If temp1 = " " Then temp1 = ""
-    ia_str$(i) = temp1
-    ia(i) = Val(temp2)
-    If ia(i) = 255 Then ia(i) = -1 ' Some files use 255 as -1
+    ia_str$(i) = advent.read_string$()
+    ia(i) = advent.read_int%()
     i2(i) = ia(i)
-  Next i
+  Next
+End Sub
 
-  Close #1
+Sub advent.clear()
+  il = 0 : cl = 0 : nl = 0 : rl = 0 : mx = 0 : ar = 0
+  tt = 0 : ln = 0 : lt = 0 : ml = 0 : tr = 0
+  Erase ca, nv_str$, ia_str$, ia, i2, rs$, rm, ms$
 End Sub

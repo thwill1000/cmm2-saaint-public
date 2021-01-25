@@ -39,8 +39,6 @@ Const VERB_DEBUG_ON   = -8
 Const VERB_DEBUG_OFF  = -9
 Const VERB_FIXED_SEED = -10
 
-Const STORY$ = Choice(Mm.CmdLine$ = "", "adv14b", Mm.CmdLine$)
-
 ' These global variables hold the current game state
 Dim lx              ' light duration
 Dim df              ' dark flag
@@ -68,7 +66,8 @@ Pause 2000
 End
 
 Sub main()
-  advent.read(FIL.PROG_DIR$ + "/" + STORY$ + ".dat")
+  Local f$ = advent.find$()
+  advent.read(f$)
 
   Do
     state = STATE_CONTINUE
@@ -82,16 +81,14 @@ Sub main()
   con.close_all()
 End Sub
 
-Sub show_intro(f$)
-  Local i, k$, ftitle$
-
-  ftitle$ = FIL.PROG_DIR$ + "/" + STORY$ + ".tit"
-  If Not fil.exists%(ftitle$) Then ftitle$ = FIL.PROG_DIR + "/default.tit"
+Sub show_intro()
+  Local f$ = fil.trim_extension$(advent.file$) + ".tit"
+  f$ = Choice(fil.exists%(f$), f$, fil.PROG_DIR$ + "/default.tit")
 
   Cls
   con.lines = 0
   Colour Rgb(White)
-  con.print_file(ftitle$, 1)
+  con.print_file(f$, 1)
   Colour Rgb(Green)
   con.println()
   con.println("S  Start a new game           ", 1)
@@ -103,6 +100,7 @@ Sub show_intro(f$)
   con.println("Version 2.0a", 1)
 
   Do While Inkey$ <> "" : Loop
+  Local k$
   Do
     k$ = LCase$(Inkey$)
     Select Case k$
@@ -119,8 +117,8 @@ Sub show_intro(f$)
 End Sub
 
 Sub show_credits()
-  Local f$ = FIL.PROG_DIR$ + "/" + STORY$ + ".cre"
-  If Not fil.exists%(f$) Then f$ = FIL.PROG_DIR + "/default.cre"
+  Local f$ = fil.trim_extension$(advent.file$) + ".cre"
+  f$ = Choice(fil.exists%(f$), f$, fil.PROG_DIR$ + "/default.cre")
 
   Cls
   con.lines = 0
@@ -140,8 +138,8 @@ Sub show_credits()
 End Sub
 
 Sub show_instructions()
-  Local f$ = FIL.PROG_DIR$ + "/" + STORY$ + ".ins"
-  If Not fil.exists%(f$) Then f$ = FIL.PROG_DIR + "/default.ins"
+  Local f$ = fil.trim_extension$(advent.file$) + ".ins"
+  f$ = Choice(fil.exists%(f$), f$, fil.PROG_DIR$ + "/default.ins")
 
   Cls
   con.lines = 0
@@ -843,7 +841,9 @@ Sub parse(s$, verb, noun, nstr$)
   Local vstr$
 
   vstr$ = LCase$(str.next_token$(s$, " ", 1))
+  vstr$ = Choice(vstr$ = sys.NO_DATA$, "", vstr$)
   nstr$ = LCase$(str.next_token$())
+  nstr$ = Choice(nstr$ = sys.NO_DATA$, "", nstr$)
 
   ' Handle empty input.
   If vstr$ = "" Then verb = VERB_NONE : Exit Sub

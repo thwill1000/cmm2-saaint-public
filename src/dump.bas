@@ -17,17 +17,38 @@ main()
 End
 
 Sub main()
-  Local in$ = Mm.CmdLine$ + ".dat"
-  Local out$ = Mm.CmdLine$ + ".dmp"
-  Local fd = 1
+  If str.trim$(Mm.CmdLine$) = "*" Then
+    dump_all()
+  Else
+    dump_file(advent.find$())
+  EndIf
+End Sub
 
-  Cls
+Sub dump_all()
+  Local t% = Timer
+  Local f$ = fil.find$(advent.DIR$, "*.dat", "File")
+  Do While f$ <> ""
+    dump_file(f$)
+    f$ = fil.find$()
+  Loop
+  Print Str$((Timer - t%) / 1000) + " s"
+End Sub
+
+Sub dump_file(in$)
+  Const fd = 1
+  Local out$ = fil.trim_extension$(in$) + ".dmp"
+
+  Print "Reading '" in$ "' ... ";
   advent.read(in$)
+  Print "OK"
+  Print "Writing '" out$ "' ... ";
   Open out$ For Output As #fd
   Print #fd, "Data dump for '" in$ "'"
   Print #fd
   dump(fd)
   Close #fd
+  Print "OK"
+  advent.clear()
 End Sub
 
 Sub dump(fd)
@@ -135,11 +156,23 @@ Function get_cond$(code, num)
 End Function
 
 Function get_verb$(v)
-  get_verb$ = nv_str$(v, 0)
+  If v > Bound(nv_str$(), 1) Then
+    Print
+    Print "  WARNING: unknown verb" v
+    get_verb$ = "<" + Str$(v) + ">"
+  Else
+    get_verb$ = nv_str$(v, 0)
+  EndIf
 End Function
 
 Function get_noun$(n)
-  get_noun$ = nv_str$(n, 1)
+  If n > Bound(nv_str$(), 1) Then
+    Print
+    Print "  WARNING: unknown noun" n
+    get_noun$ = "<" + Str$(n) + ">"
+  Else
+    get_noun$ = nv_str$(n, 1)
+  EndIf
 End Function
 
 Function get_cmd$(c)
