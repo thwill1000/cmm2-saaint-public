@@ -6,7 +6,7 @@
 Option Explicit On
 Option Default Integer
 
-#Include "advdata.inc"
+#Include "advent.inc"
 #Include "strings.inc"
 
 main()
@@ -18,7 +18,7 @@ Sub main()
   Local fd = 1
 
   Cls
-  adv.read(in$)
+  advent.read(in$)
   Open out$ For Output As #fd
   Print #fd, "Data dump for '" in$ "'"
   Print #fd

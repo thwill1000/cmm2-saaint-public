@@ -7,7 +7,7 @@
 Option Explicit On
 Option Default Integer
 
-#Include "advdata.inc"
+#Include "advent.inc"
 #Include "console.inc"
 #Include "file.inc"
 #Include "persist.inc"
@@ -48,7 +48,7 @@ Dim counter         ' main counter
 Dim alt_counter(7)  ' 8 alternate counters
 Dim alt_room(5)     ' 6 alternate room registers
 ' And ia() which contains the current object locations,
-' but is declared by adv.read()
+' but is declared by advent.read()
 
 Dim state
 Dim debug
@@ -66,7 +66,7 @@ Pause 2000
 End
 
 Sub main()
-  adv.read(FIL.PROG_DIR$ + "/" + STORY$ + ".dat")
+  advent.read(FIL.PROG_DIR$ + "/" + STORY$ + ".dat")
 
   Do
     state = STATE_CONTINUE

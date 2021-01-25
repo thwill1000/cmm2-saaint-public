@@ -20,7 +20,7 @@ Dim As String temp, temp1, temp2, temp3
 Dim flag As Integer
 Dim crlf$ = Chr$(10) + Chr$(13)
 
-Sub adv.read(f$)
+Sub advent.read(f$)
   Open f$ For Input As 1
   Input #1, il ' read the first bit of data and disregard it.
   Input #1, il
