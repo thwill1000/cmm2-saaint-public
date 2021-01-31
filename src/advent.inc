@@ -15,6 +15,7 @@ Const advent.FD% = 1
 
 Dim advent.file$
 
+Dim advent.txt_sz% ' Minimum number of bytes required to contain all text (UNUSED)
 Dim il ' Highest numbered object 0..il
 Dim cl ' Highest action number 0..cl
 Dim nl ' Highest vocabulary number 0..nl
@@ -30,9 +31,7 @@ Dim tr ' Treasure room
 Dim advent.buf$
 Dim advent.buf_ptr%
 
-Function advent.find$()
-  Local f$ = Choice(Mm.CmdLine$ = "", "adv01", Mm.CmdLine$)
-
+Function advent.find$(f$)
   f$ = str.unquote$(str.trim$(f$))
   If LCase$(fil.get_extension$(f$)) <> ".dat" Then Cat f$, ".dat"
 
@@ -78,7 +77,7 @@ Sub advent.read(f$)
 End Sub
 
 Sub advent.read_header()
-  il = advent.read_int%() ' we disregard the first integer
+  advent.txt_sz% = advent.read_int%()
   il = advent.read_int%()
   cl = advent.read_int%()
   nl = advent.read_int%()
@@ -117,7 +116,7 @@ Function advent.read_int%()
       Case 48 To 57 ' digits
         Exit Do
       Case Else
-        Error "looking for integer, found: " + Chr$(ch$)
+        Error "looking for integer, found: " + Chr$(ch%)
     End Select
   Loop
 

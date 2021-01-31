@@ -66,7 +66,8 @@ Pause 2000
 End
 
 Sub main()
-  Local f$ = advent.find$()
+  Local f$ = Choice(str.trim$(Mm.CmdLine$) = "", "adv01", Mm.CmdLine$)
+  f$ = advent.find$(f$)
   advent.read(f$)
 
   Do

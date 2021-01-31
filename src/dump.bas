@@ -17,24 +17,45 @@ main()
 End
 
 Sub main()
-  If str.trim$(Mm.CmdLine$) = "*" Then
-    dump_all()
-  Else
-    dump_file(advent.find$())
-  EndIf
+  Local i%, raw%, s$, tokens$(list.new%(10)) Length 128
+  list.init(tokens$())
+
+  s$ = str.unquote$(str.next_token$(Mm.CmdLine$, " ", 1))
+  Do While s$ <> sys.NO_DATA$
+    If list.size%(tokens$()) = list.capacity%(tokens$()) Then
+      Error "too many command-line arguments"
+    EndIf
+    list.add(tokens$(), s$)
+    s$ = str.unquote$(str.next_token$())
+  Loop
+  If list.size%(tokens$()) = 0 Then Error "no file arguments"
+
+  For i% = 0 To list.size%(tokens$()) - 1
+    Select Case LCase$(tokens$(i%))
+      Case "-r", "--raw"
+        If list.size%(tokens$()) = 1 Then Error "no file arguments"
+        raw% = 1
+      Case "*"
+        dump_all(raw%)
+      Case Else
+        dump_file(advent.find$(tokens$(i%)), raw%)
+    End Select
+  Next
 End Sub
 
-Sub dump_all()
+Sub dump_all(raw%)
+  Local count%
   Local t% = Timer
   Local f$ = fil.find$(advent.DIR$, "*.dat", "File")
   Do While f$ <> ""
-    dump_file(f$)
+    Inc count%
+    dump_file(f$, raw%)
     f$ = fil.find$()
   Loop
-  Print Str$((Timer - t%) / 1000) + " s"
+  Print Str$(count%) " files written in " Str$((Timer - t%) / 1000) + " s"
 End Sub
 
-Sub dump_file(in$)
+Sub dump_file(in$, raw%)
   Const fd = 1
   Local out$ = fil.trim_extension$(in$) + ".dmp"
 
@@ -43,15 +64,17 @@ Sub dump_file(in$)
   Print "OK"
   Print "Writing '" out$ "' ... ";
   Open out$ For Output As #fd
-  Print #fd, "Data dump for '" in$ "'"
-  Print #fd
-  dump(fd)
+  If raw% Then dump_raw(fd) Else dump(in$, fd)
   Close #fd
   Print "OK"
   advent.clear()
 End Sub
 
-Sub dump(fd)
+' Dumps adventure data in human-readable format.
+Sub dump(f$, fd)
+  Print #fd, "Data dump for '" f$ "'"
+  Print #fd
+  Print #fd, "Min text size (bytes):  " Str$(advent.txt_sz%)
   Print #fd, "Max object index:       " Str$(il)
   Print #fd, "Max action index:       " Str$(cl)
   Print #fd, "Max vocabulary index:   " Str$(nl)
@@ -295,4 +318,54 @@ Sub dump_objects(fd)
     If s$ = "" Then s$ = "<empty>"
     Print #fd, str.rpad$(Str$(i) + ":", 6) str.rpad$(Str$(ia(i)), 6) s$
   Next i
+End Sub
+
+' Dumps adventure data in raw TRS-80 / ScottFree ".dat" format.
+Sub dump_raw(fd)
+  Local i%, j%
+
+  ' Header
+  Print #fd, Str$(advent.txt_sz%)
+  Print #fd, Str$(il)
+  Print #fd, Str$(cl)
+  Print #fd, Str$(nl)
+  Print #fd, Str$(rl)
+  Print #fd, Str$(mx)
+  Print #fd, Str$(ar)
+  Print #fd, Str$(tt)
+  Print #fd, Str$(ln)
+  Print #fd, Str$(lt)
+  Print #fd, Str$(ml)
+  Print #fd, Str$(tr)
+
+  ' Action table
+  For i% = 0 To cl
+    For j% = 0 To 7
+      Print #fd, Str$(ca(i%, j%))
+    Next j%
+  Next i%
+
+  ' Vocabulary
+  For i% = 0 To nl
+    Print #fd, str.quote$(nv_str$(i%, 0))
+    Print #fd, str.quote$(nv_str$(i%, 1))
+  Next
+
+  ' Rooms
+  For i% = 0 To rl
+    For j% = 0 To 5
+      Print #fd, Str$(rm(i%, j%))
+    Next j%
+    Print #fd, str.quote$(rs$(i%))
+  Next i%
+
+  ' Messages
+  For i% = 0 To ml
+    Print #fd, str.quote$(ms$(i%))
+  Next
+
+  ' Objects
+  For i% = 0 To il
+    Print #fd, str.quote$(ia_str$(i%)) " " Str$(i2(i%))
+  Next
 End Sub
