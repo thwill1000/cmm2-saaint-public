@@ -67,7 +67,7 @@ Sub dump_file(in$, raw%)
   If raw% Then dump_raw(fd) Else dump(in$, fd)
   Close #fd
   Print "OK"
-  advent.clear()
+  advent.free()
 End Sub
 
 ' Dumps adventure data in human-readable format.

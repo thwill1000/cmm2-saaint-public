@@ -11,9 +11,16 @@ sys.provides("advent")
 If sys.err$ <> "" Then Error sys.err$
 
 Const advent.DIR$ = fil.PROG_DIR$ + "/../adventures"
-Const advent.FD% = 1
+Const advent.FD_IN% = 1
+Const advent.FD_OUT% = 2
 
-Dim advent.file$
+Dim advent.file$              ' Data file for the current adventure
+Dim advent.name$              ' Name of the current adventure
+Dim advent.title_file$        ' File containing current adventure title card, empty if none
+Dim advent.credits_file$      ' File containing current adventure credits, empty if none
+Dim advent.instructions_file$ ' File containing current adventure instructions, empty if none
+Dim advent.buf$               ' 255 char buffer for reading adventure files
+Dim advent.buf_ptr%           ' Current position within the buffer
 
 Dim advent.txt_sz% ' Minimum number of bytes required to contain all text (UNUSED)
 Dim il ' Highest numbered object 0..il
@@ -27,9 +34,6 @@ Dim ln ' Word length
 Dim lt ' Time limit
 Dim ml ' Highest message number
 Dim tr ' Treasure room
-
-Dim advent.buf$
-Dim advent.buf_ptr%
 
 Function advent.find$(f$)
   f$ = str.unquote$(str.trim$(f$))
@@ -62,9 +66,91 @@ Function advent.find$(f$)
   advent.find$ = f$
 End Function
 
+' Gets a map of (adventure name -> filename) for all the adventures in the
+' "adventures/" directory.
+Sub advent.get_all(m$())
+  Local dirs$(list.new%(10)) Length 64
+  list.init(dirs$())
+  list.add(dirs$(), ".")
+  Local f$ = Dir$(advent.DIR$ + "/*", Dir)
+  Do While (f$ <> "") And (list.size%(dirs$()) <= list.capacity%(dirs$()))
+    ' TODO: Add list.is_full%()
+    ' What does list do if you add when full ?
+    If list.size%(dirs$()) = list.capacity%(dirs$()) Then Exit Do
+    list.add(dirs$(), f$)
+    f$ = Dir$()
+  Loop
+
+  Local i%, lb% = 0, ub% = list.size%(dirs$()) - 1
+  Local name$
+  Local d$
+  For i% = lb% To ub%
+    d$ = advent.DIR$ + "/" + dirs$(i%) + "/"
+    f$ = Dir$(d$ + "*.dat")
+    Do While f$ <> ""
+      ' TODO: Add map.is_full%()
+      If map.size%(m$()) = map.capacity%(m$()) Then Exit Do
+      name$ = fil.trim_extension$(f$)
+      If fil.exists%(d$ + name$ + ".ext") Then
+        Open d$ + name$ + ".ext" For Input As advent.FD_IN%
+        Line Input #advent.FD_IN%, name$
+        Close advent.FD_IN%
+      Else
+        name$ = UCase$(Left$(name$, 1)) + Mid$(name$, 2)
+      EndIf
+      map.put(m$(), name$, f$)
+      f$ = Dir$()
+    Loop
+  Next
+End Sub
+
+' Reads name and description from ".ext" file.
+' Reports ERROR if encounters line > 255 characters.
+Sub advent.read_description(f$, out%())
+  If Not fil.exists%(f$) Then
+    LongString Append out%(), "No description provided."
+    Exit Sub
+  EndIf
+
+  Local remaining% = (Bound(out%(), 1) - Bound(out%(), 0)) * 8
+  Local s$
+  Open f$ For Input As advent.FD_IN%
+  Do While Not Eof(advent.FD_IN%) And remaining% > 0
+    Line Input #advent.FD_IN%, s$
+    If advent.find_section_header$(s$) <> "" Then Exit Do
+    LongString Append out%(), Left$(s$, Min(Len(s$), remaining% - 2))
+    LongString Append out%(), sys.CRLF$
+    Inc remaining%, -(Len(s$) + 2)
+  Loop
+  Close advent.FD_IN%
+End Sub
+
+Function advent.find_section_header$(s$)
+  If Not InStr(s$, "##") Then Exit Function
+  Local us$ = UCase$(s$)
+  If InStr(us$, "##TITLE##") Then
+    us$ = "##TITLE##"
+  ElseIf InStr(us$, "##CREDITS##") Then
+    us$ = "##CREDITS##"
+  ElseIf InStr(us$, "##INSTRUCTIONS##") Then
+    us$ = "##INSTRUCTIONS##"
+  Else
+    us$ = ""
+  EndIf
+  advent.find_section_header$ = us$
+End Function
+
 Sub advent.read(f$)
+  advent.free()
   advent.file$ = f$
-  Open advent.file$ For Input As advent.FD%
+  advent.name$ = f$
+  advent.read_dat()
+  advent.read_ext()
+End Sub
+
+' Reads the '.dat' file.
+Sub advent.read_dat()
+  Open advent.file$ For Input As advent.FD_IN%
   advent.buf$ = ""
   advent.buf_ptr% = 1
   advent.read_header()
@@ -73,7 +159,7 @@ Sub advent.read(f$)
   advent.read_rooms()
   advent.read_messages()
   advent.read_objects()
-  Close #1
+  Close advent.FD_IN%
 End Sub
 
 Sub advent.read_header()
@@ -136,7 +222,7 @@ End Function
 Function advent.peek_char%()
   If advent.buf_ptr% > Len(advent.buf$) Then
     advent.buf_ptr% = 1
-    advent.buf$ = Input$(255, #advent.FD%)
+    advent.buf$ = Input$(255, advent.FD_IN%)
   EndIf
   advent.peek_char% = Peek(Var advent.buf$, advent.buf_ptr%)
 End Function
@@ -221,7 +307,95 @@ Sub advent.read_objects()
   Next
 End Sub
 
-Sub advent.clear()
+' Reads the '.ext' file.
+' Assumes that the file has LF or CRLF line-endings, and not Mac style CR line-endings.
+' Reports ERROR if encounters line > 255 characters.
+Sub advent.read_ext()
+  Local f_in$ = fil.trim_extension$(advent.file$) + ".ext"
+
+  If Not fil.exists%(f_in$) Then Exit Sub
+
+  Open f_in$ For Input As advent.FD_IN%
+
+  ' Adventure name should be on the first (non-blank) line.
+  Do While Not Eof(advent.FD_IN%)
+    Line Input #advent.FD_IN%, advent.buf$
+    advent.buf$ = str.trim$(advent.buf$)
+    If advent.buf$ <> "" Then
+      advent.name$ = advent.buf$
+      Exit Do
+    EndIf
+  Loop
+
+  ' Extract temporary TITLE, CREDITS and INSTRUCTIONS files.
+  Local f_out$ = ""
+  Local file_open% = 0
+  Local first_line% = 0
+  Local num_blank_lines% = 0
+  Local header$
+  Do While Not Eof(advent.FD_IN%)
+    Line Input #advent.FD_IN%, advent.buf$
+
+    ' Check for section headings and if found open the appropriate output file.
+    header$ = advent.find_section_header$(advent.buf$)
+    Select Case header$
+      Case "##TITLE##"
+        advent.title_file$ = fil.PROG_DIR$ + "/title.tmp"
+        f_out$ = advent.title_file$
+        first_line% = -1
+      Case "##CREDITS##"
+        advent.credits_file$ = fil.PROG_DIR$ + "/credits.tmp"
+        f_out$ = advent.credits_file$
+        first_line% = -1
+      Case "##INSTRUCTIONS##"
+        advent.instructions_file$ = fil.PROG_DIR$ + "/instructions.tmp"
+        f_out$ = advent.instructions_file$
+        first_line% = -1
+    End Select
+
+    If first_line% = -1 Then
+      If file_open% Then Close advent.FD_OUT%
+      Open f_out$ For Output As advent.FD_OUT%
+      file_open% = 1
+      first_line% = 1
+      num_blank_lines% = 0
+      Continue Do
+    EndIf
+
+    If Not file_open% Then Continue Do
+
+    ' We don't want the file to contain any leading or trailing blank lines.
+    If str.trim$(advent.buf$) = "" Then
+      Inc num_blank_lines%
+    Else
+      If Not first_line% Then
+        Do While num_blank_lines% > 0
+          Print #advent.FD_OUT%
+          Inc num_blank_lines%, -1
+        Loop
+      EndIf
+      Print #advent.FD_OUT%, advent.buf$
+      first_line% = 0
+      num_blank_lines% = 0
+    EndIf
+
+  Loop
+
+  If file_open% Then Close advent.FD_OUT%
+  Close advent.FD_IN%
+End Sub
+
+Sub advent.free()
+
+  ' If there are no objects then we assume no adventure has been loaded
+  ' and there is thus nothing to clear.
+  If il <= 0 Then Exit Sub
+
+  advent.file$ = ""
+  advent.name$ = ""
+  advent.title_file$ = ""
+  advent.credits_file$ = ""
+  advent.instructions_file$ = ""
   il = 0 : cl = 0 : nl = 0 : rl = 0 : mx = 0 : ar = 0
   tt = 0 : ln = 0 : lt = 0 : ml = 0 : tr = 0
   Erase ca, nv_str$, ia_str$, ia, i2, rs$, rm, ms$

@@ -15,8 +15,8 @@ If sys.err$ <> "" Then Error sys.err$
 ' @param  x   the field length.
 Function str.centre$(s$, x%)
   If Len(s$) < x% Then
-    str.centre$ = Space$((x% - Len(s$)) \ 2) + s$
-    str.centre$ = str.centre$ + Space$(x% - Len(str.centre$))
+    str.centre$ = s$ + Space$((x% - Len(s$)) \ 2)
+    str.centre$ = Space$(x% - Len(str.centre$)) + str.centre$
   Else
     str.centre$ = s$
   EndIf

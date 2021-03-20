@@ -18,16 +18,18 @@ Const twm.WHITE%   = 7
 Dim twm.vt$(255)  ' map of attribute values to VT100 control codes
 Dim twm.fg%(255)  ' map of attribute values to VGA foreground colours
 Dim twm.bg%(255)  ' map of attribute values to VGA background colours
-Dim twm.data%(1)  ' large block of memory for storing window state.
-                  ' Not properly sized until init() is called
-Dim twm.ptr%(1)   ' pointers into twm.data%() such that twm.ptr%(i) is the
+'Dim twm.data%()  ' large block of memory for storing window state.
+                  ' Not created until twm.init() is called
+'Dim twm.ptr%()   ' pointers into twm.data%() such that twm.ptr%(i) is the
                   ' memory address where the data for window 'i' starts.
-                  ' Not properly sized until init() is called
+                  ' Not created until twm.init() is called
 Dim twm.max_num%  ' max number of windows allowed
 Dim twm.num%      ' current number of windows created
+Dim twm.fw%       ' font width
+Dim twm.fh%       ' font height
 
 ' For the currently selected window:
-Dim twm.id% = -1 ' id
+Dim twm.id%      ' id
 Dim twm.a%       ' x-coordinate of left hand side
 Dim twm.b%       ' y-coordinate of top
 Dim twm.w%       ' width
@@ -38,7 +40,7 @@ Dim twm.at%      ' attributes to use for printing
 Dim twm.pc%      ' pointer to the character data
 Dim twm.pa%      ' pointer to the attribute data
 
-Dim twm.cur_at% = -1
+Dim twm.cur_at%  ' TODO
 
 Dim a%(255), b%(15)
 a%(&hB9) = &b1101
@@ -71,19 +73,22 @@ b%(&b1111) = &hCE
 ' @param  mem_sz%   number of bytes of memory to allocate for window data.
 '                   Each window requires 7 + 2 * (width * height) bytes.
 Sub twm.init(max_num%, mem_sz%)
+  If twm.max_num% > 0 Then Error "'txtwm' already initialised"
   If max_num% < 1 Or max_num% > 10 Then Error "invalid max number of windows: " + Str$(max_num%)
   If mem_sz% < 100 Then Error "invalid memory size: " + Str$(mem_sz%)
 
+  twm.max_num% = max_num%
+  twm.id%      = -1
+  twm.cur_at%  = -1
+  twm.fw%      = Mm.Info(FontWidth)
+  twm.fh%      = Mm.Info(FontHeight)
+
   ' Allocate data buffer.
-  Erase twm.data%()
   Dim twm.data%(mem_sz% - 1)
 
   ' Allocate array of pointers (one for each window) into the data buffer.
   ' Because MMBasic can't have 1 element arrays we always allocate space for at least 2 windows.
-  Erase twm.ptr%()
   Dim twm.ptr%(Choice(max_num% = 1, 1, max_num% - 1))
-
-  twm.max_num% = max_num%
 
   Local i%, vt$, tmp%
   For i% = 0 To 255
@@ -137,9 +142,27 @@ Sub twm.init(max_num%, mem_sz%)
     EndIf
   Next
 
-  Dim twm.fw% = Mm.Info(FontWidth)
-  Dim twm.fh% = Mm.Info(FontHeight)
+End Sub
 
+Sub twm.free()
+  If twm.max_num% = 0 Then Exit Sub
+  Erase twm.data%()
+  Erase twm.ptr%()
+  twm.max_num% = 0
+  twm.num%     = 0
+  twm.fw%      = 0
+  twm.fh%      = 0
+  twm.id%      = 0
+  twm.a%       = 0
+  twm.b%       = 0
+  twm.w%       = 0
+  twm.h%       = 0
+  twm.x%       = 0
+  twm.y%       = 0
+  twm.at%      = 0
+  twm.pc%      = 0
+  twm.pa%      = 0
+  twm.cur_at%  = 0
 End Sub
 
 Function twm.new_win%(x%, y%, w%, h%)

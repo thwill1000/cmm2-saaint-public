@@ -1,0 +1,16 @@
+           Sock Puppet Studios Presents
+        A Toy Plastic Trumpet Production Of
+
+    _____   ____    ____   ____   ____    ______
+   / ___/  /    |  /    | |    | |    \  |      |
+  (   \_  |  o  | |  o  |  |  |  |  _  | |      |
+   \__  | |     | |     |  |  |  |  |  | |_|  |_|
+   /  \ | |  _  | |  _  |  |  |  |  |  |   |  |
+   \    | |  |  | |  |  |  |  |  |  |  |   |  |
+    \___| |__|__| |__|__| |____| |__|__|   |__|
+
+         Scott Adams Adventure Interpreter
+
+          (c) 2020 Thomas Hugo Williams
+       with the assistance of Bill McKinley
+Derived with permission from work (c) 1978 Scott Adams

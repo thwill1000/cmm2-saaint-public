@@ -10,7 +10,9 @@ Option Default Integer
 #Include "splib/system.inc"
 #Include "splib/array.inc"
 #Include "splib/list.inc"
+#Include "splib/map.inc"
 #Include "splib/string.inc"
+#Include "splib/txtwm.inc"
 #Include "splib/file.inc"
 #Include "advent.inc"
 #Include "console.inc"
@@ -61,32 +63,77 @@ Dim ip ' action parameter pointer
 
 Mode 2
 main()
-Pause 2000
-' Replaced the following line with END to make stand alone
-' we.end_program()
 End
 
 Sub main()
-  Local f$ = Choice(str.trim$(Mm.CmdLine$) = "", "adv01", Mm.CmdLine$)
+'  Local f$ = Choice(str.trim$(Mm.CmdLine$) = "", menus.choose_advent$(), Mm.CmdLine$)
+'  If f$ = "" Then Print "Goodbye" : End
+'  f$ = advent.find$(f$)
+'  advent.read(f$)
+
+  Local f$
+
+  twm.show_cursor(0)
+
+main_menu:
+
+  advent.free()
+
+  Do
+    Select Case menus.show_intro$()
+      Case "#select"       : Goto select_adventure
+      Case "#credits"      : menus.show_credits()
+      Case "#instructions" : menus.show_instructions()
+      Case "#quit"         : Goto quit
+    End Select
+  Loop
+
+select_adventure:
+
+  f$ = menus.choose_advent$()
+  If f$ = "" Then Goto main_menu
   f$ = advent.find$(f$)
   advent.read(f$)
 
+adventure_menu:
+
   Do
-    state = STATE_RESTART
-    Select Case menus.show_intro$()
-      Case "#start"        : reset_state() : state = STATE_CONTINUE
-      Case "#restore"      : If do_restore() Then state = STATE_CONTINUE Else Pause 2000
+    Select Case menus.adventure$()
+      Case "#start"        : Goto new_game
+      Case "#restore"      : Goto restore_game
       Case "#credits"      : menus.show_credits()
       Case "#instructions" : menus.show_instructions()
-      Case "#quit"         : state = STATE_QUIT
+      Case "#back"         : Goto select_adventure
+      Case "#quit"         : Goto quit
     End Select
-    If state = STATE_CONTINUE Then game_loop()
-    con.close_all()
-  Loop While state <> STATE_QUIT
+  Loop
+
+new_game:
+
+  reset_state()
+  Goto play_game
+
+restore_game:
+
+  If do_restore() Then Goto play_game
+  Pause 2000
+  Goto adventure_menu
+
+play_game:
+
+  twm.show_cursor(1)
+  state = STATE_CONTINUE
+  game_loop()
+  con.close_all()
+  If state <> STATE_QUIT Then Goto adventure_menu
+
+quit:
 
   con.endl()
   con.println("Goodbye!", 1)
   con.close_all()
+  Pause 2000
+
 End Sub
 
 Sub reset_state()
