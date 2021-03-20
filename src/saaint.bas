@@ -15,6 +15,7 @@ Option Default Integer
 #Include "advent.inc"
 #Include "console.inc"
 #Include "persist.inc"
+#Include "menus.inc"
 
 con.HEIGHT = 33
 con.WIDTH  = 80
@@ -71,8 +72,14 @@ Sub main()
   advent.read(f$)
 
   Do
-    state = STATE_CONTINUE
-    show_intro()
+    state = STATE_RESTART
+    Select Case menus.show_intro$()
+      Case "#start"        : reset_state() : state = STATE_CONTINUE
+      Case "#restore"      : If do_restore() Then state = STATE_CONTINUE Else Pause 2000
+      Case "#credits"      : menus.show_credits()
+      Case "#instructions" : menus.show_instructions()
+      Case "#quit"         : state = STATE_QUIT
+    End Select
     If state = STATE_CONTINUE Then game_loop()
     con.close_all()
   Loop While state <> STATE_QUIT
@@ -80,83 +87,6 @@ Sub main()
   con.endl()
   con.println("Goodbye!", 1)
   con.close_all()
-End Sub
-
-Sub show_intro()
-  Local f$ = fil.trim_extension$(advent.file$) + ".tit"
-  f$ = Choice(fil.exists%(f$), f$, fil.PROG_DIR$ + "/default.tit")
-
-  Cls
-  con.lines = 0
-  Colour Rgb(White)
-  con.print_file(f$, 1)
-  Colour Rgb(Green)
-  con.println()
-  con.println("S  Start a new game           ", 1)
-  con.println("R  Restore a saved game       ", 1)
-  con.println("C  Show credits               ", 1)
-  con.println("I  Instructions on how to play", 1)
-  con.println("Q  Quit                       ", 1)
-  con.println()
-  con.println("Version 2.0a", 1)
-
-  Do While Inkey$ <> "" : Loop
-  Local k$
-  Do
-    k$ = LCase$(Inkey$)
-    Select Case k$
-      Case "s" : reset_state()
-      Case "r" : If Not do_restore() Then Pause 2000 : state = STATE_RESTART
-      Case "c" : show_credits() : state = STATE_RESTART
-      Case "i" : show_instructions() : state = STATE_RESTART
-      Case "q" : state = STATE_QUIT
-      Case Else : k$ = ""
-    End Select
-  Loop Until k$ <> ""
-
-  con.lines = 0
-End Sub
-
-Sub show_credits()
-  Local f$ = fil.trim_extension$(advent.file$) + ".cre"
-  f$ = Choice(fil.exists%(f$), f$, fil.PROG_DIR$ + "/default.cre")
-
-  Cls
-  con.lines = 0
-  Colour Rgb(White)
-  con.println()
-  con.println("CREDITS", 1)
-  con.println("=======", 1)
-  con.println()
-  Colour Rgb(Green)
-  con.print_file(f$, 1)
-  con.println()
-  Colour Rgb(White)
-  con.println("Press any key to continue", 1)
-  Colour Rgb(Green)
-  Do While Inkey$ <> "" : Loop
-  Do While Inkey$ = "" : Loop
-End Sub
-
-Sub show_instructions()
-  Local f$ = fil.trim_extension$(advent.file$) + ".ins"
-  f$ = Choice(fil.exists%(f$), f$, fil.PROG_DIR$ + "/default.ins")
-
-  Cls
-  con.lines = 0
-  Colour Rgb(White)
-  con.println()
-  con.println("HOW TO PLAY", 1)
-  con.println("===========", 1)
-  con.println()
-  Colour Rgb(Green)
-  con.print_file(f$, 1)
-  con.println()
-  Colour Rgb(White)
-  con.println("Press any key to continue", 1)
-  Colour Rgb(Green)
-  Do While Inkey$ <> "" : Loop
-  Do While Inkey$ = "" : Loop
 End Sub
 
 Sub reset_state()

@@ -1,5 +1,10 @@
-' Copyright (c) 2019-20 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' Copyright (c) 2019-21 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.07
+
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.provides("console")
+If sys.err$ <> "" Then Error sys.err$
 
 Dim con.buf$   ' console write buffer
 Dim con.space  ' was the last character written to con.buf$ a space?
