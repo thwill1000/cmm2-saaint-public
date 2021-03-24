@@ -17,6 +17,8 @@ Option Default Integer
 #Include "advent.inc"
 #Include "console.inc"
 #Include "persist.inc"
+#Include "catalogue.inc"
+#Include "metadata.inc"
 #Include "menus.inc"
 
 con.HEIGHT = 33
@@ -80,10 +82,10 @@ main_menu:
   advent.free()
 
   Do
-    Select Case menus.show_intro$()
+    Select Case menus.main$()
       Case "#select"       : Goto select_adventure
-      Case "#credits"      : menus.show_credits()
-      Case "#instructions" : menus.show_instructions()
+      Case "#credits"      : menus.credits()
+      Case "#instructions" : menus.instructions()
       Case "#quit"         : Goto quit
     End Select
   Loop
@@ -92,8 +94,9 @@ select_adventure:
 
   f$ = menus.choose_advent$()
   If f$ = "" Then Goto main_menu
-  f$ = advent.find$(f$)
-  advent.read(f$)
+  f$ = catalogue.find$(f$)
+  advent.read_dat(f$)
+  metadata.read_ext(f$)
 
 adventure_menu:
 
@@ -101,8 +104,8 @@ adventure_menu:
     Select Case menus.adventure$()
       Case "#start"        : Goto new_game
       Case "#restore"      : Goto restore_game
-      Case "#credits"      : menus.show_credits()
-      Case "#instructions" : menus.show_instructions()
+      Case "#credits"      : menus.credits()
+      Case "#instructions" : menus.instructions()
       Case "#back"         : Goto select_adventure
       Case "#quit"         : Goto quit
     End Select

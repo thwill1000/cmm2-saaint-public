@@ -3,11 +3,15 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("advent", "console", "file", "map", "txtwm")
+sys.requires("catalogue", "console", "file", "map", "metadata", "txtwm")
 sys.provides("menus")
 If sys.err$ <> "" Then Error sys.err$
 
-Function menus.show_intro$()
+' This file contains functions to show the main, adventure selection
+' and adventure specific menus as well as the credits and
+' instructions.
+
+Function menus.main$()
   Local f$ = fil.PROG_DIR$ + "/title.txt")
 
   Cls
@@ -28,10 +32,10 @@ Function menus.show_intro$()
   Do
     k$ = LCase$(Inkey$)
     Select Case k$
-      Case "c" : menus.show_intro$ = "#credits"
-      Case "i" : menus.show_intro$ = "#instructions"
-      Case "q" : menus.show_intro$ = "#quit"
-      Case "s" : menus.show_intro$ = "#select"
+      Case "c" : menus.main$ = "#credits"
+      Case "i" : menus.main$ = "#instructions"
+      Case "q" : menus.main$ = "#quit"
+      Case "s" : menus.main$ = "#select"
       Case Else : k$ = ""
     End Select
   Loop Until k$ <> ""
@@ -44,18 +48,18 @@ Function menus.adventure$()
   Cls
   con.lines = 0
   Colour Rgb(White)
-  If advent.title_file$ <> "" Then
-    con.print_file(advent.title_file$, 1)
+  If metadata.title_file$ <> "" Then
+    con.print_file(metadata.title_file$, 1)
   Else
     con.println()
-    con.println(advent.name$, 1)
+    con.println(metadata.name$, 1)
   EndIf
   Colour Rgb(Green)
   con.println()
   con.println("S  Start a new game      ", 1)
   con.println("R  Restore a saved game  ", 1)
   con.println("I  Instructions          ", 1)
-  If advent.credits_file$ <> "" Then con.println("C  Credits & License      ", 1)
+  If metadata.credits_file$ <> "" Then con.println("C  Credits & License      ", 1)
   con.println("B  Back to adventure list", 1)
   con.println("Q  Quit                  ", 1)
 
@@ -66,7 +70,7 @@ Function menus.adventure$()
     Select Case k$
       Case "b" : menus.adventure$ = "#back"
       Case "c"
-        If advent.credits_file$ <> "" Then menus.adventure$ = "#credits" Else k$ = ""
+        If metadata.credits_file$ <> "" Then menus.adventure$ = "#credits" Else k$ = ""
       Case "i" : menus.adventure$ = "#instructions"
       Case "q" : menus.adventure$ = "#quit"
       Case "r" : menus.adventure$ = "#restore"
@@ -78,8 +82,8 @@ Function menus.adventure$()
   con.lines = 0
 End Function
 
-Sub menus.show_credits()
-  Local f$ = advent.credits_file$
+Sub menus.credits()
+  Local f$ = metadata.credits_file$
   f$ = Choice(f$ <> "", f$, fil.PROG_DIR$ + "/credits.txt")
 
   Cls
@@ -99,8 +103,8 @@ Sub menus.show_credits()
   Do While Inkey$ = "" : Loop
 End Sub
 
-Sub menus.show_instructions()
-  Local f$ = advent.instructions_file$
+Sub menus.instructions()
+  Local f$ = metadata.instructions_file$
   f$ = Choice(f$ <> "", f$, fil.PROG_DIR$ + "/instructions.txt")
 
   Cls
@@ -123,7 +127,7 @@ End Sub
 Function menus.choose_advent$()
   Local m$(map.new%(50)) Length 64
   map.init(m$())
-  advent.get_all(m$())
+  catalogue.get_all(m$())
 
   Const MENU_WIDTH% = Int(con.WIDTH / 2) - 4
   Const MENU_HEIGHT% = con.HEIGHT - 6
@@ -240,7 +244,7 @@ End Function
 
 Sub menus.paint_description(win%, advent$)
   Local desc%(200)
-  advent.read_description(fil.trim_extension$(advent.find$(advent$)) + ".ext", desc%())
+  metadata.read_description(fil.trim_extension$(catalogue.find$(advent$)) + ".ext", desc%())
 
   twm.switch(win%)
   twm.cls()

@@ -12,6 +12,7 @@ Option Default Integer
 #Include "splib/string.inc"
 #Include "splib/file.inc"
 #Include "advent.inc"
+#Include "catalogue.inc"
 
 main()
 End
@@ -38,7 +39,7 @@ Sub main()
       Case "*"
         dump_all(raw%)
       Case Else
-        dump_file(advent.find$(tokens$(i%)), raw%)
+        dump_file(catalogue.find$(tokens$(i%)), raw%)
     End Select
   Next
 End Sub
@@ -46,7 +47,7 @@ End Sub
 Sub dump_all(raw%)
   Local count%
   Local t% = Timer
-  Local f$ = fil.find$(advent.DIR$, "*.dat", "File")
+  Local f$ = fil.find$(catalogue.DIR$, "*.dat", "File")
   Do While f$ <> ""
     Inc count%
     dump_file(f$, raw%)
@@ -60,7 +61,7 @@ Sub dump_file(in$, raw%)
   Local out$ = fil.trim_extension$(in$) + ".dmp"
 
   Print "Reading '" in$ "' ... ";
-  advent.read(in$)
+  advent.read_dat(in$)
   Print "OK"
   Print "Writing '" out$ "' ... ";
   Open out$ For Output As #fd
