@@ -63,6 +63,8 @@ Dim continue_flag = 0 ' Flag that, when set will cause the next action(s) to be
 ' TODO: This shouldn't be global
 Dim ip ' action parameter pointer
 
+Dim redraw_flag% = 1 ' Boolean flag that if set causes the current room to be described.
+
 Mode 2
 main()
 End
@@ -128,6 +130,7 @@ play_game:
   state = STATE_CONTINUE
   game_loop()
   con.close_all()
+  twm.show_cursor(0)
   If state <> STATE_QUIT Then Goto adventure_menu
 
 quit:
@@ -158,13 +161,17 @@ Sub game_loop()
   Do
     do_automatic_actions()
     If state = STATE_CONTINUE Then prompt_for_command(verb, noun, nstr$)
+    If redraw_flag% Then describe_room()
     If state = STATE_CONTINUE Then do_player_actions(verb, noun, nstr$)
+    If redraw_flag% Then describe_room()
     If state = STATE_CONTINUE Then update_light()
   Loop While state = STATE_CONTINUE
 End Sub
 
 Sub describe_room()
   Local count, i
+
+  redraw_flag% = 0
 
   ' Object 9 is the lit light source.
   If df And ia(9) <> -1 And ia(9) <> r Then
@@ -379,7 +386,7 @@ Sub go_direction(noun)
   EndIf
 '  If Not l Then Cls
   r = k
-  describe_room()
+  redraw_flag% = 1
 End Sub
 
 Function evaluate_condition(code, value)
@@ -477,6 +484,7 @@ Sub do_command(a, cmd, nstr$)
       p = get_parameter(a)
       For i = 1 To il : If ia(i) = -1 Then x = x + 1 : Next i
       If x <= mx Then
+        redraw_flag% = redraw_flag% Or (ia(p) = r)
         ia(p) = -1
       Else
         con.println("I've too much to carry. Try " + Chr$(34) + "Inventory" + Chr$(34) + ".")
@@ -488,6 +496,7 @@ Sub do_command(a, cmd, nstr$)
       ' The object may be carried or in any other room
       p = get_parameter(a)
       ia(p) = r
+      redraw_flag% = 1
 
     Case 54
       ' GOTOy
@@ -496,11 +505,13 @@ Sub do_command(a, cmd, nstr$)
       ' Also it may need to be followed by a NIGHT (56) or DAY (57) command.
       p = get_parameter(a)
       r = p
+      redraw_flag% = 1
 
     Case 55, 59
       ' x->RM0
       ' Move the Par #1 object to room 0 (the storeroom).
       p = get_parameter(a)
+      redraw_flag% = redraw_flag% Or (ia(p) = r)
       ia(p) = 0
 
     Case 56
@@ -543,7 +554,7 @@ Sub do_command(a, cmd, nstr$)
       con.println("I'm dead...")
       r = rl
       df = 0
-      describe_room()
+      redraw_flag% = 1
 
     Case 62
       ' x->y
@@ -551,10 +562,9 @@ Sub do_command(a, cmd, nstr$)
       ' This will automatically display the room if the object came from,
       ' or went to the current room.
       x = get_parameter(a)
+      redraw_flag% = redraw_flag% Or (ia(x) = r)
       ia(x) = get_parameter(a)
-      ' TODO: This isn't automatically displaying the room.
-      '       The incorrect comment probably refer to a later version of the
-      '       original Scott Adams interpreter.
+      redraw_flag% = redraw_flag% Or (ia(x) = r)
 
     Case 63
       ' FINI
@@ -611,6 +621,7 @@ Sub do_command(a, cmd, nstr$)
       ' source (object 9). This command should be followed by a x->RM0 to store
       ' the unlighted light source (these are two different objects).
       lx = lt
+      redraw_flag% = redraw_flag% Or (ia(9) = r)
       ia(9) = -1
 
     Case 70
@@ -630,6 +641,7 @@ Sub do_command(a, cmd, nstr$)
       x = get_parameter(a)  ' x = object 1
       y = get_parameter(a)  ' y = object 2
       p = ia(x)             ' p = location of object 1
+      redraw_flag% = redraw_flag% Or (ia(x) = r) Or (ia(y) = r)
       ia(x) = ia(y)
       ia(y) = p
 
@@ -647,16 +659,17 @@ Sub do_command(a, cmd, nstr$)
       ' Always pick up the Par #1 object, even if that would cause the carry limit to be exceeded.
       ' Otherwise, this is like command 52, GETx.
       p = get_parameter(a)
+      redraw_flag% = redraw_flag% Or (ia(p) = r)
       ia(p) = -1
 
     Case 75
       ' BYx<-x
       ' Put the Par #1 object in the same place as the Par #2 object. If the Par #2 object is being
       ' carried, this will pick up the Par #1 object too, regardless of the carry limit.
-      ' TODO: Is it necessary to explicitly display the room again if this changes the objects in
-      '       the current room, or should that have been explicitly encoded in the action list?
+      ' If this changes the objects in the current room, the room will be displayed again.
       x = get_parameter(a) ' x = object 1
       y = get_parameter(a) ' y = object 2
+      redraw_flag% = redraw_flag% Or (ia(x) = r) Or (ia(y) = r)
       ia(x) = ia(y)
 
   '  Case 76
@@ -688,6 +701,7 @@ Sub do_command(a, cmd, nstr$)
       x = r
       r = alt_room(0)
       alt_room(0) = x
+      redraw_flag% = 1
 
     Case 81
       ' EXm,CT
@@ -743,6 +757,7 @@ Sub do_command(a, cmd, nstr$)
       x = r
       r = alt_room(p)
       alt_room(p) = x
+      redraw_flag% = 1
 
     Case 88
       ' DELAY
