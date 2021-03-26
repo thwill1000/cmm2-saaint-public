@@ -885,6 +885,13 @@ Sub parse(s$, verb, noun, nstr$)
 
   verb = lookup_word(Left$(vstr$, ln), 0)
   noun = lookup_word(Left$(nstr$, ln), 1)
+
+  ' If we can't find the verb "take" then try "get".
+  If verb = 0 Then
+    If Left$(vstr$, ln) = Left$("take", ln) Then
+      verb = lookup_word(Left$("get", ln), 0)
+    EndIf
+  EndIf
 End Sub
 
 Function lookup_meta_command(vstr$, nstr$)
