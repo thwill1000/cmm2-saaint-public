@@ -43,17 +43,14 @@ Function catalogue.find$(f$)
   catalogue.find$ = f$
 End Function
 
-' Gets a map of (adventure name -> filename) for all the adventures in the
+' Fills a map of (adventure name -> filename) for all the adventures in the
 ' "adventures/" directory.
 Sub catalogue.get_all(m$())
   Local dirs$(list.new%(10)) Length 64
   list.init(dirs$())
   list.add(dirs$(), ".")
   Local f$ = Dir$(catalogue.DIR$ + "/*", Dir)
-  Do While (f$ <> "") And (list.size%(dirs$()) <= list.capacity%(dirs$()))
-    ' TODO: Add list.is_full%()
-    ' What does list do if you add when full ?
-    If list.size%(dirs$()) = list.capacity%(dirs$()) Then Exit Do
+  Do While f$ <> "" And Not list.is_full%(dirs$())
     list.add(dirs$(), f$)
     f$ = Dir$()
   Loop
@@ -64,9 +61,7 @@ Sub catalogue.get_all(m$())
   For i% = lb% To ub%
     d$ = catalogue.DIR$ + "/" + dirs$(i%) + "/"
     f$ = Dir$(d$ + "*.dat")
-    Do While f$ <> ""
-      ' TODO: Add map.is_full%()
-      If map.size%(m$()) = map.capacity%(m$()) Then Exit Do
+    Do While f$ <> "" And Not map.is_full%(m$())
       name$ = fil.trim_extension$(f$)
       If fil.exists%(d$ + name$ + ".ext") Then
         Open d$ + name$ + ".ext" For Input As catalogue.FD_IN%
