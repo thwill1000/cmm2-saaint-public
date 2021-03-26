@@ -43,6 +43,7 @@ Const VERB_DUMP_STATE = -7
 Const VERB_DEBUG_ON   = -8
 Const VERB_DEBUG_OFF  = -9
 Const VERB_FIXED_SEED = -10
+Const VERB_LOOK       = -11
 
 ' These global variables hold the current game state
 Dim lx              ' light duration
@@ -810,6 +811,7 @@ Sub prompt_for_command(verb, noun, nstr$)
       Case VERB_DEBUG_ON   : con.println("OK.") : debug = 1
       Case VERB_DEBUG_OFF  : con.println("OK.") : debug = 0
       Case VERB_FIXED_SEED : con.println("OK.") : _ = sys.pseudo%(-7)
+      Case VERB_LOOK       : describe_room()
       Case Else            : Exit Do ' Handle 'verb' in calling code.
     End Select
 
@@ -892,6 +894,8 @@ Function lookup_meta_command(vstr$, nstr$)
     Case "*debug"
       If nstr$ = "on" Or nstr$ = "" Then verb = VERB_DEBUG_ON
       If nstr$ = "off" Then verb = VERB_DEBUG_OFF
+    Case "*look"
+      If nstr$ = "" Then verb = VERB_LOOK
     Case "*record"
       If nstr$ = "on" Or nstr$ = "" Then verb = VERB_RECORD_ON
       If nstr$ = "off" Then verb = VERB_RECORD_OFF
