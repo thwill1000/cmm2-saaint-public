@@ -190,13 +190,21 @@ Sub describe_room()
   con.print("Obvious exits: ")
   For i = 0 To 5
     If rm(r, i) <> 0 Then
-      ' Use sentence case for directions.
-      count = count + 1
+      Inc count
       If count > 1 Then con.print(", ")
-      con.print(UCase$(Left$(nv_str$(i + 1, 1), 1)))
-      con.print(LCase$(Mid$(nv_str$(i + 1, 1), 2)))
+      ' Originally instead of SELECT CASE I used the values of verbs 1..6,
+      ' however for the Brian Howarth adventures these were abbreviated to
+      ' 4 letters and as a result "Nort" and "Sout" would be printed.
+      Select Case i
+        Case 0 : con.print("North")
+        Case 1 : con.print("South")
+        Case 2 : con.print("East")
+        Case 3 : con.print("West")
+        Case 4 : con.print("Up")
+        Case 5 : con.print("Down")
+      End Select
     EndIf
-  Next i
+  Next
   If count = 0 Then con.print("None")
   con.println(".")
 
@@ -841,15 +849,15 @@ Sub parse(s$, verb, noun, nstr$)
   ' Hack to allow use of common abbreviations, and avoid typing 'go'.
   If nstr$ = "" Then
     Select Case vstr$
-      Case "n", "north" : vstr$ = "go" : nstr$ = "north"
-      Case "s", "south" : vstr$ = "go" : nstr$ = "south"
-      Case "e", "east"  : vstr$ = "go" : nstr$ = "east"
-      Case "w", "west"  : vstr$ = "go" : nstr$ = "west"
-      Case "u", "up"    : vstr$ = "go" : nstr$ = "up"
-      Case "d", "down"  : vstr$ = "go" : nstr$ = "down"
-      Case "i"          : vstr$ = "inventory"
-      Case "q"          : vstr$ = "quit"
-      Case "save"       : vstr$ = "save" : nstr$ = "game"
+      Case "n", "nor", "nort", "north" : vstr$ = "go" : nstr$ = "north"
+      Case "s", "sou", "sout", "south" : vstr$ = "go" : nstr$ = "south"
+      Case "e", "eas", "east"          : vstr$ = "go" : nstr$ = "east"
+      Case "w", "wes", "west"          : vstr$ = "go" : nstr$ = "west"
+      Case "u", "up"                   : vstr$ = "go" : nstr$ = "up"
+      Case "d", "dow", "down"          : vstr$ = "go" : nstr$ = "down"
+      Case "i", "inv"                  : vstr$ = "inventory"
+      Case "q"                         : vstr$ = "quit"
+      Case "save"                      : vstr$ = "save" : nstr$ = "game"
     End Select
   EndIf
 
