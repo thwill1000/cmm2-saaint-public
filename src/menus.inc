@@ -17,6 +17,7 @@ Function menus.main$()
   Cls
   con.lines = 0
   Colour Rgb(White)
+  con.println()
   con.print_file(f$, 1)
   Colour Rgb(Green)
   con.println()
@@ -253,17 +254,33 @@ Sub menus.paint_description(win%, advent$)
   Local ch%, i%, s$
   For i% = 1 To LLen(desc%())
     ch% = Peek(Var desc%(), i% + 7)
-    If ch% = 10 Then
-      twm.print(s$)
-      s$ = ""
-      Inc twm.y%
-      twm.x% = 0
-    ElseIf ch% = 13 Then
-      ' Do nothing.
-    Else
-      Cat s$, Chr$(ch%)
-      If Len(s$) = 255 Then twm.print(s$) : s$ = ""
-    EndIf
+    Select Case ch%
+      Case 10 ' LF
+        If twm.x% + Len(s$) >= twm.w% Then twm.x% = 0 : Inc twm.y%
+        twm.print(s$)
+        s$ = ""
+        twm.x% = 0
+        Inc twm.y%
+      Case 13 ' CR
+        ' Do nothing.
+      Case 32 ' Space
+        If twm.x% + Len(s$) > twm.w% Then
+          twm.x% = 0
+          Inc twm.y%
+        EndIf
+        If s$ = " " Then
+          If twm.x% > 0 Then twm.print(" ")
+        Else
+          twm.print(s$)
+        EndIf
+        s$ = " "
+      Case Else
+        If s$ = " " Then
+          If twm.x% > 0 Then twm.print(" ")
+          s$ = ""
+        EndIf
+        Cat s$, Chr$(ch%)
+    End Select
   Next
   twm.print(s$)
 

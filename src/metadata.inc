@@ -26,15 +26,21 @@ Sub metadata.read_description(f$, out%())
     Exit Sub
   EndIf
 
-  Local remaining% = (Bound(out%(), 1) - Bound(out%(), 0)) * 8
-  Local s$
+  Local max_len% = (Bound(out%(), 1) - Bound(out%(), 0)) * 8
+  Local cont%, s$
   Open f$ For Input As metadata.FD_IN%
-  Do While Not Eof(metadata.FD_IN%) And remaining% > 0
+  Do While Not Eof(metadata.FD_IN%)
     Line Input #metadata.FD_IN%, s$
+
     If metadata.find_section_header$(s$) <> "" Then Exit Do
-    LongString Append out%(), Left$(s$, Min(Len(s$), remaining% - 2))
-    LongString Append out%(), sys.CRLF$
-    Inc remaining%, -(Len(s$) + 2)
+
+    ' Handle line continuation.
+    cont% = Right$(s$, 1) = "\"
+    If cont% Then s$ = Left$(s$, Len(s$) - 1) + " "
+
+    LongString Append out%(), Left$(s$, Min(255, max_len% - LLen(out%())))
+
+    If Not cont% Then LongString Append out%(), Left$(sys.CRLF$, Min(255, max_len% - LLen(out%())))
   Loop
   Close metadata.FD_IN%
 End Sub
