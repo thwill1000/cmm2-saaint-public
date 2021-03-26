@@ -906,9 +906,10 @@ Function lookup_word(word$, dict)
   For i = 0 To nl
     s$ = nv_str$(i, dict)
     If Left$(s$, 1) = "*" Then s$ = Mid$(s$, 2)
-    If dict = 1 And i < 7 Then s$ = Left$(s$, ln)
+    s$ = Left$(s$, ln) ' Trim to the vocabulary word length which the
+                       ' adventure files don't always respect.
     If word$ = LCase$(s$) Then
-      ' Word found, if it's a synonym then use previous word
+      ' Word found, if it's a synonym then use previous word.
       lookup_word = i
       Do While Left$(nv_str$(lookup_word, dict), 1) = "*"
         lookup_word = lookup_word - 1
@@ -950,11 +951,9 @@ End Sub
 
 ' Gets an object name corresponding to a 'noun' and/or 'nstr$' supplied by the player.
 Function obj_name$(noun, nstr$)
-  If noun <> 0 Then
-    obj_name$ = LCase$(nv_str$(noun, 1)) ' to use correct synonym
-  Else
-    obj_name$ = LCase$(Left$(nstr$, ln))
-  EndIf
+  obj_name$ = Choice(noun = 0, nstr$, nv_str$(noun, 1)) ' Use correct synonym.
+  obj_name$ = Left$(obj_name$, ln)                      ' Trim to vocabulary word length.
+  obj_name$ = LCase$(obj_name$)                         ' Lower-case.
 End Function
 
 ' Gets the (lower-case) noun for referring to the given object.
