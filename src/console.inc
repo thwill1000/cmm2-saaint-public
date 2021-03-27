@@ -3,6 +3,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("vt100")
 sys.provides("console")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -206,4 +207,26 @@ End Sub
 Sub con.close_all()
   con.close_in()
   con.close_out()
+End Sub
+
+Sub con.foreground(c$)
+  Local s$ = LCase$(Mm.Info(Option Console))
+
+  If s$ <> "serial" Then
+    Local vga_colour% = RGB(White)
+    Select Case c$
+      Case "green" : vga_colour% = RGB(Green)
+      ' TODO: more colours
+    End Select
+    Colour(vga_colour%)
+  EndIf
+
+  Select Case s$
+    Case "both"
+      Option Console Serial
+      Print vt100.colour$(c$);
+      Option Console Both
+    Case "serial"
+      Print vt100.colour$(c$);
+  End Select
 End Sub

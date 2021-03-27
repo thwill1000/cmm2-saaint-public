@@ -17,10 +17,10 @@ Function menus.main$()
   Cls
   twm.show_cursor(0)
   con.lines = 0
-  Colour Rgb(White)
+  con.foreground("white")
   con.println()
   con.print_file(f$, 1)
-  Colour Rgb(Green)
+  con.foreground("green")
   con.println()
   con.println("S  Select an adventure", 1)
   con.println("I  Instructions       ", 1)
@@ -50,14 +50,14 @@ Function menus.adventure$()
   Cls
   twm.show_cursor(0)
   con.lines = 0
-  Colour Rgb(White)
+  con.foreground("white")
   If metadata.title_file$ <> "" Then
     con.print_file(metadata.title_file$, 1)
   Else
     con.println()
     con.println(metadata.name$, 1)
   EndIf
-  Colour Rgb(Green)
+  con.foreground("green")
   con.println()
   con.println("S  Start a new game      ", 1)
   con.println("R  Restore a saved game  ", 1)
@@ -92,17 +92,17 @@ Sub menus.credits()
   Cls
   twm.show_cursor(0)
   con.lines = 0
-  Colour Rgb(White)
+  con.foreground("white")
   con.println()
   con.println("CREDITS & LICENSE", 1)
   con.println("=================", 1)
   con.println()
-  Colour Rgb(Green)
+  con.foreground("green")
   con.print_file(f$, 1)
   con.println()
-  Colour Rgb(White)
+  con.foreground("white")
   con.println("Press any key to continue", 1)
-  Colour Rgb(Green)
+  con.foreground("green")
   Do While Inkey$ <> "" : Loop
   Do While Inkey$ = "" : Loop
 End Sub
@@ -114,17 +114,17 @@ Sub menus.instructions()
   Cls
   twm.show_cursor(0)
   con.lines = 0
-  Colour Rgb(White)
+  con.foreground("white")
   con.println()
   con.println("HOW TO PLAY", 1)
   con.println("===========", 1)
   con.println()
-  Colour Rgb(Green)
+  con.foreground("green")
   con.print_file(f$, 1)
   con.println()
-  Colour Rgb(White)
+  con.foreground("white")
   con.println("Press any key to continue", 1)
-  Colour Rgb(Green)
+  con.foreground("green")
   Do While Inkey$ <> "" : Loop
   Do While Inkey$ = "" : Loop
 End Sub

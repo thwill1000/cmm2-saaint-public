@@ -14,6 +14,7 @@ Option Default Integer
 #Include "splib/string.inc"
 #Include "splib/txtwm.inc"
 #Include "splib/file.inc"
+#Include "splib/vt100.inc"
 #Include "advent.inc"
 #Include "console.inc"
 #Include "persist.inc"
@@ -178,7 +179,7 @@ Sub describe_room()
     Exit Sub
   EndIf
 
-  Colour Rgb(White)
+  con.foreground("white")
 
   If Mm.Info(VPOS) > 0 Then con.println()
 '  Cls
@@ -218,8 +219,7 @@ Sub describe_room()
 
   con.println("<" + String$(con.WIDTH - 2, "-") + ">")
   con.println()
-
-  Colour Rgb(Green)
+  con.foreground("green")
 
 End Sub
 
@@ -818,9 +818,9 @@ End Sub
 
 Function prompt$(s$, echo)
   con.print(s$)
-  Colour Rgb(White)
+  con.foreground("white")
   prompt$ = con.in$("", echo)
-  Colour Rgb(Green)
+  con.foreground("green")
 End Function
 
 Sub print_state()
