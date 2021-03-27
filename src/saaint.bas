@@ -72,12 +72,18 @@ main()
 End
 
 Sub main()
-'  Local f$ = Choice(str.trim$(Mm.CmdLine$) = "", menus.choose_advent$(), Mm.CmdLine$)
-'  If f$ = "" Then Print "Goodbye" : End
-'  f$ = advent.find$(f$)
-'  advent.read(f$)
 
+  ' Allow an adventure file to be specified at the command line.
   Local f$
+  If str.trim$(Mm.CmdLine$) <> "" Then
+    f$ = catalogue.find$(str.trim$(Mm.CmdLine$))
+    If f$ = "" Then
+      Print "File not found: " + str.trim$(Mm.CmdLine$)
+      End
+    Else
+      Goto read_adventure
+    EndIf
+  EndIf
 
 main_menu:
 
@@ -97,6 +103,9 @@ select_adventure:
   f$ = menus.choose_advent$()
   If f$ = "" Then Goto main_menu
   f$ = catalogue.find$(f$)
+
+read_adventure:
+
   advent.read_dat(f$)
   metadata.read_ext(f$)
 

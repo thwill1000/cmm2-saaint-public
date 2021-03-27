@@ -39,7 +39,9 @@ Sub main()
       Case "*"
         dump_all(raw%)
       Case Else
-        dump_file(catalogue.find$(tokens$(i%)), raw%)
+        s$ = catalogue.find$(tokens$(i%))
+        If s$ = "" Then Print "File not found: " + tokens$(i%) : End
+        dump_file(s$, raw%)
     End Select
   Next
 End Sub

@@ -12,8 +12,18 @@ If sys.err$ <> "" Then Error sys.err$
 Const catalogue.DIR$ = fil.PROG_DIR$ + "/../adventures"
 Const catalogue.FD_IN% = 1
 
-Function catalogue.find$(f$)
-  f$ = str.unquote$(str.trim$(f$))
+' Finds and returns the full path to a named adventure.
+'
+' @param   name$  the name of the adventure to find, the '.dat' extension will
+'                 be appended if missing. Searches in the following order:
+'                 - is 'name$' an absolute path or a path relative to the
+'                   current working directory,
+'                 - is 'name$' a path relative to the 'adventures/' directory,
+'                 - is 'name$' a path relative to an immediate sub-directory of
+'                   the 'adventures/' directory.
+' @return  the file path, or an empty string if the adventure cannot be found.
+Function catalogue.find$(name$)
+  Local f$ = str.unquote$(str.trim$(name$))
   If LCase$(fil.get_extension$(f$)) <> ".dat" Then Cat f$, ".dat"
 
   ' Is f$ just a simple absolute or relative path to the file ?
@@ -38,7 +48,7 @@ Function catalogue.find$(f$)
     Next
   EndIf
 
-  If Not fil.exists%(f$) Then Error "File not found: " + f$
+  If Not fil.exists%(f$) Then f$ = ""
 
   catalogue.find$ = f$
 End Function
