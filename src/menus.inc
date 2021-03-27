@@ -15,6 +15,7 @@ Function menus.main$()
   Local f$ = fil.PROG_DIR$ + "/title.txt")
 
   Cls
+  twm.show_cursor(0)
   con.lines = 0
   Colour Rgb(White)
   con.println()
@@ -47,6 +48,7 @@ End Function
 Function menus.adventure$()
 
   Cls
+  twm.show_cursor(0)
   con.lines = 0
   Colour Rgb(White)
   If metadata.title_file$ <> "" Then
@@ -88,6 +90,7 @@ Sub menus.credits()
   f$ = Choice(f$ <> "", f$, fil.PROG_DIR$ + "/credits.txt")
 
   Cls
+  twm.show_cursor(0)
   con.lines = 0
   Colour Rgb(White)
   con.println()
@@ -109,6 +112,7 @@ Sub menus.instructions()
   f$ = Choice(f$ <> "", f$, fil.PROG_DIR$ + "/instructions.txt")
 
   Cls
+  twm.show_cursor(0)
   con.lines = 0
   Colour Rgb(White)
   con.println()
@@ -126,16 +130,12 @@ Sub menus.instructions()
 End Sub
 
 Function menus.choose_advent$()
-  Local m$(map.new%(50)) Length 64
-  map.init(m$())
-  catalogue.get_all(m$())
-
   Const MENU_WIDTH% = Int(con.WIDTH / 2) - 4
   Const MENU_HEIGHT% = con.HEIGHT - 6
 
   Cls
-
   Option Console Serial
+  twm.show_cursor(0)
 
   twm.init(3, 10075)
   Local win0% = twm.new_win%(0, 0, con.WIDTH, con.HEIGHT)
@@ -147,6 +147,12 @@ Function menus.choose_advent$()
   twm.box(0, 2, con.WIDTH / 2, con.HEIGHT - 2)
   twm.bold(1)
   twm.print_at(0, 0, str.centre$("Select adventure using [Up], [Down], [Page Up], [Page Down] and [Enter]", con.WIDTH))
+  twm.switch(left%)
+  twm.print_at(0, 0, "Reading adventures...")
+
+  Local m$(map.new%(50)) Length 64
+  map.init(m$())
+  catalogue.get_all(m$())
 
   Local size% = map.size%(m$())
   Local first% = 0

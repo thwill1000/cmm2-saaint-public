@@ -6,6 +6,8 @@ If sys.VERSION$ = "" Then Error "'system.inc' not included"
 sys.provides("txtwm")
 If sys.err$ <> "" Then Error sys.err$
 
+If Mm.Info(Option Base) <> 0 Then Error "expects OPTION BASE 0"
+
 Const twm.BLACK%   = 0
 Const twm.RED%     = 1
 Const twm.GREEN%   = 2
@@ -15,57 +17,39 @@ Const twm.MAGENTA% = 5
 Const twm.CYAN%    = 6
 Const twm.WHITE%   = 7
 
-Dim twm.vt$(255)  ' map of attribute values to VT100 control codes
-Dim twm.fg%(255)  ' map of attribute values to VGA foreground colours
-Dim twm.bg%(255)  ' map of attribute values to VGA background colours
-'Dim twm.data%()  ' large block of memory for storing window state.
-                  ' Not created until twm.init() is called
-'Dim twm.ptr%()   ' pointers into twm.data%() such that twm.ptr%(i) is the
-                  ' memory address where the data for window 'i' starts.
-                  ' Not created until twm.init() is called
-Dim twm.max_num%  ' max number of windows allowed
-Dim twm.num%      ' current number of windows created
-Dim twm.fw%       ' font width
-Dim twm.fh%       ' font height
+' All these arrays are created by twm.init() and destroyed by twm.free().
+' Dim twm.vt$(255)  ' map of attribute values to VT100 control-codes
+' Dim twm.fg%(255)  ' map of attribute values to VGA foreground colours
+' Dim twm.bg%(255)  ' map of attribute values to VGA background colours
+' Dim twm.data%()   ' large block of memory for storing window state.
+' Dim twm.ptr%()    ' pointers into twm.data%() such that twm.ptr%(i) is the
+                    ' memory address where the data for window 'i' starts.
+' Dim twm.c2b%(255) ' map from ASCII chars to box-drawing data.
+' Dim twm.b2c%(15)  ' map from box-drawing data to ASCII chars.
+
+Dim twm.max_num%    ' max number of windows allowed
+Dim twm.num%        ' current number of windows created
+Dim twm.fw%         ' font width
+Dim twm.fh%         ' font height
+Dim twm.last_at%    ' as an optimisation we keep a record of the last attribute
+                    ' / vt100 control-code that the txtwm library wrote to the
+                    ' serial output so that we only write a new one when
+                    ' necessary. WARNING! if code outside of txtwm is also
+                    ' writing vt100 control-codes then this may get out of
+                    ' synch. It can be cleared by setting it to -1 or calling
+                    ' twm.switch().
 
 ' For the currently selected window:
-Dim twm.id%      ' id
-Dim twm.a%       ' x-coordinate of left hand side
-Dim twm.b%       ' y-coordinate of top
-Dim twm.w%       ' width
-Dim twm.h%       ' height
-Dim twm.x%       ' x cursor-position
-Dim twm.y%       ' y cursor-position
-Dim twm.at%      ' attributes to use for printing
-Dim twm.pc%      ' pointer to the character data
-Dim twm.pa%      ' pointer to the attribute data
-
-Dim twm.cur_at%  ' TODO
-
-Dim a%(255), b%(15)
-a%(&hB9) = &b1101
-a%(&hBA) = &b0101
-a%(&hBB) = &b1100
-a%(&hBC) = &b1001
-a%(&hC8) = &b0011
-a%(&hC9) = &b0110
-a%(&hCA) = &b1011
-a%(&hCB) = &b1110
-a%(&hCC) = &b0111
-a%(&hCD) = &b1010
-a%(&hCE) = &b1111
-
-b%(&b1101) = &hB9
-b%(&b0101) = &hBA
-b%(&b1100) = &hBB
-b%(&b1001) = &hBC
-b%(&b0011) = &hC8
-b%(&b0110) = &hC9
-b%(&b1011) = &hCA
-b%(&b1110) = &hCB
-b%(&b0111) = &hCC
-b%(&b1010) = &hCD
-b%(&b1111) = &hCE
+Dim twm.id% ' id
+Dim twm.a%  ' x-coordinate of left hand side
+Dim twm.b%  ' y-coordinate of top
+Dim twm.w%  ' width
+Dim twm.h%  ' height
+Dim twm.x%  ' x cursor-position
+Dim twm.y%  ' y cursor-position
+Dim twm.at% ' attributes to use for printing
+Dim twm.pc% ' pointer to the character data
+Dim twm.pa% ' pointer to the attribute data
 
 ' Initialises the 'txtwm' library.
 '
@@ -79,7 +63,7 @@ Sub twm.init(max_num%, mem_sz%)
 
   twm.max_num% = max_num%
   twm.id%      = -1
-  twm.cur_at%  = -1
+  twm.last_at% = -1
   twm.fw%      = Mm.Info(FontWidth)
   twm.fh%      = Mm.Info(FontHeight)
 
@@ -90,7 +74,17 @@ Sub twm.init(max_num%, mem_sz%)
   ' Because MMBasic can't have 1 element arrays we always allocate space for at least 2 windows.
   Dim twm.ptr%(Choice(max_num% = 1, 1, max_num% - 1))
 
-  Local i%, vt$, tmp%
+  twm.init_serial_attrs()
+  twm.init_screen_attrs()
+  twm.init_box_chars()
+
+End Sub
+
+Sub twm.init_serial_attrs()
+  Local i%, vt$
+
+  Dim twm.vt$(255)
+
   For i% = 0 To 255
     ' Clear attributes
     vt$ = Chr$(27) + "[0m"
@@ -107,47 +101,93 @@ Sub twm.init(max_num%, mem_sz%)
     twm.vt$(i%) = vt$
   Next
 
+End Sub
+
+Sub twm.init_screen_attrs()
+  Local bg%, fg%, i%
+
+  Dim twm.fg%(255)
+  Dim twm.bg%(255)
+
   For i% = 0 To 255
     ' Foreground
     Select Case i% And &b00000111
-      Case twm.BLACK%   : twm.fg%(i%) = RGB(Black)
-      Case twm.RED%     : twm.fg%(i%) = RGB(Red)
-      Case twm.GREEN%   : twm.fg%(i%) = RGB(Green)
-      Case twm.YELLOW%  : twm.fg%(i%) = RGB(Yellow)
-      Case twm.BLUE%    : twm.fg%(i%) = RGB(Blue)
-      Case twm.MAGENTA% : twm.fg%(i%) = RGB(Magenta)
-      Case twm.CYAN%    : twm.fg%(i%) = RGB(Cyan)
-      Case twm.WHITE%   : twm.fg%(i%) = RGB(White)
+      Case twm.BLACK%   : fg% = RGB(Black)
+      Case twm.RED%     : fg% = RGB(Red)
+      Case twm.GREEN%   : fg% = RGB(Green)
+      Case twm.YELLOW%  : fg% = RGB(Yellow)
+      Case twm.BLUE%    : fg% = RGB(Blue)
+      Case twm.MAGENTA% : fg% = RGB(Magenta)
+      Case twm.CYAN%    : fg% = RGB(Cyan)
+      Case twm.WHITE%   : fg% = RGB(White)
+      Case Else Error
     End Select
 
     ' TODO: Bold/Bright text
 
     ' Background
     Select Case (i% And &b00111000) >> 3
-      Case twm.BLACK%   : twm.bg%(i%) = RGB(Black)
-      Case twm.RED%     : twm.bg%(i%) = RGB(Red)
-      Case twm.GREEN%   : twm.bg%(i%) = RGB(Green)
-      Case twm.YELLOW%  : twm.bg%(i%) = RGB(Yellow)
-      Case twm.BLUE%    : twm.bg%(i%) = RGB(Blue)
-      Case twm.MAGENTA% : twm.bg%(i%) = RGB(Magenta)
-      Case twm.CYAN%    : twm.bg%(i%) = RGB(Cyan)
-      Case twm.WHITE%   : twm.bg%(i%) = RGB(White)
+      Case twm.BLACK%   : bg% = RGB(Black)
+      Case twm.RED%     : bg% = RGB(Red)
+      Case twm.GREEN%   : bg% = RGB(Green)
+      Case twm.YELLOW%  : bg% = RGB(Yellow)
+      Case twm.BLUE%    : bg% = RGB(Blue)
+      Case twm.MAGENTA% : bg% = RGB(Magenta)
+      Case twm.CYAN%    : bg% = RGB(Cyan)
+      Case twm.WHITE%   : bg% = RGB(White)
+      Case Else Error
     End Select
 
-    ' Reverse video
     If i% And &b10000000 Then
-      tmp% = twm.bg%(i%)
-      twm.bg%(i%) = twm.fg%(i%)
-      twm.fg%(i%) = tmp%
+      ' Reverse video
+      twm.bg%(i%) = fg%
+      twm.fg%(i%) = bg%
+    Else
+      ' Normal video
+      twm.bg%(i%) = bg%
+      twm.fg%(i%) = fg%
     EndIf
   Next
 
+End Sub
+
+Sub twm.init_box_chars()
+  Dim twm.c2b%(255)
+  twm.c2b%(&hB9) = &b1101
+  twm.c2b%(&hBA) = &b0101
+  twm.c2b%(&hBB) = &b1100
+  twm.c2b%(&hBC) = &b1001
+  twm.c2b%(&hC8) = &b0011
+  twm.c2b%(&hC9) = &b0110
+  twm.c2b%(&hCA) = &b1011
+  twm.c2b%(&hCB) = &b1110
+  twm.c2b%(&hCC) = &b0111
+  twm.c2b%(&hCD) = &b1010
+  twm.c2b%(&hCE) = &b1111
+
+  Dim twm.b2c%(15)
+  twm.b2c%(&b1101) = &hB9
+  twm.b2c%(&b0101) = &hBA
+  twm.b2c%(&b1100) = &hBB
+  twm.b2c%(&b1001) = &hBC
+  twm.b2c%(&b0011) = &hC8
+  twm.b2c%(&b0110) = &hC9
+  twm.b2c%(&b1011) = &hCA
+  twm.b2c%(&b1110) = &hCB
+  twm.b2c%(&b0111) = &hCC
+  twm.b2c%(&b1010) = &hCD
+  twm.b2c%(&b1111) = &hCE
 End Sub
 
 Sub twm.free()
   If twm.max_num% = 0 Then Exit Sub
   Erase twm.data%()
   Erase twm.ptr%()
+  Erase twm.c2b%()
+  Erase twm.b2c%()
+  Erase twm.vt$()
+  Erase twm.fg%()
+  Erase twm.bg%()
   twm.max_num% = 0
   twm.num%     = 0
   twm.fw%      = 0
@@ -162,7 +202,7 @@ Sub twm.free()
   twm.at%      = 0
   twm.pc%      = 0
   twm.pa%      = 0
-  twm.cur_at%  = 0
+  twm.last_at% = 0
 End Sub
 
 Function twm.new_win%(x%, y%, w%, h%)
@@ -201,6 +241,10 @@ Function twm.new_win%(x%, y%, w%, h%)
 End Function
 
 Sub twm.switch(id%)
+
+  ' Calling twm.switch() always resets this even if no actually window switch
+  ' is required.
+  twm.last_at% = -1
 
   If twm.id% = id% Then Exit Sub
 
@@ -267,7 +311,7 @@ Sub twm.putc(ch%)
   Poke Byte twm.pa% + of%, at%
 
   ' Update serial console:
-  If twm.cur_at% <> at% Then Print vt$; : twm.cur_at% = at%
+  If twm.last_at% <> at% Then Print vt$; : twm.last_at% = at%
   Print Chr$(27) "[" Str$(by%) ";" Str$(ax%) "H" s$;
 
   ' Update VGA display:
@@ -298,14 +342,14 @@ Sub twm.print(s$)
   If nc% = 0 Then Exit Sub
 
   ' Set serial console VT100 attributes
-  If twm.cur_at% <> at% Then Print vt$; : twm.cur_at% = at%
+  If twm.last_at% <> at% Then Print vt$; : twm.last_at% = at%
 
   Do
     If twm.y% = twm.h% Then
       twm.scroll_up(1)
       Inc twm.y%, -1
       ' Restore attributes that may have been changed by scroll_up()
-      If twm.cur_at% <> at% Then Print vt$ : twm.cur_at% = at%
+      If twm.last_at% <> at% Then Print vt$ : twm.last_at% = at%
     EndIf
 
     ' Write text and attributes to twm.data%()
@@ -391,7 +435,7 @@ Sub twm.redraw()
       ch$ = Chr$(Peek(Byte pc% + x%))
 
       ' Update serial console:
-      If twm.cur_at% <> at% Then Print twm.vt$(at%); : twm.cur_at% = at%
+      If twm.last_at% <> at% Then Print twm.vt$(at%); : twm.last_at% = at%
       Print ch$;
 
       ' Update VGA display:
@@ -453,10 +497,18 @@ End Sub
 ' @param ex%  existing character.
 ' @return     junction character, or 'ch%'.
 Function twm.box_or%(ch%, ex%)
-  Local tmp% = a%(ch%)
-  twm.box_or% = Choice(tmp% = 0, ch%, b%(tmp% Or a%(ex%)))
+  Local tmp% = twm.c2b%(ch%)
+  twm.box_or% = Choice(tmp% = 0, ch%, twm.b2c%(tmp% Or twm.c2b%(ex%)))
 End Function
 
+' Sends VT100 control-code to hide/show cursor to the serial console.
 Sub twm.show_cursor(z)
+  Local s$ = LCase$(Mm.Info$(Option Console))
+  If s$ = "screen" Then
+    Exit Sub
+  ElseIf s$ = "both" Then
+    Option Console Serial
+  EndIf
   Print Chr$(27) Choice(z, "[?25h", "[?25l");
+  If s$ = "both" Then Option Console Both
 End Sub

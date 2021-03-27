@@ -78,8 +78,6 @@ Sub main()
 
   Local f$
 
-  twm.show_cursor(0)
-
 main_menu:
 
   advent.free()
@@ -131,7 +129,6 @@ play_game:
   state = STATE_CONTINUE
   game_loop()
   con.close_all()
-  twm.show_cursor(0)
   If state <> STATE_QUIT Then Goto adventure_menu
 
 quit:
