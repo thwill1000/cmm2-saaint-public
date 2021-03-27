@@ -33,10 +33,11 @@ Function menus.main$()
   Local k$
   Do
     k$ = LCase$(Inkey$)
+    If Asc(k$) = 27 Then k$ = "escape"
     Select Case k$
       Case "c" : menus.main$ = "#credits"
       Case "i" : menus.main$ = "#instructions"
-      Case "q" : menus.main$ = "#quit"
+      Case "q", "escape" : menus.main$ = "#quit"
       Case "s" : menus.main$ = "#select"
       Case Else : k$ = ""
     End Select
@@ -70,8 +71,9 @@ Function menus.adventure$()
   Local k$
   Do
     k$ = LCase$(Inkey$)
+    If Asc(k$) = 27 Then k$ = "escape"
     Select Case k$
-      Case "b" : menus.adventure$ = "#back"
+      Case "b", "escape" : menus.adventure$ = "#back"
       Case "c"
         If metadata.credits_file$ <> "" Then menus.adventure$ = "#credits" Else k$ = ""
       Case "i" : menus.adventure$ = "#instructions"
