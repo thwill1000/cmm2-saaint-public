@@ -9,8 +9,8 @@ sys.requires("file")
 sys.provides("persist")
 If sys.err$ <> "" Then Error sys.err$
 
-Const SAVE_DIR$   = fil.PROG_DIR$ + "/../saves"
-Const SCRIPT_DIR$ = fil.PROG_DIR$ + "/../scripts"
+Const SAVE_DIR$   = fil.get_canonical$(fil.PROG_DIR$ + "/../saves")
+Const SCRIPT_DIR$ = fil.get_canonical$(fil.PROG_DIR$ + "/../scripts")
 
 ' Saves the current game state to a file.
 ' @return 1 on success, otherwise 0.
@@ -36,6 +36,8 @@ Function do_save()
   If game = 0 Then con.println("Cancelled.") Exit Function
 
   con.println("Saving '" + f$ + "' ...")
+
+  fil.mkdir(fil.get_parent$(f$))
 
   Open f$ For Output As #1
 
@@ -64,7 +66,11 @@ End Function
 Function save_file$(i)
   If i < 1 Or i > 10 Then Error "Invalid saved game number"
   Local name$ = fil.trim_extension$(fil.get_name$(advent.file$))
-  save_file$ = SAVE_DIR$ + "/" + name$ + "_" + Str$(i) + ".sav"
+  Local parent_name$ = fil.get_name$(fil.get_parent$(advent.file$))
+  If Right$(parent_name$, 1) = ":" Then
+    parent_name$ = Left$(parent_name$, Len(parent_name$) - 1) + "-drive"
+  EndIf
+  save_file$ = SAVE_DIR$ + "/" + parent_name$ + "/" + name$ + "_" + Str$(i) + ".sav"
 End Function
 
 ' Restores game state from a file.
@@ -123,8 +129,6 @@ End Function
 Function select_game()
   Local i, f$, s$(3) Length 64
 
-  fil.mkdir(SAVE_DIR$)
-
   For i = 1 To 10
     f$ = save_file$(i)
     con.print("  [" + Format$(i, "%2g") + "] ")
@@ -175,6 +179,8 @@ Sub record_on()
 
   con.println("Recording to '" + f$ + "' ...")
 
+  fil.mkdir(fil.get_parent$(f$))
+
   con.open_out(2, f$)
 
   Print #2, "# " Date$ " " Time$
@@ -185,8 +191,6 @@ End Sub
 ' Prompts the user to select a script slot.
 Function select_script()
   Local i, f$, s$
-
-  fil.mkdir(SCRIPT_DIR$)
 
   For i = 1 To 10
     f$ = script_file$(i)
@@ -214,7 +218,11 @@ End Function
 Function script_file$(i)
   If i < 1 Or i > 10 Then Error "Invalid script number"
   Local name$ = fil.trim_extension$(fil.get_name$(advent.file$))
-  script_file$ = SCRIPT_DIR$ + "/" + name$ + "_" + Str$(i) + ".scr"
+  Local parent_name$ = fil.get_name$(fil.get_parent$(advent.file$))
+  If Right$(parent_name$, 1) = ":" Then
+    parent_name$ = Left$(parent_name$, Len(parent_name$) - 1) + "-drive"
+  EndIf
+  script_file$ = SCRIPT_DIR$ + "/" + parent_name$ + "/" + name$ + "_" + Str$(i) + ".scr"
 End Function
 
 Sub record_off()
