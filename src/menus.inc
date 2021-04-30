@@ -163,6 +163,7 @@ Function menus.choose_advent$()
   Local new_first% = first%
   Local new_sel% = sel%
   Local requires_update% = 1
+  Local i%
 
   menus.paint_menu(left%, m$(), first%, sel%)
 
@@ -175,16 +176,27 @@ Function menus.choose_advent$()
         Exit Do
       Case 128 ' Up
         new_sel% = sel% - 1
-        If new_sel% < first% Then new_first% = first% - 1
       Case 129 ' Down
         new_sel% = sel% + 1
-        If new_sel% > last% Then new_first% = first% + 1
       Case 136 ' Page Up
         new_sel% = Choice(sel% = first%, sel% - MENU_HEIGHT%, first%)
-        new_first% = Choice(sel% = first%, new_sel%, first%)
       Case 137 ' Page Down
         new_sel% = Choice(sel% = last%, sel% + MENU_HEIGHT%, last%)
-        new_first% = Choice(sel% = last%, new_sel%, first%)
+      Case Asc("A") To Asc("Z"), Asc("a") To Asc("z"), Asc("0") To Asc("9")
+        ' Select adventure to first entry whose name begins with letter/digit.
+        ' If current selection and next entry begin with letter/digit then select
+        ' next entry.
+        ' Relies on all adventure names beginning with digit or upper-case character.
+        k$ = UCase$(k$)
+        If Left$(m$(sel%), 1) = k$ Then new_sel% = sel% + 1
+        If Left$(m$(new_sel%), 1) <> k$ Then
+          For i% = 0 To size% - 1
+            If Left$(m$(i%), 1) = k$ Then
+              new_sel% = i%
+              Exit For
+            EndIf
+          Next
+        EndIf
       Case 0
         If requires_update% Then
           menus.paint_description(right%, map.get$(m$(), m$(sel%)))
@@ -195,12 +207,18 @@ Function menus.choose_advent$()
     ' Clear the keyboard buffer without blocking when it is empty.
     If k$ <> "" Then k$ = Input$(255, #0)
 
-    ' Keep selected and first item within bounds of list.
+    ' Keep selected item within bounds of list.
     new_sel% = Min(size% - 1, Max(0, new_sel%))
-    new_first% = Min(size% - MENU_HEIGHT%, Max(0, new_first%))
 
     ' Short-circuit if new selected item = old selected item.
     If new_sel% = sel% Then Continue Do
+
+    ' Update new_first% to keep new_sel% within display bounds.
+    If new_sel% < first% Then
+      new_first% = new_sel%
+    ElseIf new_sel% > last% Then
+      new_first% = new_sel% - MENU_HEIGHT% + 1
+    EndIf
 
     twm.switch(left%)
     twm.inverse(0)
