@@ -43,8 +43,10 @@ Const VERB_REPLAY_OFF = -6
 Const VERB_DUMP_STATE = -7
 Const VERB_DEBUG_ON   = -8
 Const VERB_DEBUG_OFF  = -9
-Const VERB_FIXED_SEED = -10
+Const VERB_SEED       = -10
 Const VERB_LOOK       = -11
+Const VERB_MORE_ON    = -12
+Const VERB_MORE_OFF   = -13
 
 ' These global variables hold the current game state
 Dim lx              ' light duration
@@ -102,6 +104,7 @@ select_adventure:
 
   f$ = menus.choose_advent$()
   If f$ = "" Then Goto main_menu
+  Cls
   f$ = catalogue.find$(f$)
 
 read_adventure:
@@ -168,10 +171,10 @@ Sub game_loop()
 
   Do
     do_automatic_actions()
+    If redraw_flag% Then describe_room()
     If state = STATE_CONTINUE Then prompt_for_command(verb, noun, nstr$)
-    If redraw_flag% Then describe_room()
     If state = STATE_CONTINUE Then do_player_actions(verb, noun, nstr$)
-    If redraw_flag% Then describe_room()
+'    If redraw_flag% Then describe_room()
     If state = STATE_CONTINUE Then update_light()
   Loop While state = STATE_CONTINUE
 End Sub
@@ -191,8 +194,6 @@ Sub describe_room()
   con.foreground("white")
 
   If Mm.Info(VPOS) > 0 Then con.println()
-'  Cls
-'  con.lines = 0
 
   If debug Then con.print("[" + Str$(r) + "] ")
   If Left$(rs$(r), 1) = "*" Then
@@ -294,6 +295,10 @@ Sub do_player_actions(verb, noun, nstr$)
 
   Local a, an, av, result = ACTION_UNKNOWN
 
+  ' We record this so we can determine whether a user action caused any
+  ' messages to be output, if it didn't then we will automatically output OK.
+  Local num_lines = con.lines
+
   For a = 0 To cl
     av = Int(ca(a, 0) / 150) ' action - verb
     an = ca(a, 0) - av * 150 ' action - noun
@@ -339,7 +344,7 @@ Sub do_player_actions(verb, noun, nstr$)
   Select Case result
     Case ACTION_UNKNOWN : con.println("I don't understand your command.")
     Case ACTION_NOT_YET : con.println("I can't do that yet.")
-    Case Else           : If con.lines = 0 And state = STATE_CONTINUE Then con.println("OK.")
+    Case Else           : If con.lines = num_lines Then con.println("OK.")
   End Select
 
 End Sub
@@ -798,7 +803,7 @@ Function get_parameter(a)
 End Function
 
 Sub prompt_for_command(verb, noun, nstr$)
-  Local s$, _
+  Local s$
 
   Do
     If con.count = 1 Then con.println()
@@ -809,15 +814,17 @@ Sub prompt_for_command(verb, noun, nstr$)
       Case 0               : con.println("You use word(s) I don't know!")
       Case VERB_NONE       : ' Do nothing, user will be prompted for command again.
       Case VERB_TOO_MANY   : con.println("I only understand two word commands!")
-      Case VERB_RECORD_ON  : record_on()
+      Case VERB_RECORD_ON  : fix_random_numbers("record") : record_on()
       Case VERB_RECORD_OFF : record_off()
-      Case VERB_REPLAY_ON  : replay_on()
+      Case VERB_REPLAY_ON  : fix_random_numbers("record") : replay_on()
       Case VERB_REPLAY_OFF : replay_off()
       Case VERB_DUMP_STATE : print_state()
       Case VERB_DEBUG_ON   : con.println("OK.") : debug = 1
       Case VERB_DEBUG_OFF  : con.println("OK.") : debug = 0
-      Case VERB_FIXED_SEED : con.println("OK.") : _ = sys.pseudo%(-7)
+      Case VERB_SEED       : fix_random_numbers(nstr$)
       Case VERB_LOOK       : describe_room()
+      Case VERB_MORE_ON    : con.println("OK.") : con.more = 1
+      Case VERB_MORE_OFF   : con.println("OK.") : con.more = 0
       Case Else            : Exit Do ' Handle 'verb' in calling code.
     End Select
 
@@ -909,6 +916,9 @@ Function lookup_meta_command(vstr$, nstr$)
       If nstr$ = "off" Then verb = VERB_DEBUG_OFF
     Case "*look"
       If nstr$ = "" Then verb = VERB_LOOK
+    Case "*more"
+      If nstr$ = "on" Or nstr$ = "" Then verb = VERB_MORE_ON
+      If nstr$ = "off" Then verb = VERB_MORE_OFF
     Case "*record"
       If nstr$ = "on" Or nstr$ = "" Then verb = VERB_RECORD_ON
       If nstr$ = "off" Then verb = VERB_RECORD_OFF
@@ -918,7 +928,7 @@ Function lookup_meta_command(vstr$, nstr$)
       ' so as to stop it from being read to its end.
       If nstr$ = "off" Then verb = VERB_REPLAY_OFF
     Case "*seed"
-      If nstr$ = "" Then verb = VERB_FIXED_SEED
+      verb = VERB_SEED
     Case "*state"
       If nstr$ = "" Then verb = VERB_DUMP_STATE
   End Select
@@ -950,6 +960,24 @@ Function lookup_word(word$, dict)
     EndIf
   Next i
 End Function
+
+' Specifies a fixed seed for the random number generator.
+'
+' @param  nstr$  the seed, should be an integer > 0 or the string "record"
+'                which will use the hardcoded seed value 7.
+Sub fix_random_numbers(nstr$)
+  If nstr$ = "record" Then
+    Local seed% = 7
+  ElseIf Val(nstr$) > 0 And nstr$ = Str$(Int(Val(nstr$)))) Then
+    Local seed% = Val(nstr$)
+  Else
+    con.println("Invalid seed, should be integer > 0.")
+    Exit Sub
+  EndIf
+
+  Local _ = sys.pseudo%(-seed%)
+  If nstr$ <> "record" Then con.println("OK.")
+End Sub
 
 ' Picks up the object identified by 'nstr$'
 Sub do_get(noun, nstr$)

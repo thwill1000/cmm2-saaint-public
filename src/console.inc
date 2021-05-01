@@ -7,15 +7,17 @@ sys.requires("vt100")
 sys.provides("console")
 If sys.err$ <> "" Then Error sys.err$
 
-Dim con.buf$   ' console write buffer
-Dim con.space  ' was the last character written to con.buf$ a space?
-Dim con.lines  ' number of lines that have been output since the last prompt
-Dim con.count  ' number of consecutive calls to con.endl() without an
-               ' intervening call to con.print()
-Dim con.x = 1  ' current horizontal cursor position, indexed from 1
-Dim con.spin   ' is the spinning cursor currently displayed?
-Dim con.fd_in  ' file descriptor to read input from
-Dim con.fd_out ' file descriptor to echo input to
+Dim con.buf$     ' console write buffer
+Dim con.space    ' was the last character written to con.buf$ a space?
+Dim con.lines    ' number of lines that have been output since the last prompt
+Dim con.count    ' number of consecutive calls to con.endl() without an
+                 ' intervening call to con.print()
+Dim con.x = 1    ' current horizontal cursor position, indexed from 1
+Dim con.spin     ' is the spinning cursor currently displayed?
+Dim con.fd_in    ' file descriptor to read input from
+Dim con.fd_out   ' file descriptor to echo input to
+Dim con.more = 1 ' show the [MORE] prompt if more than a page of output
+                 ' (approx con.HEIGHT lines) is written without a prompt
 
 '!comment_if INLINE_CONSTANTS
 Const con.CR$ = Chr$(13)
@@ -36,7 +38,7 @@ Function con.in$(p$, echo)
   ' If we read from a file then echo what we read.
   If con.fd_in > 0 Then con.println(s$)
 
-  ' If we read from the console when clear con.lines.
+  ' If we read from the console then clear con.lines.
   If con.fd_in = 0 Then con.lines = 0
 
   con.x = 1
@@ -100,10 +102,12 @@ Sub con.flush()
 
   Do
     If con.x = 1 And con.lines > con.HEIGHT - 2 Then
-      Print "[MORE] ";
-      Do While Inkey$ <> "" : Loop
-      Do While Inkey$ = "" : Loop
-      Print
+      If con.more Then
+        Print "[MORE] ";
+        Do While Inkey$ <> "" : Loop
+        Do While Inkey$ = "" : Loop
+        Print
+      EndIf
       con.lines = 0
     EndIf
 
