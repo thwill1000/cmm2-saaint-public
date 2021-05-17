@@ -1,21 +1,28 @@
-"Pirate Adventure" is (c) 1978 Scott Adams and is distributed with his
-kind permission.
+The following files are (c) 1978-1981 Scott Adams/Adventure International
+and are distibuted with his kind permission. They should not be further
+reproduced without permission of the copyright holders:
 
-The following files should not be reproduced without permission of the
-copyright holders:
+  adventures/scott-adams/
+    adv01.dat  -  #1  Adventureland
+    adv02.dat  -  #2  Pirate Adventure
+    adv03.dat  -  #3  Secret Mission
+    adv04.dat  -  #4  Voodoo Castle
+    adv05.dat  -  #5  The Count
+    adv06.dat  -  #6  Strange Odyssey
+    adv07.dat  -  #7  Mystery Fun House
+    adv08.dat  -  #8  Pyramid of Doom
+    adv09.dat  -  #9  Ghost Town
+    adv10.dat  - #10  Savage Island, Part I
+    adv11.dat  - #11  Savage Island, Part II
+    adv12.dat  - #12  The Golden Voyage
+    pirate.dat - Pirate Adventure (BYTE magazine version)
 
-  advdata.bas -  (c) 1978 Scott Adams
-                 (c) 2020 Thomas Hugo Williams
-  interp.bas  -  (c) 1978 Scott Adams
-                 (c) 2020 Thomas Hugo Williams
-  pirate.dat  -  (c) 1978 Scott Adams
-
-All the other files of this program are (c) Thomas Hugo Williams 2019-20
-and licensed under the MIT license:
+The SAAINT program itself and all other files are
+(c) Thomas Hugo Williams 2019-2021 and licensed under the MIT license:
 
 MIT License
 
-Copyright (c) 2019-20 Thomas Hugo Williams
+Copyright (c) 2019-2021 Thomas Hugo Williams
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -18,8 +18,8 @@ games:
      https://github.com/pdxiv/LuaScott/blob/master/doc/
        The_ADVENTURE_Data_Base_Format_(1980).md
 
-IMPORTANT! Game data (.dat) file are (c) their respective authors and
-should not be distributed without permission.
+IMPORTANT! Game data (.dat) file are copyright their respective
+authors and should not be distributed without permission.
 
 Please read the LICENSE file for further details about modifying and
 distributing this program.

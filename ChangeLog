@@ -1,0 +1,15 @@
+ChangeLog
+---------
+
+Version 2.0.0 - June 2021:
+ - Substantially enhanced standalone version including *with permission*
+   Scott Adams' Classic Adventures #1-#12.
+ - Should also be capable of playing Brian Howarth's "Mysterious Adventures"
+   and other adventures in TRS-80 / ScottFree / .dat file format.
+ - The author has only used SAAINT to play Scott Adams's Classic Adventures
+   #1-#3 to completion, the others *should work*, let me know if they do not.
+ - For firmware 5.07.00 or later.
+
+Version 1.0.0 - Jan 2021:
+ - Original version distributed with version 1.0.0 of "The Welcome Tape".
+ - Only capable of playing the BYTE Magazine version of "Pirate Adventure".
