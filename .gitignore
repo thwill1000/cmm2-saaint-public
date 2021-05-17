@@ -1,0 +1,8 @@
+# Ignore output from the "dump" command
+*.dmp
+
+# Ignore backup files
+*.bak
+
+# Ignore temporary files
+*.tmp
