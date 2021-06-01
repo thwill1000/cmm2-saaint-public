@@ -5,7 +5,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("file", "string")
+sys.requires("file", "string", "metadata")
 sys.provides("catalogue")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -66,21 +66,12 @@ Sub catalogue.get_all(m$())
   Loop
 
   Local i%, lb% = 0, ub% = list.size%(dirs$()) - 1
-  Local name$
   Local d$
   For i% = lb% To ub%
     d$ = catalogue.DIR$ + "/" + dirs$(i%) + "/"
     f$ = Dir$(d$ + "*.dat")
     Do While f$ <> "" And Not map.is_full%(m$())
-      name$ = fil.trim_extension$(f$)
-      If fil.exists%(d$ + name$ + ".ext") Then
-        Open d$ + name$ + ".ext" For Input As catalogue.FD_IN%
-        Line Input #catalogue.FD_IN%, name$
-        Close catalogue.FD_IN%
-      Else
-        name$ = UCase$(Left$(name$, 1)) + Mid$(name$, 2)
-      EndIf
-      map.put(m$(), name$, f$)
+      map.put(m$(), metadata.read_name$(d$ + f$), f$)
       f$ = Dir$()
     Loop
   Next

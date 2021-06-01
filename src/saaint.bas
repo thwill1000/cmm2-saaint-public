@@ -14,12 +14,13 @@ Option Default Integer
 #Include "splib/string.inc"
 #Include "splib/txtwm.inc"
 #Include "splib/file.inc"
+#Include "splib/inifile.inc"
 #Include "splib/vt100.inc"
 #Include "advent.inc"
 #Include "console.inc"
 #Include "persist.inc"
-#Include "catalogue.inc"
 #Include "metadata.inc"
+#Include "catalogue.inc"
 #Include "menus.inc"
 
 con.HEIGHT = 33
@@ -48,6 +49,12 @@ Const VERB_LOOK       = -11
 Const VERB_MORE_ON    = -12
 Const VERB_MORE_OFF   = -13
 
+Const INI_FILE$ = fil.PROG_DIR$ + "/saaint.ini"
+
+' Game options persisted to .ini file.
+Dim options$(map.new%(10))
+map.init(options$())
+
 ' These global variables hold the current game state
 Dim lx              ' light duration
 Dim df              ' dark flag
@@ -74,6 +81,7 @@ main()
 End
 
 Sub main()
+  read_inifile()
 
   ' Allow an adventure file to be specified at the command line.
   Local f$
@@ -89,10 +97,14 @@ Sub main()
 
 main_menu:
 
+  f$ = map.get$(options$(), "current")
+  If f$ <> "" Then f$ = catalogue.find$(str.trim$(f$))
+
   advent.free()
 
   Do
-    Select Case menus.main$()
+    Select Case menus.main$(f$)
+      Case "#play"         : Goto read_adventure
       Case "#select"       : Goto select_adventure
       Case "#credits"      : menus.credits()
       Case "#instructions" : menus.instructions()
@@ -138,10 +150,13 @@ restore_game:
 
 play_game:
 
+  con.more = map.get$(options$(), "more") <> "0"
+  write_inifile() ' Updates .ini file with the selected adventure.
   twm.show_cursor(1)
   state = STATE_CONTINUE
   game_loop()
   con.close_all()
+  write_inifile() ' Updates .ini file with any options changed during play.
   If state <> STATE_QUIT Then Goto adventure_menu
 
 quit:
@@ -151,6 +166,35 @@ quit:
   con.close_all()
   Pause 2000
 
+End Sub
+
+' Reads contents of options$() map from .ini file.
+Sub read_inifile()
+  If fil.exists%(INI_FILE$) Then
+    Open INI_FILE$ For Input As #1
+    Local ok% = inifile.read%(1, options$())
+    Close #1
+    If Not ok% Then Error "read_inifile: " + sys.err$
+  EndIf
+
+  Local s$
+
+  s$ = map.get$(options$(), "current")
+  If s$ = sys.NO_DATA$ Then map.put(options$(), "current", "")
+
+  s$ = map.get$(options$(), "more")
+  If s$ = sys.NO_DATA$ Then map.put(options$(), "more", "1")
+End Sub
+
+' Writes contents of options$() map to .ini file.
+Sub write_inifile()
+  map.put(options$(), "current", advent.file$)
+  map.put(options$(), "more", Str$(con.more))
+
+  Open INI_FILE$ For Output As #1
+  Local ok% = inifile.write%(1, options$())
+  Close #1
+  If Not ok% Then Error "write_inifile: " + sys.err$
 End Sub
 
 Sub reset_state()

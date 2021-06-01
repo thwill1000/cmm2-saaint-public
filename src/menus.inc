@@ -11,7 +11,7 @@ If sys.err$ <> "" Then Error sys.err$
 ' and adventure specific menus as well as the credits and
 ' instructions.
 
-Function menus.main$()
+Function menus.main$(advent$)
   Local f$ = fil.PROG_DIR$ + "/title.txt")
 
   Cls
@@ -22,10 +22,14 @@ Function menus.main$()
   con.print_file(f$, 1)
   con.foreground("green")
   con.println()
-  con.println("S  Select an adventure", 1)
-  con.println("I  Instructions       ", 1)
-  con.println("C  Credits & License  ", 1)
-  con.println("Q  Quit               ", 1)
+  Local play_item$ = Choice(advent$ = "", "", "P  Play '" + metadata.read_name$(advent$) + "'")
+  Local select_item$ = "S  Select a " + Choice(advent$ = "", "new", "different") + " adventure"
+  Local width% = Max(Len(play_item$), Len(select_item$))
+  If play_item$ <> "" Then con.println(str.rpad$(play_item$, width%), 1)
+  con.println(str.rpad$(select_item$,           width%), 1)
+  con.println(str.rpad$("I  Instructions",      width%), 1)
+  con.println(str.rpad$("C  Credits & License", width%), 1)
+  con.println(str.rpad$("Q  Quit",              width%), 1)
   con.println()
   con.println("Version 2.0a", 1)
 
@@ -35,6 +39,7 @@ Function menus.main$()
     k$ = LCase$(Inkey$)
     If Asc(k$) = 27 Then k$ = "escape"
     Select Case k$
+      Case "p" : menus.main$ = "#play"
       Case "c" : menus.main$ = "#credits"
       Case "i" : menus.main$ = "#instructions"
       Case "q", "escape" : menus.main$ = "#quit"

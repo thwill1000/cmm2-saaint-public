@@ -18,8 +18,33 @@ Dim metadata.title_file$        ' File containing current adventure title card, 
 Dim metadata.credits_file$      ' File containing current adventure credits, empty if none
 Dim metadata.instructions_file$ ' File containing current adventure instructions, empty if none
 
-' Reads name and description from ".ext" file.
-' Reports ERROR if encounters line > 255 characters.
+' Reads adventure name from ".ext" file.
+'
+' @param  f$  the full file path.
+' @return     the adventure name,
+'             if 'f$' does not exist then returns the name of the file withou
+'             any path or extension and with the first letter capitalised.
+Function metadata.read_name$(f$)
+  Local extfile$ = fil.trim_extension$(f$) + ".ext"
+  Local name$
+
+  If fil.exists%(extfile$) Then
+    Open extfile$ For Input As metadata.FD_IN%
+    Line Input #metadata.FD_IN%, name$
+    Close metadata.FD_IN%
+  Else
+    name$ = fil.trim_extension$(fil.get_name$(f$))
+    name$ = UCase$(Left$(name$, 1)) + Mid$(name$, 2)
+  EndIf
+
+  metadata.read_name$ = str.trim$(name$)
+End Function
+
+
+' Reads description from ".ext" file.
+'
+' @param       f$      the full file path.
+' @param[out]  out%()  the description is appended to this LongString.
 Sub metadata.read_description(f$, out%())
   If Not fil.exists%(f$) Then
     LongString Append out%(), "No description provided."

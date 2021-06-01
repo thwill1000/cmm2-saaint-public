@@ -11,6 +11,6 @@
 
          Scott Adams Adventure Interpreter
 
-          (c) 2020 Thomas Hugo Williams
+        (c) 2020-2021 Thomas Hugo Williams
        with the assistance of Bill McKinley
 Derived with permission from work (c) 1978 Scott Adams
