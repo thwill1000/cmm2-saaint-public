@@ -1,4 +1,4 @@
-# S.A.A.I.N.T.
+# SAAINT
 **Scott Adams Adventure Interpreter for the Colour Maximite 2**
 
 An interpreter allowing the classic works of Interactive Fiction (a.k.a. Text Adventures) by Scott Adams, Brian Howarth and others to be played on the [Colour Maximite 2](http://geoffg.net/maximite.html).
@@ -28,6 +28,16 @@ SAAINT is distributed for free but if you enjoy it then perhaps you would like t
  - Type ```chdir "/saaint"```
  - Type ```*saaint```
 
+## What adventures does it come with ?
+
+With his kind permission SAAINT is distributed with 12 of Scott Adams' Classic Adventures (SACA).<br/>
+These adventures / data files are still copyright Scott Adams and not subject to the open [LICENSE](LICENSE) covering SAAINT's source-code.
+
+Scott Adams is still very much active in the computer-games industry, you can find his latest games here:
+ - https://www.clopas.net
+ - http://www.AdventurelandXL.com
+ - https://www.EscapeTheGloomer.com
+
 ## How do I play a text adventure ?
 
 When the computer asks "What shall I do ?" type a one or two word command.
@@ -56,16 +66,6 @@ simply type "W".
 To take an inventory of the items you are carrying type "I".
 
 To save your current progress type "SAVE".
-
-## What adventures does it come with ?
-
-With his kind permission SAAINT is distributed with 12 of Scott Adams' Classic Adventures (SACA).<br/>
-These adventures / data files are still copyright Scott Adams and not subject to the open [LICENSE](LICENSE) covering SAAINT's source-code.
-
-Scott Adams is still very much active in the computer-games industry, you can find his latest games here:
- - https://www.clopas.net
- - http://www.AdventurelandXL.com
- - https://www.EscapeTheGloomer.com
 
 ## Where can I find more adventures?
 
