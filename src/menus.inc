@@ -31,7 +31,7 @@ Function menus.main$(advent$)
   con.println(str.rpad$("C  Credits & License", width%), 1)
   con.println(str.rpad$("Q  Quit",              width%), 1)
   con.println()
-  con.println("Version 2.0a", 1)
+  con.println("Version " + SAAINT_VERSION$, 1)
 
   Do While Inkey$ <> "" : Loop
   Local k$
