@@ -4,8 +4,9 @@
 ' Developed with the assistance of Bill McKinley
 ' Based on original TRS-80 Level II BASIC code (c) 1978 Scott Adams
 
-Option Explicit On
+Option Base 0
 Option Default Integer
+Option Explicit On
 
 #Include "splib/system.inc"
 #Include "splib/array.inc"
@@ -14,6 +15,7 @@ Option Default Integer
 #Include "splib/string.inc"
 #Include "splib/txtwm.inc"
 #Include "splib/file.inc"
+#Include "splib/crypt.inc"
 #Include "splib/inifile.inc"
 #Include "splib/vt100.inc"
 #Include "advent.inc"
@@ -35,19 +37,20 @@ Const ACTION_UNKNOWN   = 4
 Const ACTION_NOT_YET   = 5
 
 ' Hardcoded Verb id's.
-Const VERB_NONE       = -1
-Const VERB_TOO_MANY   = -2
-Const VERB_RECORD_ON  = -3
-Const VERB_RECORD_OFF = -4
-Const VERB_REPLAY_ON  = -5
-Const VERB_REPLAY_OFF = -6
-Const VERB_DUMP_STATE = -7
-Const VERB_DEBUG_ON   = -8
-Const VERB_DEBUG_OFF  = -9
-Const VERB_SEED       = -10
-Const VERB_LOOK       = -11
-Const VERB_MORE_ON    = -12
-Const VERB_MORE_OFF   = -13
+Const VERB_NONE        = -1
+Const VERB_TOO_MANY    = -2
+Const VERB_RECORD_ON   = -3
+Const VERB_RECORD_OFF  = -4
+Const VERB_REPLAY_ON   = -5
+Const VERB_REPLAY_OFF  = -6
+Const VERB_DUMP_STATE  = -7
+Const VERB_DEBUG_ON    = -8
+Const VERB_DEBUG_OFF   = -9
+Const VERB_SEED        = -10
+Const VERB_LOOK        = -11
+Const VERB_MORE_ON     = -12
+Const VERB_MORE_OFF    = -13
+Const VERB_WALKTHROUGH = -14
 
 Const INI_FILE$ = fil.PROG_DIR$ + "/saaint.ini"
 
@@ -855,21 +858,22 @@ Sub prompt_for_command(verb, noun, nstr$)
     parse(s$, verb, noun, nstr$)
 
     Select Case verb
-      Case 0               : con.println("You use word(s) I don't know!")
-      Case VERB_NONE       : ' Do nothing, user will be prompted for command again.
-      Case VERB_TOO_MANY   : con.println("I only understand two word commands!")
-      Case VERB_RECORD_ON  : fix_random_numbers("record") : record_on()
-      Case VERB_RECORD_OFF : record_off()
-      Case VERB_REPLAY_ON  : fix_random_numbers("record") : replay_on()
-      Case VERB_REPLAY_OFF : replay_off()
-      Case VERB_DUMP_STATE : print_state()
-      Case VERB_DEBUG_ON   : con.println("OK.") : debug = 1
-      Case VERB_DEBUG_OFF  : con.println("OK.") : debug = 0
-      Case VERB_SEED       : fix_random_numbers(nstr$)
-      Case VERB_LOOK       : describe_room()
-      Case VERB_MORE_ON    : con.println("OK.") : con.more = 1
-      Case VERB_MORE_OFF   : con.println("OK.") : con.more = 0
-      Case Else            : Exit Do ' Handle 'verb' in calling code.
+      Case 0                : con.println("You use word(s) I don't know!")
+      Case VERB_NONE        : ' Do nothing, user will be prompted for command again.
+      Case VERB_TOO_MANY    : con.println("I only understand two word commands!")
+      Case VERB_RECORD_ON   : fix_random_numbers("record") : record_on()
+      Case VERB_RECORD_OFF  : record_off()
+      Case VERB_REPLAY_ON   : fix_random_numbers("record") : replay_on()
+      Case VERB_REPLAY_OFF  : replay_off()
+      Case VERB_DUMP_STATE  : print_state()
+      Case VERB_DEBUG_ON    : con.println("OK.") : debug = 1
+      Case VERB_DEBUG_OFF   : con.println("OK.") : debug = 0
+      Case VERB_SEED        : fix_random_numbers(nstr$)
+      Case VERB_LOOK        : describe_room()
+      Case VERB_MORE_ON     : con.println("OK.") : con.more = 1
+      Case VERB_MORE_OFF    : con.println("OK.") : con.more = 0
+      Case VERB_WALKTHROUGH : fix_random_numbers("record") : persist.walkthrough()
+      Case Else             : Exit Do ' Handle 'verb' in calling code.
     End Select
 
   Loop
@@ -975,6 +979,8 @@ Function lookup_meta_command(vstr$, nstr$)
       verb = VERB_SEED
     Case "*state"
       If nstr$ = "" Then verb = VERB_DUMP_STATE
+    Case "*walkthrough"
+      If nstr$ = "" Then verb = VERB_WALKTHROUGH
   End Select
 
   lookup_meta_command = verb
