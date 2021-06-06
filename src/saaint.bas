@@ -111,8 +111,8 @@ main_menu:
     Select Case menus.main$(f$)
       Case "#play"         : Goto read_adventure
       Case "#select"       : Goto select_adventure
-      Case "#credits"      : menus.credits()
-      Case "#instructions" : menus.instructions()
+      Case "#credits"      : menus.credits(1)
+      Case "#instructions" : menus.instructions(1)
       Case "#quit"         : Goto quit
     End Select
   Loop

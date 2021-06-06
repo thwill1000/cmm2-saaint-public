@@ -92,8 +92,8 @@ Function menus.adventure$()
   con.lines = 0
 End Function
 
-Sub menus.credits()
-  Local f$ = metadata.credits_file$
+Sub menus.credits(top%)
+  Local f$ = Choice(top%, "", metadata.credits_file$)
   f$ = Choice(f$ <> "", f$, fil.PROG_DIR$ + "/credits.txt")
 
   Cls
@@ -114,8 +114,8 @@ Sub menus.credits()
   Do While Inkey$ = "" : Loop
 End Sub
 
-Sub menus.instructions()
-  Local f$ = metadata.instructions_file$
+Sub menus.instructions(top%)
+  Local f$ = Choice(top%, "", metadata.instructions_file$)
   f$ = Choice(f$ <> "", f$, fil.PROG_DIR$ + "/instructions.txt")
 
   Cls
