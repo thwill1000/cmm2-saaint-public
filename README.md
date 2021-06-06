@@ -1,12 +1,23 @@
 # S.A.A.I.N.T.
 **Scott Adams Adventure Interpreter for the Colour Maximite 2**
 
-An interpreter allowing classic interactive works of fiction by Scott Adams, Brian Howarth and others to be played on the [Colour Maximite 2](http://geoffg.net/maximite.html).
+An interpreter allowing the classic works of Interactive Fiction (a.k.a. Text Adventures) by Scott Adams, Brian Howarth and others to be played on the [Colour Maximite 2](http://geoffg.net/maximite.html).
 
 Written in MMBasic 5.07 by Thomas Hugo Williams with the assistance of Bill McKinley in 2020-2021.
 
-You can do what you like with the source-code for SAAINT subject to the [LICENSE](LICENSE),<br/>
-but if you use it then perhaps you would like to buy me a coffee? [![paypal](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T5F7BZ5NZFF66&source=url)
+Although it consists almost entirely of new code it is derived *with permission* from:
+ - Scott Adams' "Pirate Adventure" for TRS-80 published in BYTE Magazine Volume 05 Number 12 - December 1980
+ - Source-code for a BASIC version of "Adventureland" provided to the authors by Scott Adams.
+
+The authors would also like to thank:
+ - Alan Moluf and Bruce Hanson for documenting the data file format used by Scott Adams' adventure games: https://github.com/pdxiv/LuaScott/blob/master/doc/The_ADVENTURE_Data_Base_Format_(1980).md
+ - @hope1 for porting "Pirate Adventure" to the BBC Micro which served to show that the task was not as daunting as it first appeared: https://github.com/ahope1/Beeb-Pirate-Adventure.
+
+**IMPORTANT!** Game data (.dat) file are copyright their respective authors and should not be distributed without permission.
+
+Please read the [LICENSE](LICENSE) file for further details about modifying and distributing this program.
+
+SAAINT is distributed for free but if you enjoy it then perhaps you would like to buy Tom a coffee? [![paypal](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T5F7BZ5NZFF66&source=url)
 
 ## How do I install it ?
 
