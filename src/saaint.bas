@@ -147,7 +147,7 @@ new_game:
 
 restore_game:
 
-  If do_restore() Then Goto play_game
+  If persist.restore%() Then Goto play_game
   Pause 2000
   Goto adventure_menu
 
@@ -628,8 +628,8 @@ Sub do_command(a, cmd, nstr$)
     Case 63
       ' FINI
       ' Tell the player the game is over and ask if they want to play again.
-      If con.fd_out > 0 Then record_off()
-      If con.fd_in > 0 Then replay_off()
+      If con.fd_out > 0 Then persist.record_off()
+      If con.fd_in > 0 Then persist.replay_off()
       Local s$ = prompt$("The game is now over, would you like to play again [Y|n]? ")
       If LCase$(s$) = "n" Then state = STATE_QUIT Else state = STATE_RESTART
 
@@ -690,7 +690,7 @@ Sub do_command(a, cmd, nstr$)
     Case 71
       ' SAVEz
       ' This command saves the current game state to a file.
-      x = do_save()
+      x = persist.save%()
 
     Case 72
       ' EXx,x
@@ -861,10 +861,10 @@ Sub prompt_for_command(verb, noun, nstr$)
       Case 0                : con.println("You use word(s) I don't know!")
       Case VERB_NONE        : ' Do nothing, user will be prompted for command again.
       Case VERB_TOO_MANY    : con.println("I only understand two word commands!")
-      Case VERB_RECORD_ON   : fix_random_numbers("record") : record_on()
-      Case VERB_RECORD_OFF  : record_off()
-      Case VERB_REPLAY_ON   : fix_random_numbers("record") : replay_on()
-      Case VERB_REPLAY_OFF  : replay_off()
+      Case VERB_RECORD_ON   : fix_random_numbers("record") : persist.record_on()
+      Case VERB_RECORD_OFF  : persist.record_off()
+      Case VERB_REPLAY_ON   : fix_random_numbers("record") : persist.replay_on()
+      Case VERB_REPLAY_OFF  : persist.replay_off()
       Case VERB_DUMP_STATE  : print_state()
       Case VERB_DEBUG_ON    : con.println("OK.") : debug = 1
       Case VERB_DEBUG_OFF   : con.println("OK.") : debug = 0
