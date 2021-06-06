@@ -12,7 +12,7 @@ Some (but not all!) of the words you might find useful are:
 If you use a command that the computer can't perform or doesn't understand, it
 will say "You use word(s) I don't know." or "I don't understand your command.
 When this happens, try thinking of another way to say it or try making a verb
-out of the action. Instead of "GO SWIMMING," try "SWIM". You'll also discover
+out of the action. Instead of "GO SWIMMING", try "SWIM". You'll also discover
 that most objects can be picked up using the last word of their names.
 For example. to pick up an OLD BOOK, type "TAKE BOOK". Normally you can only
 do things to objects that are either visible or you are carrying.
