@@ -365,7 +365,7 @@ Sub do_player_actions(verb, noun, nstr$)
 
     EndIf
 
-    result = ACTION_NOT_YET
+    If result = ACTION_UNKNOWN Then result = ACTION_NOT_YET
     If Not process_conditions(a) Then Continue For ' Conditions not passed, try the next action.
 
     do_commands(a, nstr$)
