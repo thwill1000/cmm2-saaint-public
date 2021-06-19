@@ -5,7 +5,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("file", "crypt", "advent")
+sys.requires("file", "crypt", "console", "advent")
 sys.provides("persist")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -278,7 +278,7 @@ Sub persist.walkthrough()
   If con.fd_in <> 0  Then con.println("Cannot play walkthrough whilst replaying script.") : Exit Sub
 
   ' Prompt for and hash password.
-  Local password$ = con.in$("Password? ")
+  Local password$ = prompt$("Password? ")
   If password$ = "" Then con.println("Cancelled.") : Exit Sub
   Local k%(array.new%(2))
   Local ok% = crypt.md5%(Peek(VarAddr password$) + 1, Len(password$), k%())

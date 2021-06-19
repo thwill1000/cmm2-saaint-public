@@ -39,7 +39,7 @@ Function con.in$(p$, echo)
   If con.fd_in > 0 Then con.println(s$)
 
   ' If we read from the console then clear con.lines.
-  If con.fd_in = 0 Then con.lines = 0
+  If con.fd_in = 0 Then con.lines = 0 : con.count = 1
 
   con.x = 1
   If con.fd_in > 0 Then
