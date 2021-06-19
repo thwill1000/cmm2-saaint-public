@@ -139,6 +139,27 @@ The interpreter includes a number of meta-commands all prefixed with a ```*``` t
      - replays walkthrough file (.wlk) for the current adventure if present.
      - this feature is to help with testing and the files are encrypted to avoid spoilers. Passwords are available on request.
 
+## The "dump" utility
+
+SAAINT comes with a utility `src/dump.bas` that converts adventure `.dat` files into a (more) human-readable format:
+
+```
+*dump [OPTION]... [FILE]...
+
+Options:
+  -r, --raw  Outputs adventure(s) in original TRS-80 / ScottFree ".dat"
+             format. In theory excluding any slight nuances in formatting the
+             output files should be the same as the input files.
+
+Notes:
+  - One or more adventure files may be specified with or without .dat extension.
+  - Files may be absolute paths or relative to the current working directory or
+    relative to the 'adventures/' directory or its immediate subdirectories.
+  - If the list of files includes the entry * then all the .dat files in
+    'adventures' and its immediate subdirectories will be processed, i.e.
+      *dump *
+```
+
 ## FAQ
 
 **1. What is the Colour Maximite 2 ?**
