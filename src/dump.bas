@@ -12,6 +12,7 @@ Option Default Integer
 #Include "splib/string.inc"
 #Include "splib/file.inc"
 #Include "advent.inc"
+#Include "metadata.inc"
 #Include "catalogue.inc"
 
 main()
