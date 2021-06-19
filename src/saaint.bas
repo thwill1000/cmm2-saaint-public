@@ -25,7 +25,7 @@ Option Explicit On
 #Include "catalogue.inc"
 #Include "menus.inc"
 
-Const SAAINT_VERSION$ = "2.0.0"
+Const SAAINT_VERSION$ = "2.0.1"
 
 con.HEIGHT = 33
 con.WIDTH  = 80

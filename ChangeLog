@@ -1,7 +1,12 @@
 ChangeLog
 ---------
 
-Version 2.0.0 - June 2021:
+Version 2.0.1 - 19-Jun-2021:
+ - Changed password input typed by user (to access walkthroughs) from
+   green text to white text to match other user input.
+ - Fixed 'dump.bas' utility which was missing a #Include statement.
+
+Version 2.0.0 - 8-Jun-2021:
  - Substantially enhanced standalone version including *with permission*
    Scott Adams' Classic Adventures #1-#12.
  - Should also be capable of playing Brian Howarth's "Mysterious Adventures"
@@ -10,6 +15,6 @@ Version 2.0.0 - June 2021:
    #1-#3 to completion, the others *should work*, let me know if they do not.
  - For firmware 5.07.00 or later.
 
-Version 1.0.0 - Jan 2021:
+Version 1.0.0 - 24-Jan-2021:
  - Original version distributed with version 1.0.0 of "The Welcome Tape".
  - Only capable of playing the BYTE Magazine version of "Pirate Adventure".
