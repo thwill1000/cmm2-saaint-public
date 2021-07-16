@@ -126,10 +126,10 @@ The interpreter includes a number of meta-commands all prefixed with a ```*``` t
  - ```*replay off```
      - halts replaying.
      - only makes sense if inserted manually into a script file to prevent it from replaying to its end.
- - ```*seed```
+ - ```*seed <integer>```
      - seeds the pseudo-random number generator used by the interpreter.
      - note that this is automatically set (to 7) when recording or replaying a script so as to ensure any "random" behaviour will be consistent.
- - ```*state <integer>```
+ - ```*state```
      - prints the current game state:
          - the number of the current room
          - the value of the "dark flag"
