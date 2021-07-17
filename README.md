@@ -135,9 +135,10 @@ the interpreter itself rather than being specific to an adventure:
  - ```*replay off```
      - halts replaying.
      - only makes sense if inserted manually into a script file to prevent it from replaying to its end.
- - ```*seed <integer>```
-     - seeds the pseudo-random number generator used by the interpreter.
-     - note that this is automatically set (to 7) when recording or replaying a script so as to ensure any "random" behaviour will be consistent.
+ - ```*seed <+ve integer>```
+     - immediately re-seeds the pseudo-random number generator used by the interpreter with the given value.
+     - this command is DEPRECATED. Instead specify ```seed = <+ve integer>``` in the "saaint.ini" file to provide a seed that will automatically be used when an adventure is started or restored.
+     - note that the pseudo-random number generator is automatically re-seeded with the value 7 when recording or replaying a script so as to ensure any "random" behaviour will be consistent.
  - ```*state```
      - prints the current game state:
          - the number of the current room
