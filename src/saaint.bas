@@ -1,5 +1,5 @@
 ' Scott Adams Adventure Game Interpreter
-' For Colour Maximite 2, MMBasic 5.06
+' For Colour Maximite 2, MMBasic 5.07
 ' Copyright (c) 2020-2021 Thomas Hugo Williams
 ' Developed with the assistance of Bill McKinley
 ' Based on original TRS-80 Level II BASIC code (c) 1978 Scott Adams
@@ -25,7 +25,7 @@ Option Explicit On
 #Include "catalogue.inc"
 #Include "menus.inc"
 
-Const SAAINT_VERSION$ = "2.0.1"
+Const SAAINT_VERSION$ = "2.0.2"
 
 con.HEIGHT = 33
 con.WIDTH  = 80
@@ -156,6 +156,7 @@ restore_game:
 play_game:
 
   con.more = map.get$(options$(), "more") <> "0"
+  seed_random_number_generator("option")
   write_inifile() ' Updates .ini file with the selected adventure.
   twm.show_cursor(1)
   state = STATE_CONTINUE
@@ -188,13 +189,21 @@ Sub read_inifile()
   If s$ = sys.NO_DATA$ Then map.put(options$(), "current", "")
 
   s$ = map.get$(options$(), "more")
-  If s$ = sys.NO_DATA$ Then map.put(options$(), "more", "1")
+  Select Case s$
+    Case "0", "1" : ' the value is valid so do nothing.
+    Case Else     : map.put(options$(), "more", "1")
+  End Select
+
+  s$ = map.get$(options$(), "seed")
+  ' If the value isn't a +ve integer then make it 0.
+  If Str$(Int(Val(s$))) <> s$ Or Val(s$) < 0 Then map.put(options$(), "seed", "0")
 End Sub
 
 ' Writes contents of options$() map to .ini file.
 Sub write_inifile()
   map.put(options$(), "current", advent.file$)
   map.put(options$(), "more", Str$(con.more))
+  ' We do not need to update the value of "seed" since the program never changes it.
 
   Open INI_FILE$ For Output As #1
   Local ok% = inifile.write%(1, options$())
@@ -863,18 +872,18 @@ Sub prompt_for_command(verb, noun, nstr$)
       Case 0                : con.println("You use word(s) I don't know!")
       Case VERB_NONE        : ' Do nothing, user will be prompted for command again.
       Case VERB_TOO_MANY    : con.println("I only understand two word commands!")
-      Case VERB_RECORD_ON   : fix_random_numbers("record") : persist.record_on()
+      Case VERB_RECORD_ON   : seed_random_number_generator("record") : persist.record_on()
       Case VERB_RECORD_OFF  : persist.record_off()
-      Case VERB_REPLAY_ON   : fix_random_numbers("record") : persist.replay_on()
+      Case VERB_REPLAY_ON   : seed_random_number_generator("record") : persist.replay_on()
       Case VERB_REPLAY_OFF  : persist.replay_off()
       Case VERB_DUMP_STATE  : print_state()
       Case VERB_DEBUG_ON    : con.println("OK.") : debug = 1
       Case VERB_DEBUG_OFF   : con.println("OK.") : debug = 0
-      Case VERB_SEED        : fix_random_numbers(nstr$)
+      Case VERB_SEED        : seed_random_number_generator(nstr$)
       Case VERB_LOOK        : describe_room()
       Case VERB_MORE_ON     : con.println("OK.") : con.more = 1
       Case VERB_MORE_OFF    : con.println("OK.") : con.more = 0
-      Case VERB_WALKTHROUGH : fix_random_numbers("record") : persist.walkthrough()
+      Case VERB_WALKTHROUGH : seed_random_number_generator("record") : persist.walkthrough()
       Case Else             : Exit Do ' Handle 'verb' in calling code.
     End Select
 
@@ -1013,22 +1022,29 @@ Function lookup_word(word$, dict)
   Next i
 End Function
 
-' Specifies a fixed seed for the random number generator.
+' Seeds the random number generator.
 '
-' @param  nstr$  the seed, should be an integer > 0 or the string "record"
-'                which will use the hardcoded seed value 7.
-Sub fix_random_numbers(nstr$)
-  If nstr$ = "record" Then
-    Local seed% = 7
-  ElseIf Val(nstr$) > 0 And nstr$ = Str$(Int(Val(nstr$)))) Then
-    Local seed% = Val(nstr$)
-  Else
-    con.println("Invalid seed, should be integer > 0.")
-    Exit Sub
+' @param  s$  the seed, either:
+'              - "option" to use the value stored in options$(), or the TIMER value if that is 0.
+'              - "record" to use the hardcoded seed value 7.
+'              - an integer > 0.
+Sub seed_random_number_generator(s$)
+  Local seed% = 0
+  If s$ = "option" Then
+    seed% = Val(map.get$(options$(), "seed"))
+    If seed% = 0 Then seed% = Timer
+  ElseIf s$ = "record" Then
+    seed% = 7
+  ElseIf s$ = Str$(Int(Val(s$)))) Then
+    seed% = Val(s$)
   EndIf
 
-  Local _ = sys.pseudo%(-seed%)
-  If nstr$ <> "record" Then con.println("OK.")
+  If seed% > 0 Then
+    Local _ = sys.pseudo%(-seed%)
+    If s$ = Str$(seed%) Then con.println("OK.")
+  Else
+    con.println("Invalid seed, should be integer > 0.")
+  EndIf
 End Sub
 
 ' Picks up the object identified by 'nstr$'

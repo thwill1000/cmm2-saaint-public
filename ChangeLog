@@ -1,6 +1,11 @@
 ChangeLog
 ---------
 
+Version 2.0.2 - 17-Jul-2021:
+ - Added "seed" key to "saaint.ini". If the value is > 0 then the random number
+   generator will be seeded with this value when an adventure is started or
+   restored. Otherwise the random number generator is seeded from the TIMER.
+
 Version 2.0.1 - 19-Jun-2021:
  - Changed password input typed by user (to access walkthroughs) from
    green text to white text to match other user input.
