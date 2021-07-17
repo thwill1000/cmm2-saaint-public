@@ -1,7 +1,9 @@
 # SAAINT
 **Scott Adams Adventure Interpreter for the Colour Maximite 2**
 
-An interpreter allowing the classic works of Interactive Fiction (a.k.a. Text Adventures) by Scott Adams, Brian Howarth and others to be played on the [Colour Maximite 2](http://geoffg.net/maximite.html).
+An interpreter allowing the classic works of Interactive Fiction (a.k.a. Text Adventures) by Scott
+Adams, Brian Howarth and others to be played on the
+[Colour Maximite 2](http://geoffg.net/maximite.html).
 
 Written in MMBasic 5.07 by Thomas Hugo Williams with the assistance of Bill McKinley in 2020-2021.
 
@@ -13,11 +15,14 @@ The authors would also like to thank:
  - Alan Moluf and Bruce Hanson for documenting the data file format used by Scott Adams' adventure games: https://github.com/pdxiv/LuaScott/blob/master/doc/The_ADVENTURE_Data_Base_Format_(1980).md
  - @hope1 for porting "Pirate Adventure" to the BBC Micro which served to show that the task was not as daunting as it first appeared: https://github.com/ahope1/Beeb-Pirate-Adventure.
 
-**IMPORTANT!** Game data (.dat) file are copyright their respective authors and should not be distributed without permission.
+**IMPORTANT!** Game data (.dat) file are copyright their respective authors and should not be
+distributed without permission.
 
-Please read the [LICENSE](LICENSE) file for further details about modifying and distributing this program.
+Please read the [LICENSE](LICENSE) file for further details about modifying and distributing this
+program.
 
-SAAINT is distributed for free but if you enjoy it then perhaps you would like to buy Tom a coffee? [![paypal](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T5F7BZ5NZFF66&source=url)
+SAAINT is distributed for free but if you enjoy it then perhaps you would like to buy Tom a coffee?
+[![paypal](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T5F7BZ5NZFF66&source=url)
 
 ## How do I install it ?
 
@@ -31,9 +36,11 @@ SAAINT is distributed for free but if you enjoy it then perhaps you would like t
 ## What adventures does it come with ?
 
 With his kind permission SAAINT is distributed with 12 of Scott Adams' Classic Adventures (SACA).<br/>
-These adventures / data files are still copyright Scott Adams and not subject to the open [LICENSE](LICENSE) covering SAAINT's source-code.
+These adventures / data files are still copyright Scott Adams and not subject to the open
+[LICENSE](LICENSE) covering SAAINT's source-code.
 
-Scott Adams is still very much active in the computer-games industry, you can find his latest games here:
+Scott Adams is still very much active in the computer-games industry, you can find his latest games
+here:
  - https://www.clopas.net
  - http://www.AdventurelandXL.com
  - https://www.EscapeTheGloomer.com
@@ -69,7 +76,8 @@ To save your current progress type "SAVE".
 
 ## Where can I find more adventures?
 
-Many more SAAINT compatible adventures can be downloaded from the [ifarchive.org](https://www.ifarchive.org/indexes/if-archiveXscott-adamsXgamesXscottfree.html):
+Many more SAAINT compatible adventures can be downloaded from the
+[ifarchive.org](https://www.ifarchive.org/indexes/if-archiveXscott-adamsXgamesXscottfree.html):
 
  - [AdamsGames.zip](https://www.ifarchive.org/if-archive/scott-adams/games/scottfree/AdamsGames.zip)
      - 17 copyrighted Scott Adams adventures, plus a freely distributable sampler.
@@ -101,7 +109,8 @@ Many more SAAINT compatible adventures can be downloaded from the [ifarchive.org
 
 ## Meta-Commands
 
-The interpreter includes a number of meta-commands all prefixed with a ```*``` that are provided by the interpreter itself rather than being specific to an adventure:
+The interpreter includes a number of meta-commands all prefixed with a ```*``` that are provided by
+the interpreter itself rather than being specific to an adventure:
 
  - ```*debug```
      - enables debug diagnostics:
@@ -141,7 +150,8 @@ The interpreter includes a number of meta-commands all prefixed with a ```*``` t
 
 ## The "dump" utility
 
-SAAINT comes with a utility `src/dump.bas` that converts adventure `.dat` files into a (more) human-readable format:
+SAAINT comes with a utility `src/dump.bas` that converts adventure `.dat` files into a (more)
+human-readable format:
 
 ```
 *dump [OPTION]... [FILE]...
@@ -164,15 +174,19 @@ Notes:
 
 **1. What is the Colour Maximite 2 ?**
 
-The Colour Maximite 2 is a small self contained "Boot to BASIC" computer inspired by the home computers of the early 80's such as the Tandy TRS-80, Commodore 64 and Apple II.
+The Colour Maximite 2 is a small self contained "Boot to BASIC" computer inspired by the home
+computers of the early 80's such as the Tandy TRS-80, Commodore 64 and Apple II.
 
 While the concept of the Colour Maximite 2 is borrowed from the computers of the 80's the technology
 used is very much up to date.  Its CPU is an ARM Cortex-M7 32-bit RISC processor running at 480MHz
 and it generates a VGA output at resolutions up to 800x600 pixels with up 65,536 colours.
 
-The power of the ARM processor means it is capable of running BASIC at speeds comparable to running native machine-code on an 8-bit home computer with the additional advantage of vastly more memory and superior graphics and audio capabilities.
+The power of the ARM processor means it is capable of running BASIC at speeds comparable to running
+native machine-code on an 8-bit home computer with the additional advantage of vastly more memory
+and superior graphics and audio capabilities.
 
-More information can be found on the official Colour Maximite 2 website at http://geoffg.net/maximite.html
+More information can be found on the official Colour Maximite 2 website at
+http://geoffg.net/maximite.html
 
 **2. How do I find out more about Interactive Fiction ?**
 
@@ -180,7 +194,9 @@ Visit https://intfiction.org/
 
 **3. Where can I find out more about the ADVENTURE database format used by SAAINT ?**
 
-SAAINT interprets adventures saved in the TRS-80 / [ScottFree](http://www.ifwiki.org/index.php/ScottFree) / .dat file format which is documented in detail [here](https://github.com/pdxiv/LuaScott/blob/master/doc/The_ADVENTURE_Data_Base_Format_(1980).md)
+SAAINT interprets adventures saved in the TRS-80 /
+[ScottFree](http://www.ifwiki.org/index.php/ScottFree) / .dat file format which is documented in
+detail [here](https://github.com/pdxiv/LuaScott/blob/master/doc/The_ADVENTURE_Data_Base_Format_(1980).md)
 
 **4. How do I contact the author ?**
 
