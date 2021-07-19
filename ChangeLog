@@ -1,6 +1,10 @@
 ChangeLog
 ---------
 
+Version 2.0.3 - 20-Jul-2021:
+ - Changed location of temporary files from "<saaint-root>/src"
+   to "<saaint-root>/tmp".
+
 Version 2.0.2 - 17-Jul-2021:
  - Added "seed" key to "saaint.ini". If the value is > 0 then the random number
    generator will be seeded with this value when an adventure is started or

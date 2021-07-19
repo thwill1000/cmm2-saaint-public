@@ -25,7 +25,8 @@ Option Explicit On
 #Include "catalogue.inc"
 #Include "menus.inc"
 
-Const SAAINT_VERSION$ = "2.0.2"
+Const SAAINT_VERSION$ = "2.0.3"
+Const TMP_DIR$ = fil.get_canonical$(fil.PROG_DIR$ + "/../tmp")
 
 con.HEIGHT = 33
 con.WIDTH  = 80
@@ -86,6 +87,7 @@ main()
 End
 
 Sub main()
+  fil.mkdir(TMP_DIR$)
   read_inifile()
 
   ' Allow an adventure file to be specified at the command line.

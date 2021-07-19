@@ -285,7 +285,7 @@ Sub persist.walkthrough()
   If Not ok% Then con.println("Error: " + sys.err$) : Exit Sub
 
   ' Decrypt walkthough to "walkthrough.tmp"
-  Local f_out$ = fil.PROG_DIR$ + "/walkthrough.tmp"
+  Local f_out$ = TMP_DIR$ + "/walkthrough.tmp"
   Const fd_in% = persist.SCRIPT_FD_IN%
   Const fd_out% = persist.SCRIPT_FD_OUT%
   Open f_in$ For Input As fd_in%

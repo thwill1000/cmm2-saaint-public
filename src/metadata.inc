@@ -128,15 +128,15 @@ Sub metadata.read_ext(f$)
     header$ = metadata.find_section_header$(s$)
     Select Case header$
       Case "##TITLE##"
-        metadata.title_file$ = fil.PROG_DIR$ + "/title.tmp"
+        metadata.title_file$ = TMP_DIR$ + "/title.tmp"
         f_out$ = metadata.title_file$
         first_line% = -1
       Case "##CREDITS##"
-        metadata.credits_file$ = fil.PROG_DIR$ + "/credits.tmp"
+        metadata.credits_file$ = TMP_DIR$ + "/credits.tmp"
         f_out$ = metadata.credits_file$
         first_line% = -1
       Case "##INSTRUCTIONS##"
-        metadata.instructions_file$ = fil.PROG_DIR$ + "/instructions.tmp"
+        metadata.instructions_file$ = TMP_DIR$ + "/instructions.tmp"
         f_out$ = metadata.instructions_file$
         first_line% = -1
     End Select
