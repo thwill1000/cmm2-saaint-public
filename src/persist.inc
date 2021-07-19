@@ -277,6 +277,12 @@ Sub persist.walkthrough()
   If con.fd_out <> 0 Then con.println("Cannot play walkthrough whilst recording script.") : Exit Sub
   If con.fd_in <> 0  Then con.println("Cannot play walkthrough whilst replaying script.") : Exit Sub
 
+  ' Handle unencrypted walkthrough.
+  If persist.is_unencrypted%(f_in$) Then
+    con.open_in(persist.SCRIPT_FD_IN%, f_in$)
+    Exit Sub
+  EndIf
+
   ' Prompt for and hash password.
   Local password$ = prompt$("Password? ")
   If password$ = "" Then con.println("Cancelled.") : Exit Sub
@@ -293,15 +299,27 @@ Sub persist.walkthrough()
   ok% = crypt.xxtea_file%("decrypt", fd_in%, fd_out%, k%(), k%())
   Close fd_out%
   Close fd_in%
-  If Not ok% Then con.println("Error: " + sys.err$) : Exit Sub
 
-  ' Check for the text "walkthrough" in the first 255 characters,
-  ' if not present then password incorrect.
-  Open f_out$ For Input As fd_in%
+  ' If successful then start replaying the walkthrough script, otherwise report the problem.
+  If Not ok% Then
+    con.println("Error: " + sys.err$)
+  ElseIf persist.is_unencrypted%(f_out$) Then
+    con.open_in(persist.SCRIPT_FD_IN%, f_out$)
+  Else
+    con.println("Password incorrect!")
+  EndIf
+
+End Sub
+
+' Is file 'f$' unencrypted ?
+'
+' @param  f$  the file in question.
+' @return     1 if there are no non-printable, non-whitespace control codes in the first 255 bytes
+'             of the file, otherwise 0.
+Function persist.is_unencrypted%(f$)
+  Const fd_in% = persist.SCRIPT_FD_IN%
+  Open f$ For Input As fd_in%
   Local s$ = LCase$(Input$(255, #fd_in%))
   Close fd_in%
-  If InStr(s$, "walkthrough") < 1 Then con.println("Password incorrect!") : Exit Sub
-
-  ' Start replaying the walkthrough script.
-  con.open_in(persist.SCRIPT_FD_IN%, f_out$)
-End Sub
+  persist.is_unencrypted% = str.is_plain_ascii%(s$)
+End Function

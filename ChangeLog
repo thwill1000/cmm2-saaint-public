@@ -2,6 +2,10 @@ ChangeLog
 ---------
 
 Version 2.0.3 - 20-Jul-2021:
+ - Added support for unencrypted walkthough (.wlk) files.
+   These are in the same format as ordinary script files but should be put in
+   the directory containing the corresponding "<adventure>.dat" and be named
+   "<adventure>.wlk".
  - Changed location of "saaint.ini" file from "<saaint-root>/src"
    to "<saaint-root>". If the .ini file is not present in "<saaint-root>" but
    is present in "<saaint-root>/src" then it will be moved.

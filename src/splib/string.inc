@@ -1,5 +1,6 @@
-' Copyright (c) 2019-2021 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.06
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For Colour Maximite 2, MMBasic 5.07
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -25,6 +26,22 @@ End Function
 ' Compares s1$ and s2$ ignoring case considerations.
 Function str.equals_ignore_case%(s1$, s2$)
   str.equals_ignore_case% = LCase$(s1$) = LCase$(s2$)
+End Function
+
+' Does a string contain only printable and/or whitespace ASCII ?
+'
+' @param  s$  the string.
+' @return     1 if the string only contains printable and/or whitespace ASCII, otherwise 0.
+Function str.is_plain_ascii%(s$)
+  Local i%
+  For i% = 1 To Len(s$)
+    Select Case Peek(Var s$, i%)
+      Case 9, 10, 13   : ' Tab, line-feed and carriage-return are acceptable.
+      Case < 32, > 126 : Exit Function
+      Case Else        : ' ASCII printable characters.
+    End Select
+  Next
+  str.is_plain_ascii% = 1
 End Function
 
 Function str.lpad$(s$, x%)
@@ -79,6 +96,20 @@ Function str.quote$(s$, begin$, end$)
   Local begin_$ = Choice(begin$ = "", Chr$(34), Left$(begin$, 1))
   Local end_$ = Choice(end$ = "", begin_$, Left$(end$, 1))
   str.quote$ = begin_$ + s$ + end_$
+End Function
+
+' Gets copy of 'haystack$' with occurrences of 'needle$' replaced by 'rep$'.
+Function str.replace$(haystack$, needle$, rep$)
+  Local p%, st%, s$
+  Do
+    Inc st%
+    p% = InStr(st%, haystack$, needle$)
+    If p% < 1 Then Exit Do
+    Cat s$, Mid$(haystack$, st%, p% - st%) + rep$
+    st% = p% + Len(needle$) - 1
+  Loop
+  Cat s$, Mid$(haystack$, st%)
+  str.replace$ = s$
 End Function
 
 Function str.rpad$(s$, x%)
