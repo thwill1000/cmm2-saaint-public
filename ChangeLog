@@ -2,6 +2,9 @@ ChangeLog
 ---------
 
 Version 2.0.3 - 20-Jul-2021:
+ - Changed location of "saaint.ini" file from "<saaint-root>/src"
+   to "<saaint-root>". If the .ini file is not present in "<saaint-root>" but
+   is present in "<saaint-root>/src" then it will be moved.
  - Changed location of temporary files from "<saaint-root>/src"
    to "<saaint-root>/tmp".
 

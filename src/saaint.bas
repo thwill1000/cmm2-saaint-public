@@ -26,7 +26,9 @@ Option Explicit On
 #Include "menus.inc"
 
 Const SAAINT_VERSION$ = "2.0.3"
-Const TMP_DIR$ = fil.get_canonical$(fil.PROG_DIR$ + "/../tmp")
+Const ROOT_DIR$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
+Const TMP_DIR$ = ROOT_DIR$ + "/tmp"
+Const INI_FILE$ = ROOT_DIR$ + "/saaint.ini"
 
 con.HEIGHT = 33
 con.WIDTH  = 80
@@ -54,8 +56,6 @@ Const VERB_LOOK        = -11
 Const VERB_MORE_ON     = -12
 Const VERB_MORE_OFF    = -13
 Const VERB_WALKTHROUGH = -14
-
-Const INI_FILE$ = fil.PROG_DIR$ + "/saaint.ini"
 
 ' Game options persisted to .ini file.
 Dim options$(map.new%(10))
@@ -178,6 +178,15 @@ End Sub
 
 ' Reads contents of options$() map from .ini file.
 Sub read_inifile()
+
+  ' Backward compatibility: if the .ini file isn't present in "<saaint-root>"
+  ' but it is present in "<saaint-root>/src" then move the latter to the former.
+  If Not fil.exists%(INI_FILE$) Then
+    If fil.exists%(ROOT_DIR$ + "/src/saaint.ini") Then
+      Rename ROOT_DIR$ + "/src/saaint.ini" As INI_FILE$
+    EndIf
+  EndIf
+
   If fil.exists%(INI_FILE$) Then
     Open INI_FILE$ For Input As #1
     Local ok% = inifile.read%(1, options$())
