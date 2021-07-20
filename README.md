@@ -127,7 +127,7 @@ the interpreter itself rather than being specific to an adventure:
  - ```*more off```
      - disables output paging for this and future sessions.
  - ```*record```
-     - prompts the user to select and name a script file slot and then starts to echo every subsequent command into that file.
+     - prompts the user to select and name one of 10 script file slots and then starts to echo every subsequent command into the selected file.
  - ```*record off```
      - halts recording.
  - ```*replay```
@@ -141,13 +141,15 @@ the interpreter itself rather than being specific to an adventure:
      - note that the pseudo-random number generator is automatically re-seeded with the value 7 when recording or replaying a script so as to ensure any "random" behaviour will be consistent.
  - ```*state```
      - prints the current game state:
-         - the number of the current room
-         - the value of the "dark flag"
-         - the value of the "remaining light" counter
+         - the number of the current room.
+         - the value of the "dark flag".
+         - the value of the "remaining light" counter.
          - the indexes of the status bits that are currently set.
  - ```*walkthrough```
      - replays walkthrough file (.wlk) for the current adventure if present.
-     - this feature is to help with testing and the files are encrypted to avoid spoilers. Passwords are available on request.
+     - walkthrough files should be placed in the same directory as the corresponding "\<adventure\>.dat" file and named "\<adventure\>.wlk".
+     - walkthrough files have the same format as the script files created by the ```*record``` command.
+     - however the walkthrough files included in this repository are encrypted to avoid spoilers; passwords are available on request.
 
 ## The "dump" utility
 
