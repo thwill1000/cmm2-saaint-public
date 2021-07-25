@@ -1,5 +1,6 @@
-' Copyright (c) 2020 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.06
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For Colour Maximite 2, MMBasic 5.07
 
 Const sys.VERSION$ = "r1b3"
 Const sys.NO_DATA$ = Chr$(&h7F)
@@ -23,12 +24,15 @@ Sub sys.provides(f$)
 End Sub
 
 Sub sys.requires(f1$, f2$, f3$, f4$, f5$, f6$, f7$, f8$, f9$, f10$)
+
+  ' Use indexes from 1..10 even when Option Base 0.
   Local f$(10) Length 20
   f$(1) = f1$ : f$(2) = f2$ : f$(3) = f3$ : f$(4) = f4$ : f$(5) = f5$
   f$(6) = f6$ : f$(7) = f7$ : f$(8) = f8$ : f$(9) = f9$ : f$(10) = f10$
-
-  Local i%, j%, ok%, fail%
+  Local i%
   For i% = 1 To 10 : f$(i%) = LCase$(f$(i%)) : Next
+
+  Local j%, ok%, fail%
   For i% = 1 To 10
     If f$(i%) <> "" Then
       ok% = 0
@@ -37,7 +41,7 @@ Sub sys.requires(f1$, f2$, f3$, f4$, f5$, f6$, f7$, f8$, f9$, f10$)
           Case f$(i%) : ok% = 1 : Exit For
           Case ""     : Exit For
         End Select
-      Next j%
+      Next
       If Not ok% Then
         If Not fail% Then
           sys.err$ = "required file(s) not included: " + f$(i%) + ".inc"
@@ -47,7 +51,7 @@ Sub sys.requires(f1$, f2$, f3$, f4$, f5$, f6$, f7$, f8$, f9$, f10$)
         EndIf
       EndIf
     EndIf
-  Next i%
+  Next
 End Sub
 
 ' Formats a firmware version as a 5-digit number, e.g.
@@ -64,25 +68,4 @@ Function sys.firmware_version%(version$)
   Next
   Do While Len(s$) < 5 : s$ = s$ + "0" : Loop
   sys.firmware_version% = Val(s$)
-End Function
-
-' Generates a pseudo random integer between 1 and 'range%' inclusive.
-'
-' @param  range%  if > 0 then upper bound of generated number,
-'                 if = 0 then reinitialises seed based on Timer value,
-'                 if < 0 then sets seed to Abs(range%)
-Function sys.pseudo%(range%)
-  Static x% = Timer ' 7
-  Static a% = 1103515245
-  Static c% = 12345
-  Static m% = 2^31
-
-  If range% = 0 Then
-    x% = Timer
-  ElseIf range% < 0 Then
-    x% = Abs(range%)
-  Else
-    x% = (a% * x% + c%) Mod m%
-    sys.pseudo% = 1 + CInt((range% - 1) * (x% / m%))
-  EndIf
 End Function

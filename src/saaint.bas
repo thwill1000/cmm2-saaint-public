@@ -17,6 +17,7 @@ Option Explicit On
 #Include "splib/file.inc"
 #Include "splib/crypt.inc"
 #Include "splib/inifile.inc"
+#Include "splib/math.inc"
 #Include "splib/vt100.inc"
 #Include "advent.inc"
 #Include "console.inc"
@@ -26,7 +27,7 @@ Option Explicit On
 #Include "menus.inc"
 
 Const SAAINT_VERSION$ = "2.0.3"
-Const ROOT_DIR$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
+Const ROOT_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/..")
 Const TMP_DIR$ = ROOT_DIR$ + "/tmp"
 Const INI_FILE$ = ROOT_DIR$ + "/saaint.ini"
 
@@ -87,7 +88,7 @@ main()
 End
 
 Sub main()
-  fil.mkdir(TMP_DIR$)
+  file.mkdir(TMP_DIR$)
   read_inifile()
 
   ' Allow an adventure file to be specified at the command line.
@@ -160,7 +161,7 @@ play_game:
   con.more = map.get$(options$(), "more") <> "0"
   seed_random_number_generator("option")
   write_inifile() ' Updates .ini file with the selected adventure.
-  twm.show_cursor(1)
+  twm.enable_cursor(1)
   state = STATE_CONTINUE
   game_loop()
   con.close_all()
@@ -181,13 +182,13 @@ Sub read_inifile()
 
   ' Backward compatibility: if the .ini file isn't present in "<saaint-root>"
   ' but it is present in "<saaint-root>/src" then move the latter to the former.
-  If Not fil.exists%(INI_FILE$) Then
-    If fil.exists%(ROOT_DIR$ + "/src/saaint.ini") Then
+  If Not file.exists%(INI_FILE$) Then
+    If file.exists%(ROOT_DIR$ + "/src/saaint.ini") Then
       Rename ROOT_DIR$ + "/src/saaint.ini" As INI_FILE$
     EndIf
   EndIf
 
-  If fil.exists%(INI_FILE$) Then
+  If file.exists%(INI_FILE$) Then
     Open INI_FILE$ For Input As #1
     Local ok% = inifile.read%(1, options$())
     Close #1
@@ -342,7 +343,7 @@ Sub do_automatic_actions()
     ' If the CONTinue flag is not set then 'noun' is the probability of the
     ' action occurring.
     If Not continue_flag Then
-      If sys.pseudo%(100) > an Then Continue For ' Did not occur, try the next action.
+      If math.pseudo_rnd%(100) > an Then Continue For ' Did not occur, try the next action.
     EndIf
 
     If Not process_conditions(a) Then Continue For ' Conditions not passed, try the next action.
@@ -1051,7 +1052,7 @@ Sub seed_random_number_generator(s$)
   EndIf
 
   If seed% > 0 Then
-    Local _ = sys.pseudo%(-seed%)
+    Local _ = math.pseudo_rnd%(-seed%)
     If s$ = Str$(seed%) Then con.println("OK.")
   Else
     con.println("Invalid seed, should be integer > 0.")

@@ -9,7 +9,7 @@ sys.requires("file", "string", "metadata")
 sys.provides("catalogue")
 If sys.err$ <> "" Then Error sys.err$
 
-Const catalogue.DIR$ = fil.PROG_DIR$ + "/../adventures"
+Const catalogue.DIR$ = file.PROG_DIR$ + "/../adventures"
 Const catalogue.FD_IN% = 1
 
 ' Finds and returns the full path to a named adventure.
@@ -24,31 +24,31 @@ Const catalogue.FD_IN% = 1
 ' @return  the file path, or an empty string if the adventure cannot be found.
 Function catalogue.find$(name$)
   Local f$ = str.unquote$(str.trim$(name$))
-  If LCase$(fil.get_extension$(f$)) <> ".dat" Then Cat f$, ".dat"
+  If LCase$(file.get_extension$(f$)) <> ".dat" Then Cat f$, ".dat"
 
   ' Is f$ just a simple absolute or relative path to the file ?
-  If fil.exists%(f$) Then
+  If file.exists%(f$) Then
     ' Do nothing.
 
   ' Is f$ a path relative to catalogue.DIR$ ?
-  ElseIf fil.exists%(catalogue.DIR$ + "/" + f$) Then
+  ElseIf file.exists%(catalogue.DIR$ + "/" + f$) Then
     f$ = catalogue.DIR$ +  "/" + f$
 
   ' Is f$ a path relative to a sub-directory of catalogue.DIR$ ?
   Else
-    Local num_dirs% = fil.count_files%(catalogue.DIR$, "*", "Dir")
+    Local num_dirs% = file.count_files%(catalogue.DIR$, "*", "Dir")
     Local all_dirs$(num_dirs% - 1) Length 128
-    fil.get_files(catalogue.DIR$, "*", "Dir", all_dirs$())
+    file.get_files(catalogue.DIR$, "*", "Dir", all_dirs$())
     Local i%
     For i% = 0 To num_dirs% - 1
-      If fil.exists%(catalogue.DIR$ + "/" + all_dirs$(i%) + "/" + f$) Then
+      If file.exists%(catalogue.DIR$ + "/" + all_dirs$(i%) + "/" + f$) Then
         f$ = catalogue.DIR$ + "/" + all_dirs$(i%) + "/" + f$
         Exit For
       EndIf
     Next
   EndIf
 
-  If Not fil.exists%(f$) Then f$ = ""
+  If Not file.exists%(f$) Then f$ = ""
 
   catalogue.find$ = f$
 End Function

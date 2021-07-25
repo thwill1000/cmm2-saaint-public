@@ -12,10 +12,10 @@ If sys.err$ <> "" Then Error sys.err$
 ' instructions.
 
 Function menus.main$(advent$)
-  Local f$ = fil.PROG_DIR$ + "/title.txt")
+  Local f$ = file.PROG_DIR$ + "/title.txt")
 
   Cls
-  twm.show_cursor(0)
+  twm.enable_cursor(0)
   con.lines = 0
   con.foreground("white")
   con.println()
@@ -54,7 +54,7 @@ End Function
 Function menus.adventure$()
 
   Cls
-  twm.show_cursor(0)
+  twm.enable_cursor(0)
   con.lines = 0
   con.foreground("white")
   If metadata.title_file$ <> "" Then
@@ -94,10 +94,10 @@ End Function
 
 Sub menus.credits(top%)
   Local f$ = Choice(top%, "", metadata.credits_file$)
-  f$ = Choice(f$ <> "", f$, fil.PROG_DIR$ + "/credits.txt")
+  f$ = Choice(f$ <> "", f$, file.PROG_DIR$ + "/credits.txt")
 
   Cls
-  twm.show_cursor(0)
+  twm.enable_cursor(0)
   con.lines = 0
   con.foreground("white")
   con.println()
@@ -116,10 +116,10 @@ End Sub
 
 Sub menus.instructions(top%)
   Local f$ = Choice(top%, "", metadata.instructions_file$)
-  f$ = Choice(f$ <> "", f$, fil.PROG_DIR$ + "/instructions.txt")
+  f$ = Choice(f$ <> "", f$, file.PROG_DIR$ + "/instructions.txt")
 
   Cls
-  twm.show_cursor(0)
+  twm.enable_cursor(0)
   con.lines = 0
   con.foreground("white")
   con.println()
@@ -142,7 +142,7 @@ Function menus.choose_advent$()
 
   Cls
   Option Console Serial
-  twm.show_cursor(0)
+  twm.enable_cursor(0)
 
   twm.init(3, 10075)
   Local win0% = twm.new_win%(0, 0, con.WIDTH, con.HEIGHT)
@@ -276,7 +276,7 @@ End Function
 
 Sub menus.paint_description(win%, advent$)
   Local desc%(200)
-  metadata.read_description(fil.trim_extension$(catalogue.find$(advent$)) + ".ext", desc%())
+  metadata.read_description(file.trim_extension$(catalogue.find$(advent$)) + ".ext", desc%())
 
   twm.switch(win%)
   twm.cls()

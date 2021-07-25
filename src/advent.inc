@@ -35,7 +35,7 @@ Dim tr ' Treasure room
 ' Reads a '.dat' file.
 Sub advent.read_dat(f$)
   advent.free()
-  advent.file$ = Choice(LCase$(fil.get_extension$(f$)) = ".dat", f$, f$ + ".dat")
+  advent.file$ = Choice(LCase$(file.get_extension$(f$)) = ".dat", f$, f$ + ".dat")
   Open advent.file$ For Input As advent.FD_IN%
   advent.buf$ = ""
   advent.buf_ptr% = 1

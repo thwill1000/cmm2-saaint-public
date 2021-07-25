@@ -9,8 +9,8 @@ sys.requires("file", "crypt", "console", "advent")
 sys.provides("persist")
 If sys.err$ <> "" Then Error sys.err$
 
-Const persist.SAVE_DIR$ = fil.get_canonical$(fil.PROG_DIR$ + "/../saves")
-Const persist.SCRIPT_DIR$ = fil.get_canonical$(fil.PROG_DIR$ + "/../scripts")
+Const persist.SAVE_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/../saves")
+Const persist.SCRIPT_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/../scripts")
 Const persist.FD% = 1
 Const persist.SCRIPT_FD_IN% = 2
 Const persist.SCRIPT_FD_OUT% = 3
@@ -27,7 +27,7 @@ Function persist.save%()
   Local game% = persist.select_game%()
   If game% <> 0 Then
     f$ = persist.save_file$(game%)
-    If fil.exists%(f$) Then
+    If file.exists%(f$) Then
       s$ = prompt$("Overwrite game " + Str$(game%) + " [y|N]? ")
       If LCase$(s$) <> "y" Then game% = 0
     EndIf
@@ -42,7 +42,7 @@ Function persist.save%()
 
   con.println("Saving '" + f$ + "' ...")
 
-  fil.mkdir(fil.get_parent$(f$))
+  file.mkdir(file.get_parent$(f$))
 
   Const fd% = persist.FD%
   Open f$ For Output As #fd%
@@ -71,8 +71,8 @@ End Function
 ' Gets the path to the file corresponding to saved game slot 'i'.
 Function persist.save_file$(i)
   If i < 1 Or i > 10 Then Error "Invalid saved game number"
-  Local name$ = fil.trim_extension$(fil.get_name$(advent.file$)) + "_" + Str$(i) + ".sav"
-  Local parent_name$ = fil.get_name$(fil.get_parent$(advent.file$))
+  Local name$ = file.trim_extension$(file.get_name$(advent.file$)) + "_" + Str$(i) + ".sav"
+  Local parent_name$ = file.get_name$(file.get_parent$(advent.file$))
   If Right$(parent_name$, 1) = ":" Then
     parent_name$ = Left$(parent_name$, Len(parent_name$) - 1) + "-drive"
   EndIf
@@ -91,7 +91,7 @@ Function persist.restore%()
   Local game% = persist.select_game%()
   If game% <> 0 Then
     f$ = persist.save_file$(game%)
-    If Not fil.exists%(f$) Then game% = 0
+    If Not file.exists%(f$) Then game% = 0
   EndIf
 
   If game% = 0 Then con.println("Cancelled.") : Exit Function
@@ -140,7 +140,7 @@ Function persist.select_game%()
   For i = 1 To 10
     f$ = persist.save_file$(i)
     con.print("  [" + Format$(i, "%2g") + "] ")
-    If fil.exists%(f$) Then
+    If file.exists%(f$) Then
       Open f$ For Input As fd%
       Line Input #fd%, s$(0) ' header
       Line Input #fd%, s$(1) ' version
@@ -174,7 +174,7 @@ Sub persist.record_on()
   Local script% = persist.select_script%()
   If script% <> 0 Then f$ = persist.script_file$(script%)
 
-  If script% <> 0 And fil.exists%(f$) Then
+  If script% <> 0 And file.exists%(f$) Then
     s$ = prompt$("Overwrite script " + Str$(script%) + " [y|N]? ")
     If LCase$(s$) <> "y" Then script% = 0
   EndIf
@@ -188,7 +188,7 @@ Sub persist.record_on()
 
   con.println("Recording to '" + f$ + "' ...")
 
-  fil.mkdir(fil.get_parent$(f$))
+  file.mkdir(file.get_parent$(f$))
 
   Const fd_out% = persist.SCRIPT_FD_OUT%
   con.open_out(fd_out%, f$)
@@ -205,7 +205,7 @@ Function persist.select_script%()
   For i = 1 To 10
     f$ = persist.script_file$(i)
     con.print("  [" + Format$(i, "%2g") + "] ")
-    If fil.exists%(f$) Then
+    If file.exists%(f$) Then
       Open f$ For Input As #fd%
       Line Input #fd%, s$ ' date/time
       con.print(Mid$(s$, 3) + " - ")
@@ -228,8 +228,8 @@ End Function
 ' Gets the path to the file corresponding to script slot 'i'.
 Function persist.script_file$(i)
   If i < 1 Or i > 10 Then Error "Invalid script number"
-  Local name$ = fil.trim_extension$(fil.get_name$(advent.file$)) + "_" + Str$(i) + ".scr"
-  Local parent_name$ = fil.get_name$(fil.get_parent$(advent.file$))
+  Local name$ = file.trim_extension$(file.get_name$(advent.file$)) + "_" + Str$(i) + ".scr"
+  Local parent_name$ = file.get_name$(file.get_parent$(advent.file$))
   If Right$(parent_name$, 1) = ":" Then
     parent_name$ = Left$(parent_name$, Len(parent_name$) - 1) + "-drive"
   EndIf
@@ -252,7 +252,7 @@ Sub persist.replay_on()
   Local script% = persist.select_script%()
   If script% <> 0 Then
     Local f$ = persist.script_file$(script%)
-    If Not fil.exists%(f$) Then script% = 0
+    If Not file.exists%(f$) Then script% = 0
   EndIf
 
   If script% = 0 Then con.println("Cancelled.") : Exit Sub
@@ -271,8 +271,8 @@ End Sub
 ' Replays the walkthrough file (.wlk) for the current adventure.
 Sub persist.walkthrough()
 
-  Local f_in$ = fil.trim_extension$(advent.file$) + ".wlk"
-  If Not fil.exists%(f_in$) Then con.println("No walkthrough available.") : Exit Sub
+  Local f_in$ = file.trim_extension$(advent.file$) + ".wlk"
+  If Not file.exists%(f_in$) Then con.println("No walkthrough available.") : Exit Sub
 
   If con.fd_out <> 0 Then con.println("Cannot play walkthrough whilst recording script.") : Exit Sub
   If con.fd_in <> 0  Then con.println("Cannot play walkthrough whilst replaying script.") : Exit Sub

@@ -50,18 +50,18 @@ End Sub
 Sub dump_all(raw%)
   Local count%
   Local t% = Timer
-  Local f$ = fil.find$(catalogue.DIR$, "*.dat", "File")
+  Local f$ = file.find$(catalogue.DIR$, "*.dat", "File")
   Do While f$ <> ""
     Inc count%
     dump_file(f$, raw%)
-    f$ = fil.find$()
+    f$ = file.find$()
   Loop
   Print Str$(count%) " files written in " Str$((Timer - t%) / 1000) + " s"
 End Sub
 
 Sub dump_file(in$, raw%)
   Const fd = 1
-  Local out$ = fil.trim_extension$(in$) + ".dmp"
+  Local out$ = file.trim_extension$(in$) + ".dmp"
 
   Print "Reading '" in$ "' ... ";
   advent.read_dat(in$)

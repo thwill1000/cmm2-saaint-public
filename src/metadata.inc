@@ -25,15 +25,15 @@ Dim metadata.instructions_file$ ' File containing current adventure instructions
 '             if 'f$' does not exist then returns the name of the file withou
 '             any path or extension and with the first letter capitalised.
 Function metadata.read_name$(f$)
-  Local extfile$ = fil.trim_extension$(f$) + ".ext"
+  Local extfile$ = file.trim_extension$(f$) + ".ext"
   Local name$
 
-  If fil.exists%(extfile$) Then
+  If file.exists%(extfile$) Then
     Open extfile$ For Input As metadata.FD_IN%
     Line Input #metadata.FD_IN%, name$
     Close metadata.FD_IN%
   Else
-    name$ = fil.trim_extension$(fil.get_name$(f$))
+    name$ = file.trim_extension$(file.get_name$(f$))
     name$ = UCase$(Left$(name$, 1)) + Mid$(name$, 2)
   EndIf
 
@@ -46,7 +46,7 @@ End Function
 ' @param       f$      the full file path.
 ' @param[out]  out%()  the description is appended to this LongString.
 Sub metadata.read_description(f$, out%())
-  If Not fil.exists%(f$) Then
+  If Not file.exists%(f$) Then
     LongString Append out%(), "No description provided."
     Exit Sub
   EndIf
@@ -89,18 +89,18 @@ End Function
 ' Assumes that the file has LF or CRLF line-endings, and not Mac style CR line-endings.
 ' Reports ERROR if encounters line > 255 characters.
 Sub metadata.read_ext(f$)
-  Select Case LCase$(fil.get_extension$(f$))
-    Case ".dat" : Local f_in$ = fil.trim_extension$(f$) + ".ext"
+  Select Case LCase$(file.get_extension$(f$))
+    Case ".dat" : Local f_in$ = file.trim_extension$(f$) + ".ext"
     Case ".ext" : Local f_in$ = f$
     Case Else   : Local f_in$ = f$ + ".ext"
   End Select
 
-  metadata.name$ = fil.trim_extension$(f$) + ".dat"
+  metadata.name$ = file.trim_extension$(f$) + ".dat"
   metadata.title_file$ = ""
   metadata.credits_file$ = ""
   metadata.instructions_file$ = ""
 
-  If Not fil.exists%(f_in$) Then Exit Sub
+  If Not file.exists%(f_in$) Then Exit Sub
 
   Open f_in$ For Input As metadata.FD_IN%
 
