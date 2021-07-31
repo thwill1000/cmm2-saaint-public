@@ -45,6 +45,10 @@ Const ACTION_NOT_YET   = 5
 ' Hardcoded Object Id's.
 Const OBJ_LIGHT_SOURCE% = 9 ' The LIT light source.
 
+' Hardcoded Room Id's.
+Const ROOM_CARRIED% = -1
+Const ROOM_STORE% = 0
+
 ' Hardcoded Verb Id's.
 Const VERB_GET%         = 10
 Const VERB_DROP%        = 18
@@ -311,7 +315,7 @@ End Sub
 ' Is the current room dark ?
 Function is_dark%()
   If Not df Then Exit Function
-  If ia(OBJ_LIGHT_SOURCE%) = -1 Then Exit Function
+  If ia(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED% Then Exit Function
   If ia(OBJ_LIGHT_SOURCE%) = r Then Exit Function
   is_dark% = 1
 End Function
@@ -486,13 +490,13 @@ Function evaluate_condition(code, value)
       pass = 1
     Case 1
       ' Passes if the player is carrying object <value>.
-      pass = (ia(value) = -1)
+      pass = (ia(value) = ROOM_CARRIED%)
     Case 2
       ' Passes if the player is in the same room (but not carrying) object <value>.
       pass = (ia(value) = r)
     Case 3
       ' Passes if object <value> is available; i.e. carried or in the current room
-      pass = (ia(value) = -1) Or (ia(value) = r)
+      pass = (ia(value) = ROOM_CARRIED%) Or (ia(value) = r)
     Case 4
       ' Passes if the player is in room <value>.
       pass = (r = value)
@@ -501,7 +505,7 @@ Function evaluate_condition(code, value)
       pass = (ia(value) <> r)
     Case 6
       ' Passes if the player is not carrying object <value>.
-      pass = (ia(value) <> -1)
+      pass = (ia(value) <> ROOM_CARRIED%)
     Case 7
       ' Passes if the player is not in room <value>.
       pass = (r <> value)
@@ -514,24 +518,24 @@ Function evaluate_condition(code, value)
     Case 10
       ' Passes if the player is carrying anything.
       For i = 0 To il
-        If ia(i) = -1 Then pass = 1 : Exit For
+        If ia(i) = ROOM_CARRIED% Then pass = 1 : Exit For
       Next i
     Case 11
       ' Passes if the player is carrying nothing.
       pass = 1
       For i = 0 To il
-        If ia(i) = -1 Then pass = 0 : Exit For
+        If ia(i) = ROOM_CARRIED% Then pass = 0 : Exit For
       Next i
     Case 12
       ' Passes if object <value> is not available;
       ' i.e. not carried or in the current room.
-      pass = (ia(value) <> -1) And (ia(value) <> r)
+      pass = (ia(value) <> ROOM_CARRIED%) And (ia(value) <> r)
     Case 13
       ' Passes if object <value> is not in the store room (0)
-      pass = (ia(value) <> 0)
+      pass = (ia(value) <> ROOM_STORE%)
     Case 14
       ' Passes if object <value> is in the store room (0)
-      pass = (ia(value) = 0)
+      pass = (ia(value) = ROOM_STORE%)
     Case 15
       ' Passes if counter <= the value.
       pass = (counter <= value)
@@ -572,10 +576,10 @@ Sub do_command(a, cmd, nstr$)
       ' Pick up the Par #1 object unless player already carrying the limit.
       ' The object may be in this room, or in any other room.
       p = get_parameter(a)
-      For i = 1 To il : If ia(i) = -1 Then x = x + 1 : Next i
+      For i = 1 To il : If ia(i) = ROOM_CARRIED% Then x = x + 1 : Next i
       If x <= mx Then
         redraw_flag% = redraw_flag% Or (ia(p) = r)
-        ia(p) = -1
+        ia(p) = ROOM_CARRIED%
       Else
         con.println("I've too much to carry. Try " + Chr$(34) + "Inventory" + Chr$(34) + ".")
       EndIf
@@ -692,7 +696,7 @@ Sub do_command(a, cmd, nstr$)
       ' INV
       ' Tells the player what objects they are carrying.
       con.print("I'm carrying: ")
-      print_object_list(-1, "Nothing")
+      print_object_list(ROOM_CARRIED%, "Nothing")
 
     Case 67
       ' SET0
@@ -712,7 +716,7 @@ Sub do_command(a, cmd, nstr$)
       ' the unlighted light source (these are two different objects).
       lx = lt
       redraw_flag% = redraw_flag% Or (ia(OBJ_LIGHT_SOURCE%) = r)
-      ia(OBJ_LIGHT_SOURCE%) = -1
+      ia(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED%
 
     Case 70
       ' CLS
@@ -750,7 +754,7 @@ Sub do_command(a, cmd, nstr$)
       ' Otherwise, this is like command 52, GETx.
       p = get_parameter(a)
       redraw_flag% = redraw_flag% Or (ia(p) = r)
-      ia(p) = -1
+      ia(p) = ROOM_CARRIED%
 
     Case 75
       ' BYx<-x
@@ -1114,7 +1118,7 @@ Sub do_get(noun, nstr$)
   For i = 0 To il
     If obj_noun$(i) = obj$ Then
       If ia(i) = r Then
-        ia(i) = -1
+        ia(i) = ROOM_CARRIED%
         k = 3
         Exit For
       Else
@@ -1157,7 +1161,7 @@ Sub do_drop(noun, nstr$)
 
   For i = 0 To il
     If obj_noun$(i) = obj$ Then
-      If ia(i) = -1 Then
+      If ia(i) = ROOM_CARRIED% Then
         ia(i) = r
         k = 3
         Exit For
@@ -1177,11 +1181,11 @@ End Sub
 
 Sub update_light()
   ' If carrying the lit light source ...
-  If ia(OBJ_LIGHT_SOURCE%) = -1 Then
+  If ia(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED% Then
     lx = lx - 1 ' decrement its duration
     If lx < 0 Then
       con.println("Light has run out!")
-      ia(OBJ_LIGHT_SOURCE%) = 0
+      ia(OBJ_LIGHT_SOURCE%) = ROOM_STORE%
     ElseIf lx < 25 Then
       con.println("Light runs out in " + Str$(lx) + " turns!")
     EndIf
