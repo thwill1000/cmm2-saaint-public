@@ -68,6 +68,8 @@ Const VERB_MORE_ON      = -13
 Const VERB_MORE_OFF     = -14
 Const VERB_WALKTHROUGH  = -15
 
+Dim DIRECTIONS$(5) Length 10 = ("North", "South", "East", "West", "Up", "Down")
+
 ' Game options persisted to .ini file.
 Dim options$(map.new%(10))
 map.init(options$())
@@ -287,17 +289,7 @@ Sub describe_room()
     If rm(r, i) <> 0 Then
       Inc count
       If count > 1 Then con.print(", ")
-      ' Originally instead of SELECT CASE I used the values of verbs 1..6,
-      ' however for the Brian Howarth adventures these were abbreviated to
-      ' 4 letters and as a result "Nort" and "Sout" would be printed.
-      Select Case i
-        Case 0 : con.print("North")
-        Case 1 : con.print("South")
-        Case 2 : con.print("East")
-        Case 3 : con.print("West")
-        Case 4 : con.print("Up")
-        Case 5 : con.print("Down")
-      End Select
+      con.print(DIRECTIONS$(i))
     EndIf
   Next
   If count = 0 Then con.print("None")
