@@ -42,7 +42,10 @@ Const ACTION_PERFORMED = 3
 Const ACTION_UNKNOWN   = 4
 Const ACTION_NOT_YET   = 5
 
-' Hardcoded Verb id's.
+' Hardcoded Object Id's.
+Const OBJ_LIGHT_SOURCE% = 9 ' The LIT light source.
+
+' Hardcoded Verb Id's.
 Const VERB_NONE         = -1
 Const VERB_TOO_MANY     = -2
 Const VERB_RECORD_ON    = -3
@@ -255,8 +258,7 @@ Sub describe_room()
 
   redraw_flag% = 0
 
-  ' Object 9 is the lit light source.
-  If df And ia(9) <> -1 And ia(9) <> r Then
+  If is_dark%() Then
     If debug Then con.print("[" + Str$(r) + "] ")
     con.println("I can't see, its too dark!")
     Exit Sub
@@ -303,6 +305,14 @@ Sub describe_room()
   con.foreground("green")
 
 End Sub
+
+' Is the current room dark ?
+Function is_dark%()
+  If Not df Then Exit Function
+  If ia(OBJ_LIGHT_SOURCE%) = -1 Then Exit Function
+  If ia(OBJ_LIGHT_SOURCE%) = r Then Exit Function
+  is_dark% = 1
+End Function
 
 Sub print_object_list(rm, none$)
   Local count, i, p
@@ -452,13 +462,12 @@ Sub do_commands(a, nstr$)
 End Sub
 
 Sub go_direction(noun)
-  Local l = df
-  If l Then l = df And ia(9) <> r And ia(9) <> -1
-  If l Then con.println("Dangerous to move in the dark!")
+  Local dark% = is_dark%()
+  If dark% Then con.println("Dangerous to move in the dark!")
   If noun < 1 Then con.println("Give me a direction too.") : Exit Sub
   Local k = rm(r, noun - 1)
   If k < 1 Then
-    If l Then
+    If dark% Then
       con.println("I fell down and broke my neck.")
       k = rl
       df = 0
@@ -467,7 +476,6 @@ Sub go_direction(noun)
       Exit Sub
     EndIf
   EndIf
-'  If Not l Then Cls
   r = k
   redraw_flag% = 1
 End Sub
@@ -704,8 +712,8 @@ Sub do_command(a, cmd, nstr$)
       ' source (object 9). This command should be followed by a x->RM0 to store
       ' the unlighted light source (these are two different objects).
       lx = lt
-      redraw_flag% = redraw_flag% Or (ia(9) = r)
-      ia(9) = -1
+      redraw_flag% = redraw_flag% Or (ia(OBJ_LIGHT_SOURCE%) = r)
+      ia(OBJ_LIGHT_SOURCE%) = -1
 
     Case 70
       ' CLS
@@ -1172,11 +1180,11 @@ End Sub
 
 Sub update_light()
   ' If carrying the lit light source ...
-  If ia(9) = -1 Then
+  If ia(OBJ_LIGHT_SOURCE%) = -1 Then
     lx = lx - 1 ' decrement its duration
     If lx < 0 Then
       con.println("Light has run out!")
-      ia(9) = 0
+      ia(OBJ_LIGHT_SOURCE%) = 0
     ElseIf lx < 25 Then
       con.println("Light runs out in " + Str$(lx) + " turns!")
     EndIf
