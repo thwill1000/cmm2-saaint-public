@@ -43,20 +43,21 @@ Const ACTION_UNKNOWN   = 4
 Const ACTION_NOT_YET   = 5
 
 ' Hardcoded Verb id's.
-Const VERB_NONE        = -1
-Const VERB_TOO_MANY    = -2
-Const VERB_RECORD_ON   = -3
-Const VERB_RECORD_OFF  = -4
-Const VERB_REPLAY_ON   = -5
-Const VERB_REPLAY_OFF  = -6
-Const VERB_DUMP_STATE  = -7
-Const VERB_DEBUG_ON    = -8
-Const VERB_DEBUG_OFF   = -9
-Const VERB_SEED        = -10
-Const VERB_LOOK        = -11
-Const VERB_MORE_ON     = -12
-Const VERB_MORE_OFF    = -13
-Const VERB_WALKTHROUGH = -14
+Const VERB_NONE         = -1
+Const VERB_TOO_MANY     = -2
+Const VERB_RECORD_ON    = -3
+Const VERB_RECORD_OFF   = -4
+Const VERB_REPLAY_ON    = -5
+Const VERB_REPLAY_OFF   = -6
+Const VERB_DUMP_OBJECTS = -7
+Const VERB_DUMP_STATE   = -8
+Const VERB_DEBUG_ON     = -9
+Const VERB_DEBUG_OFF    = -10
+Const VERB_SEED         = -11
+Const VERB_LOOK         = -12
+Const VERB_MORE_ON      = -13
+Const VERB_MORE_OFF     = -14
+Const VERB_WALKTHROUGH  = -15
 
 ' Game options persisted to .ini file.
 Dim options$(map.new%(10))
@@ -881,22 +882,23 @@ Sub prompt_for_command(verb, noun, nstr$)
     parse(s$, verb, noun, nstr$)
 
     Select Case verb
-      Case 0                : con.println("You use word(s) I don't know!")
-      Case VERB_NONE        : ' Do nothing, user will be prompted for command again.
-      Case VERB_TOO_MANY    : con.println("I only understand two word commands!")
-      Case VERB_RECORD_ON   : seed_random_number_generator("record") : persist.record_on()
-      Case VERB_RECORD_OFF  : persist.record_off()
-      Case VERB_REPLAY_ON   : seed_random_number_generator("record") : persist.replay_on()
-      Case VERB_REPLAY_OFF  : persist.replay_off()
-      Case VERB_DUMP_STATE  : print_state()
-      Case VERB_DEBUG_ON    : con.println("OK.") : debug = 1
-      Case VERB_DEBUG_OFF   : con.println("OK.") : debug = 0
-      Case VERB_SEED        : seed_random_number_generator(nstr$)
-      Case VERB_LOOK        : describe_room()
-      Case VERB_MORE_ON     : con.println("OK.") : con.more = 1
-      Case VERB_MORE_OFF    : con.println("OK.") : con.more = 0
-      Case VERB_WALKTHROUGH : seed_random_number_generator("record") : persist.walkthrough()
-      Case Else             : Exit Do ' Handle 'verb' in calling code.
+      Case 0                 : con.println("You use word(s) I don't know!")
+      Case VERB_NONE         : ' Do nothing, user will be prompted for command again.
+      Case VERB_TOO_MANY     : con.println("I only understand two word commands!")
+      Case VERB_RECORD_ON    : seed_random_number_generator("record") : persist.record_on()
+      Case VERB_RECORD_OFF   : persist.record_off()
+      Case VERB_REPLAY_ON    : seed_random_number_generator("record") : persist.replay_on()
+      Case VERB_REPLAY_OFF   : persist.replay_off()
+      Case VERB_DUMP_OBJECTS : dump_objects()
+      Case VERB_DUMP_STATE   : dump_state()
+      Case VERB_DEBUG_ON     : con.println("OK.") : debug = 1
+      Case VERB_DEBUG_OFF    : con.println("OK.") : debug = 0
+      Case VERB_SEED         : seed_random_number_generator(nstr$)
+      Case VERB_LOOK         : describe_room()
+      Case VERB_MORE_ON      : con.println("OK.") : con.more = 1
+      Case VERB_MORE_OFF     : con.println("OK.") : con.more = 0
+      Case VERB_WALKTHROUGH  : seed_random_number_generator("record") : persist.walkthrough()
+      Case Else              : Exit Do ' Handle 'verb' in calling code.
     End Select
 
   Loop
@@ -910,8 +912,40 @@ Function prompt$(s$, echo)
   con.foreground("green")
 End Function
 
-Sub print_state()
+Sub dump_objects()
+
   con.println()
+  con.println("OBJECTS")
+  con.println("-------")
+  con.println("Id    Room")
+  con.println()
+
+  Local i%, p%, q%, s$
+  For i% = 0 To il
+    con.print(str.rpad$(Str$(i%), 6))
+    con.print(str.rpad$(Str$(ia(i%)), 6))
+    s$ = Choice(ia_str$(i%) = "", "<empty>", ia_str$(i%))
+    p% = 1
+    Do While p% <= Len(s$)
+      q% = InStr(p%, s$, sys.CRLF$)
+      If q% Then
+        con.println(Mid$(s$, p%, q% - p%))
+        con.print("            ")
+        p% = q% + 2
+      Else
+        con.println(Mid$(s$, p%))
+        p% = 256
+      EndIf
+    Loop
+  Next
+
+  con.println()
+End Sub
+
+Sub dump_state()
+  con.println()
+  con.println("GAME STATE")
+  con.println("----------")
   con.println("Current room:    " + Str$(r))
   con.println("Dark flag:       " + Str$(df))
   con.println("Remaining light: " + Str$(lx))
@@ -990,6 +1024,8 @@ Function lookup_meta_command(vstr$, nstr$)
     Case "*more"
       If nstr$ = "on" Or nstr$ = "" Then verb = VERB_MORE_ON
       If nstr$ = "off" Then verb = VERB_MORE_OFF
+    Case "*objects"
+      If nstr$ = "" Then verb = VERB_DUMP_OBJECTS
     Case "*record"
       If nstr$ = "on" Or nstr$ = "" Then verb = VERB_RECORD_ON
       If nstr$ = "off" Then verb = VERB_RECORD_OFF

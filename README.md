@@ -126,6 +126,9 @@ the interpreter itself rather than being specific to an adventure:
      - this initially defaults to ```on```, but is persisted across SAAINT sessions.
  - ```*more off```
      - disables output paging for this and future sessions.
+ - ```*objects```
+     - prints the id, current location and name of every object in the adventure.
+     - WARNING! may contain spoilers.
  - ```*record```
      - prompts the user to select and name one of 10 script file slots and then starts to echo every subsequent command into the selected file.
  - ```*record off```

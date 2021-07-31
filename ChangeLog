@@ -2,7 +2,9 @@ ChangeLog
 ---------
 
 Version 2.0.4 - ??-???-2021:
-  - ...
+  - Added *OBJECTS meta-command:
+    - prints the id, current location and name of every object in the adventure.
+    - WARNING! may contain spoilers.
 
 Version 2.0.3 - 20-Jul-2021:
  - Added support for unencrypted walkthough (.wlk) files.
