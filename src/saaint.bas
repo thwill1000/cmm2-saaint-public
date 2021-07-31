@@ -46,6 +46,8 @@ Const ACTION_NOT_YET   = 5
 Const OBJ_LIGHT_SOURCE% = 9 ' The LIT light source.
 
 ' Hardcoded Verb Id's.
+Const VERB_GET%         = 10
+Const VERB_DROP%        = 18
 Const VERB_NONE         = -1
 Const VERB_TOO_MANY     = -2
 Const VERB_RECORD_ON    = -3
@@ -413,13 +415,10 @@ Sub do_player_actions(verb, noun, nstr$)
   ' Whilst the action table contains some specialist pickup and drop handling
   ' the general case is handled by this code.
   If result = ACTION_UNKNOWN Then
-    If verb = 10 Then
-      do_get(noun, nstr$)
-      result = ACTION_PERFORMED
-    ElseIf verb = 18 Then
-      do_drop(noun, nstr$)
-      result = ACTION_PERFORMED
-    EndIf
+    Select Case verb
+      Case VERB_GET%  : do_get(noun, nstr$)  : result = ACTION_PERFORMED
+      Case VERB_DROP% : do_drop(noun, nstr$) : result = ACTION_PERFORMED
+    End Select
   EndIf
 
   Select Case result
@@ -1012,11 +1011,9 @@ Sub parse(s$, verb, noun, nstr$)
   verb = lookup_word(Left$(vstr$, ln), 0)
   noun = lookup_word(Left$(nstr$, ln), 1)
 
-  ' If we can't find the verb "take" then try "get".
+  ' If TAKE is not in the vocabulary then treat it as a synonym for GET.
   If verb = 0 Then
-    If Left$(vstr$, ln) = Left$("take", ln) Then
-      verb = lookup_word(Left$("get", ln), 0)
-    EndIf
+    If Left$(vstr$, ln) = Left$("take", ln) Then verb = VERB_GET%
   EndIf
 End Sub
 
