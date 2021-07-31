@@ -517,15 +517,10 @@ Function evaluate_condition(code, value)
       pass = (sf And Int(2 ^ value + 0.5)) = 0
     Case 10
       ' Passes if the player is carrying anything.
-      For i = 0 To il
-        If ia(i) = ROOM_CARRIED% Then pass = 1 : Exit For
-      Next i
+      pass = count_carried%() > 0
     Case 11
       ' Passes if the player is carrying nothing.
-      pass = 1
-      For i = 0 To il
-        If ia(i) = ROOM_CARRIED% Then pass = 0 : Exit For
-      Next i
+      pass = count_carried%() = 0
     Case 12
       ' Passes if object <value> is not available;
       ' i.e. not carried or in the current room.
@@ -558,6 +553,13 @@ Function evaluate_condition(code, value)
   evaluate_condition = pass
 End Function
 
+Function count_carried%()
+  Local i%
+  For i% = 0 To il
+    If ia(i) = ROOM_CARRIED% Then Inc count_carried%
+  Next
+End Function
+
 ' @param  a  current action index
 Sub do_command(a, cmd, nstr$)
   Local i, p, x, y
@@ -576,12 +578,11 @@ Sub do_command(a, cmd, nstr$)
       ' Pick up the Par #1 object unless player already carrying the limit.
       ' The object may be in this room, or in any other room.
       p = get_parameter(a)
-      For i = 1 To il : If ia(i) = ROOM_CARRIED% Then x = x + 1 : Next i
-      If x <= mx Then
+      If count_carried%() >= mx Then
+        con.println("I've too much to carry. Try " + Chr$(34) + "Inventory" + Chr$(34) + ".")
+      Else
         redraw_flag% = redraw_flag% Or (ia(p) = r)
         ia(p) = ROOM_CARRIED%
-      Else
-        con.println("I've too much to carry. Try " + Chr$(34) + "Inventory" + Chr$(34) + ".")
       EndIf
 
     Case 53
@@ -1106,14 +1107,14 @@ End Sub
 
 ' Picks up the object identified by 'nstr$'
 Sub do_get(noun, nstr$)
-  Local carried = 0, i, k, obj$ = obj_name$(noun, nstr$)
+  Local i, k, obj$ = obj_name$(noun, nstr$)
 
   If nstr$ = "" Then con.println("What?") : Exit Sub
 
-  For i = 0 To il
-    If ia(i) = -1 Then carried = carried + 1
-  Next i
-  If carried >= mx Then con.println("I've too much to carry!") : Exit Sub
+  If count_carried%() >= mx Then
+    con.println("I've too much to carry!")
+    Exit Sub
+  EndIf
 
   For i = 0 To il
     If obj_noun$(i) = obj$ Then
