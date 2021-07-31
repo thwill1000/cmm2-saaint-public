@@ -26,7 +26,7 @@ Option Explicit On
 #Include "catalogue.inc"
 #Include "menus.inc"
 
-Const SAAINT_VERSION$ = "2.0.3"
+Const SAAINT_VERSION$ = "2.0.4"
 Const ROOT_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/..")
 Const TMP_DIR$ = ROOT_DIR$ + "/tmp"
 Const INI_FILE$ = ROOT_DIR$ + "/saaint.ini"
