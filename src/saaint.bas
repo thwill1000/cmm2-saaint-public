@@ -239,7 +239,7 @@ Sub reset_state()
   lx = lt ' light source starts full
   df = 0  ' dark flag is unset
   sf = 0  ' status flags are clear
-  For i = 0 To il : ia(i) = i2(i) : Next i ' initial object locations
+  For i = 0 To il : ia(i) = i2(i) : Next ' initial object locations
   state = STATE_CONTINUE
 End Sub
 
@@ -335,7 +335,7 @@ Sub print_object_list(rm, none$)
         con.print(Left$(ia_str$(i), p - 1))
       EndIf
     EndIf
-  Next i
+  Next
 
   If count = 0 Then con.print(none$)
   con.println(".")
@@ -443,7 +443,7 @@ Function process_conditions(a)
     code = ca(a, i) - value * 20
     ok = ok And evaluate_condition(code, value)
     If Not ok Then Exit For
-  Next i
+  Next
 
   process_conditions = ok
 End Function
@@ -685,7 +685,7 @@ Sub do_command(a, cmd, nstr$)
       x = 0
       For i = 1 To il
         If ia(i) = tr And Left$(ia_str$(i), 1) = "*" Then Inc x
-      Next i
+      Next
       con.print("I've stored " + Str$(x) + " treasures. On a scale of 0 to 100 that rates a ")
       con.println(Str$(Int(x / tt * 100)) + ".")
       If x = tt Then
@@ -969,7 +969,7 @@ Sub dump_state()
       If count > 1 Then con.print(", ")
       con.print(Str$(i))
     EndIf
-  Next i
+  Next
   con.println()
 End Sub
 
@@ -1077,7 +1077,7 @@ Function lookup_word(word$, dict)
       Loop
       Exit For
     EndIf
-  Next i
+  Next
 End Function
 
 ' Seeds the random number generator.
@@ -1126,7 +1126,7 @@ Sub do_get(noun, nstr$)
         k = 2
       EndIf
     EndIf
-  Next i
+  Next
 
   If k = 2 Then
     con.println("I don't see it here.")
@@ -1170,7 +1170,7 @@ Sub do_drop(noun, nstr$)
         k = 1
       EndIf
     EndIf
-  Next i
+  Next
 
   If k = 1 Then
     con.println("I'm not carrying it!")
