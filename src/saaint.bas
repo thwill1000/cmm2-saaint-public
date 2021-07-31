@@ -325,7 +325,7 @@ Sub print_object_list(rm, none$)
 
   For i = 0 To il
     If ia(i) = rm Then
-      count = count + 1
+      Inc count
       If count > 1 Then con.print(", ")
       If debug Then con.print("[" + Str$(i) + "] ")
       p = InStr(ia_str$(i), "/")
@@ -684,7 +684,7 @@ Sub do_command(a, cmd, nstr$)
       ' them to the treasure room and what their percentage of the total is.
       x = 0
       For i = 1 To il
-        If ia(i) = tr And Left$(ia_str$(i), 1) = "*" Then x = x + 1
+        If ia(i) = tr And Left$(ia_str$(i), 1) = "*" Then Inc x
       Next i
       con.print("I've stored " + Str$(x) + " treasures. On a scale of 0 to 100 that rates a ")
       con.println(Str$(Int(x / tt * 100)) + ".")
@@ -774,7 +774,7 @@ Sub do_command(a, cmd, nstr$)
     Case 77
       ' CT-1
       ' This subtracts 1 from the counter value.
-      counter = counter - 1
+      Inc counter, -1
 
     Case 78
       ' DspCT
@@ -820,13 +820,13 @@ Sub do_command(a, cmd, nstr$)
       ' CT+n
       ' This adds the Par #1 value to the counter.
       p = get_parameter(a)
-      counter = counter + p
+      Inc counter, p
 
     Case 83
       ' CT-n
       ' This subtracts the Par #1 value from the counter.
       p = get_parameter(a)
-      counter = counter - p
+      Inc counter, -p
 
     Case 84
       ' SAYw
@@ -877,7 +877,7 @@ Function get_parameter(a)
   Local code, value
 
   Do
-    ip = ip + 1
+    Inc ip
     value = Int(ca(a, ip) / 20)
     code = ca(a, ip) - value * 20
   Loop While code <> 0
@@ -965,7 +965,7 @@ Sub dump_state()
   Local count, i
   For i = 0 To 31
     If sf And 1 << i Then
-      count = count + 1
+      Inc count
       If count > 1 Then con.print(", ")
       con.print(Str$(i))
     EndIf
@@ -1073,7 +1073,7 @@ Function lookup_word(word$, dict)
       ' Word found, if it's a synonym then use previous word.
       lookup_word = i
       Do While Left$(nv_str$(lookup_word, dict), 1) = "*"
-        lookup_word = lookup_word - 1
+        Inc lookup_word, -1
       Loop
       Exit For
     EndIf
@@ -1183,7 +1183,7 @@ End Sub
 Sub update_light()
   ' If carrying the lit light source ...
   If ia(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED% Then
-    lx = lx - 1 ' decrement its duration
+    Inc lx, -1 ' decrement its duration
     If lx < 0 Then
       con.println("Light has run out!")
       ia(OBJ_LIGHT_SOURCE%) = ROOM_STORE%
