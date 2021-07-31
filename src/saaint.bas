@@ -50,23 +50,19 @@ Const ROOM_CARRIED% = -1
 Const ROOM_STORE% = 0
 
 ' Hardcoded Verb Id's.
-Const VERB_GET%         = 10
-Const VERB_DROP%        = 18
-Const VERB_NONE         = -1
-Const VERB_TOO_MANY     = -2
-Const VERB_RECORD_ON    = -3
-Const VERB_RECORD_OFF   = -4
-Const VERB_REPLAY_ON    = -5
-Const VERB_REPLAY_OFF   = -6
-Const VERB_DUMP_OBJECTS = -7
-Const VERB_DUMP_STATE   = -8
-Const VERB_DEBUG_ON     = -9
-Const VERB_DEBUG_OFF    = -10
-Const VERB_SEED         = -11
-Const VERB_LOOK         = -12
-Const VERB_MORE_ON      = -13
-Const VERB_MORE_OFF     = -14
-Const VERB_WALKTHROUGH  = -15
+Const VERB_GET%          = 10
+Const VERB_DROP%         = 18
+Const VERB_NONE%         = -1
+Const VERB_TOO_MANY%     = -2
+Const VERB_DEBUG%        = -3
+Const VERB_DUMP_OBJECTS% = -4
+Const VERB_DUMP_STATE%   = -5
+Const VERB_LOOK%         = -6
+Const VERB_MORE%         = -7
+Const VERB_RECORD%       = -8
+Const VERB_REPLAY%       = -9
+Const VERB_SEED%         = -10
+Const VERB_WALKTHROUGH%  = -11
 
 Dim DIRECTIONS$(5) Length 10 = ("North", "South", "East", "West", "Up", "Down")
 
@@ -886,23 +882,31 @@ Sub prompt_for_command(verb, noun, nstr$)
     parse(s$, verb, noun, nstr$)
 
     Select Case verb
-      Case 0                 : con.println("You use word(s) I don't know!")
-      Case VERB_NONE         : ' Do nothing, user will be prompted for command again.
-      Case VERB_TOO_MANY     : con.println("I only understand two word commands!")
-      Case VERB_RECORD_ON    : seed_random_number_generator("record") : persist.record_on()
-      Case VERB_RECORD_OFF   : persist.record_off()
-      Case VERB_REPLAY_ON    : seed_random_number_generator("record") : persist.replay_on()
-      Case VERB_REPLAY_OFF   : persist.replay_off()
-      Case VERB_DUMP_OBJECTS : dump_objects()
-      Case VERB_DUMP_STATE   : dump_state()
-      Case VERB_DEBUG_ON     : con.println("OK.") : debug = 1
-      Case VERB_DEBUG_OFF    : con.println("OK.") : debug = 0
-      Case VERB_SEED         : seed_random_number_generator(nstr$)
-      Case VERB_LOOK         : describe_room()
-      Case VERB_MORE_ON      : con.println("OK.") : con.more = 1
-      Case VERB_MORE_OFF     : con.println("OK.") : con.more = 0
-      Case VERB_WALKTHROUGH  : seed_random_number_generator("record") : persist.walkthrough()
-      Case Else              : Exit Do ' Handle 'verb' in calling code.
+      Case 0                  : con.println("You use word(s) I don't know!")
+      Case VERB_NONE%         : ' Do nothing, user will be prompted for command again.
+      Case VERB_TOO_MANY%     : con.println("I only understand two word commands!")
+      Case VERB_DEBUG%        : con.println("OK.") : debug = (nstr$ = "on")
+      Case VERB_DUMP_OBJECTS% : dump_objects()
+      Case VERB_DUMP_STATE%   : dump_state()
+      Case VERB_LOOK%         : describe_room()
+      Case VERB_MORE%         : con.println("OK.") : con.more = (nstr$ = "on")
+      Case VERB_RECORD%
+        If nstr$ = "on" Then
+          seed_random_number_generator("record")
+          persist.record_on()
+        Else
+          persist.record_off()
+        EndIf
+      Case VERB_REPLAY%
+        If nstr$ = "on" Then
+          seed_random_number_generator("record")
+          persist.replay_on()
+        Else
+          persist.replay_off()
+        EndIf
+      Case VERB_SEED%         : seed_random_number_generator(nstr$)
+      Case VERB_WALKTHROUGH%  : seed_random_number_generator("record") : persist.walkthrough()
+      Case Else               : Exit Do ' Handle 'verb' in calling code.
     End Select
 
   Loop
@@ -1015,36 +1019,32 @@ Sub parse(s$, verb, noun, nstr$)
 End Sub
 
 Function lookup_meta_command(vstr$, nstr$)
-  Local verb
+  Const TYPE_BOOLEAN% = 1, TYPE_OTHER% = 2
+  Local verb%, type%
 
-  Select Case vstr$
-    Case "*debug"
-      If nstr$ = "on" Or nstr$ = "" Then verb = VERB_DEBUG_ON
-      If nstr$ = "off" Then verb = VERB_DEBUG_OFF
-    Case "*look"
-      If nstr$ = "" Then verb = VERB_LOOK
-    Case "*more"
-      If nstr$ = "on" Or nstr$ = "" Then verb = VERB_MORE_ON
-      If nstr$ = "off" Then verb = VERB_MORE_OFF
-    Case "*objects"
-      If nstr$ = "" Then verb = VERB_DUMP_OBJECTS
-    Case "*record"
-      If nstr$ = "on" Or nstr$ = "" Then verb = VERB_RECORD_ON
-      If nstr$ = "off" Then verb = VERB_RECORD_OFF
-    Case "*replay"
-      If nstr$ = "on" Or nstr$ = "" Then verb = VERB_REPLAY_ON
-      ' "*replay off" only makes sense if put in a script file
-      ' so as to stop it from being read to its end.
-      If nstr$ = "off" Then verb = VERB_REPLAY_OFF
-    Case "*seed"
-      verb = VERB_SEED
-    Case "*state"
-      If nstr$ = "" Then verb = VERB_DUMP_STATE
-    Case "*walkthrough"
-      If nstr$ = "" Then verb = VERB_WALKTHROUGH
+  Select Case Left$(vstr$, 4)
+    Case "*deb" : verb% = VERB_DEBUG%  : type% = TYPE_BOOLEAN%
+    Case "*loo" : verb% = VERB_LOOK%
+    Case "*mor" : verb% = VERB_MORE%   : type% = TYPE_BOOLEAN%
+    Case "*obj" : verb% = VERB_DUMP_OBJECTS%
+    Case "*rec" : verb% = VERB_RECORD% : type% = TYPE_BOOLEAN%
+    Case "*rep" : verb% = VERB_REPLAY% : type% = TYPE_BOOLEAN%
+    Case "*see" : verb% = VERB_SEED%   : type% = TYPE_OTHER%
+    Case "*sta" : verb% = VERB_DUMP_STATE%
+    Case "*wal" : verb% = VERB_WALKTHROUGH%
   End Select
 
-  lookup_meta_command = verb
+  If verb% = 0 Then Exit Function
+
+  Select Case type%
+    Case 0
+      If nstr$ <> "" Then Exit Function ' Unexpected noun.
+    Case TYPE_BOOLEAN%
+      If nstr$ = "" Then nstr$ = "on"
+      If nstr$ <> "on" And nstr$ <> "off" Then Exit Function ' Invalid noun.
+  End Select
+
+  lookup_meta_command = verb%
 End Function
 
 ' @param  word$  word to lookup
