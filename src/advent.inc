@@ -160,10 +160,18 @@ Sub advent.read_action_table()
 End Sub
 
 Sub advent.read_vocab_table()
-  Local i
-  For i = 0 To nl
-    nv_str$(i, 0) = advent.read_string$() ' verb
-    nv_str$(i, 1) = advent.read_string$() ' noun
+  Local i%, j%, s$
+  For i% = 0 To nl
+    For j% = 0 To 1 ' 0 is verb, 1 is noun.
+      s$ = advent.read_string$()
+      ' Not sure what these . and *. entries are, but suspect they are crud.
+      ' Until I learn better replace them with empty string, or previous word as appropriate.
+      Select Case s$
+        Case "."  : nv_str$(i%, j%) = ""
+        Case "*." : nv_str$(i%, j%) = nv_str$(i% - 1, j%)
+        Case Else : nv_str$(i%, j%) = s$
+      End Select
+    Next
   Next
 End Sub
 
