@@ -57,12 +57,13 @@ Const VERB_TOO_MANY%     = -2
 Const VERB_DEBUG%        = -3
 Const VERB_DUMP_OBJECTS% = -4
 Const VERB_DUMP_STATE%   = -5
-Const VERB_LOOK%         = -6
-Const VERB_MORE%         = -7
-Const VERB_RECORD%       = -8
-Const VERB_REPLAY%       = -9
-Const VERB_SEED%         = -10
-Const VERB_WALKTHROUGH%  = -11
+Const VERB_DUMP_VOCAB%   = -6
+Const VERB_LOOK%         = -7
+Const VERB_MORE%         = -8
+Const VERB_RECORD%       = -9
+Const VERB_REPLAY%       = -10
+Const VERB_SEED%         = -11
+Const VERB_WALKTHROUGH%  = -12
 
 Dim DIRECTIONS$(5) Length 10 = ("North", "South", "East", "West", "Up", "Down")
 
@@ -888,6 +889,7 @@ Sub prompt_for_command(verb, noun, nstr$)
       Case VERB_DEBUG%        : con.println("OK.") : debug = (nstr$ = "on")
       Case VERB_DUMP_OBJECTS% : dump_objects()
       Case VERB_DUMP_STATE%   : dump_state()
+      Case VERB_DUMP_VOCAB%   : dump_vocabulary()
       Case VERB_LOOK%         : describe_room()
       Case VERB_MORE%         : con.println("OK.") : con.more = (nstr$ = "on")
       Case VERB_RECORD%
@@ -969,6 +971,26 @@ Sub dump_state()
   con.println()
 End Sub
 
+Sub dump_vocabulary()
+  con.println()
+  con.println("VOCABULARY")
+  con.println("----------")
+  con.println("Id    Verb      Noun")
+  con.println()
+
+  Local i%, j%, s$, w$
+  For i% = 0 To nl
+    s$ = str.rpad$(Str$(i%), 6)
+    For j% = 0 To 1
+      w$ = Choice(nv_str$(i%, j%) = "", "<empty>", str.replace$(nv_str$(i%, j%), "*", "+"))
+      Cat s$, Choice(j% = 0, str.rpad$(w$, 10), w$)
+    Next
+    con.println(s$)
+  Next
+
+  con.println()
+End Sub
+
 Sub parse(s$, verb, noun, nstr$)
   Local vstr$
 
@@ -1031,6 +1053,7 @@ Function lookup_meta_command(vstr$, nstr$)
     Case "*rep" : verb% = VERB_REPLAY% : type% = TYPE_BOOLEAN%
     Case "*see" : verb% = VERB_SEED%   : type% = TYPE_OTHER%
     Case "*sta" : verb% = VERB_DUMP_STATE%
+    Case "*voc" : verb% = VERB_DUMP_VOCAB%
     Case "*wal" : verb% = VERB_WALKTHROUGH%
   End Select
 

@@ -5,6 +5,14 @@ Version 2.0.4 - ??-???-2021:
   - Added *OBJECTS meta-command:
     - prints the id, current location and name of every object in the adventure.
     - WARNING! may contain spoilers.
+  - Added *VOCAB meta-command:
+    - prints the adventure's verb and noun tables.
+      - the tables usually only contain the first 3-5 significant characters
+        of each word.
+      - an entry preceded by a + is a synonym for the previous entry.
+    - the noun table does not necessarily contain the nouns for all the
+      adventure's objects, see the output of *OBJECTS.
+    - WARNING! may contain spoilers.
 
 Version 2.0.3 - 20-Jul-2021:
  - Added support for unencrypted walkthough (.wlk) files.

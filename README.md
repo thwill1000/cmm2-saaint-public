@@ -148,6 +148,12 @@ the interpreter itself rather than being specific to an adventure:
          - the value of the "dark flag".
          - the value of the "remaining light" counter.
          - the indexes of the status bits that are currently set.
+ - ```*vocab```
+   - prints the adventure's verb and noun tables.
+    - the tables usually only contain the first 3-5 significant characters of each word.
+    - an entry preceded by a `+` is a synonym for the previous entry.
+   - the noun table does not necessarily contain the nouns for all the adventure's objects, see the output of ```*objects```.
+   - WARNING! may contain spoilers.
  - ```*walkthrough```
      - replays walkthrough file (.wlk) for the current adventure if present.
      - walkthrough files should be placed in the same directory as the corresponding "\<adventure\>.dat" file and named "\<adventure\>.wlk".
