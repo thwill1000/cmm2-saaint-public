@@ -9,9 +9,9 @@ sys.requires("map", "string", "math", "advent", "console", "persist")
 sys.provides("interp")
 If sys.err$ <> "" Then Error sys.err$
 
-Const STATE_CONTINUE = 0
-Const STATE_QUIT     = 1
-Const STATE_RESTART  = 2
+Const STATE_OK      = 0
+Const STATE_QUIT    = 1
+Const STATE_RESTART = 2
 
 Const ACTION_PERFORMED = 3
 Const ACTION_UNKNOWN   = 4
@@ -74,23 +74,24 @@ Sub reset_state()
   df = 0  ' dark flag is unset
   sf = 0  ' status flags are clear
   For i = 0 To il : ia(i) = i2(i) : Next ' initial object locations
-  state = STATE_CONTINUE
+  state = STATE_OK
 End Sub
 
 Sub game_loop()
   Local noun, nstr$, verb
 
-  Cls
+  state = STATE_OK
+
   describe_room()
 
   Do
     do_automatic_actions()
     If redraw_flag% Then describe_room()
-    If state = STATE_CONTINUE Then prompt_for_command(verb, noun, nstr$)
-    If state = STATE_CONTINUE Then do_player_actions(verb, noun, nstr$)
+    If state = STATE_OK Then prompt_for_command(verb, noun, nstr$)
+    If state = STATE_OK Then do_player_actions(verb, noun, nstr$)
 '    If redraw_flag% Then describe_room()
-    If state = STATE_CONTINUE Then update_light()
-  Loop While state = STATE_CONTINUE
+    If state = STATE_OK Then update_light()
+  Loop While state = STATE_OK
 End Sub
 
 Sub describe_room()

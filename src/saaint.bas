@@ -114,7 +114,7 @@ play_game:
   seed_random_number_generator("option")
   write_inifile() ' Updates .ini file with the selected adventure.
   twm.enable_cursor(1)
-  state = STATE_CONTINUE
+  Cls
   game_loop()
   con.close_all()
   write_inifile() ' Updates .ini file with any options changed during play.
