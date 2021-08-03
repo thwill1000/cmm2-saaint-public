@@ -119,8 +119,8 @@ End Sub
 ' Is the current room dark ?
 Function is_dark%()
   If Not df Then Exit Function
-  If ia(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED% Then Exit Function
-  If ia(OBJ_LIGHT_SOURCE%) = r Then Exit Function
+  If state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED% Then Exit Function
+  If state.obj_rm%(OBJ_LIGHT_SOURCE%) = r Then Exit Function
   is_dark% = 1
 End Function
 
@@ -128,7 +128,7 @@ Sub print_object_list(rm, none$)
   Local count, i, p
 
   For i = 0 To il
-    If ia(i) = rm Then
+    If state.obj_rm%(i) = rm Then
       Inc count
       If count > 1 Then con.print(", ")
       If debug Then con.print("[" + Str$(i) + "] ")
@@ -294,22 +294,22 @@ Function evaluate_condition(code, value)
       pass = 1
     Case 1
       ' Passes if the player is carrying object <value>.
-      pass = (ia(value) = ROOM_CARRIED%)
+      pass = (state.obj_rm%(value) = ROOM_CARRIED%)
     Case 2
       ' Passes if the player is in the same room (but not carrying) object <value>.
-      pass = (ia(value) = r)
+      pass = (state.obj_rm%(value) = r)
     Case 3
       ' Passes if object <value> is available; i.e. carried or in the current room
-      pass = (ia(value) = ROOM_CARRIED%) Or (ia(value) = r)
+      pass = (state.obj_rm%(value) = ROOM_CARRIED%) Or (state.obj_rm%(value) = r)
     Case 4
       ' Passes if the player is in room <value>.
       pass = (r = value)
     Case 5
       ' Passes if the player is carrying object <value> or it is in a different room.
-      pass = (ia(value) <> r)
+      pass = (state.obj_rm%(value) <> r)
     Case 6
       ' Passes if the player is not carrying object <value>.
-      pass = (ia(value) <> ROOM_CARRIED%)
+      pass = (state.obj_rm%(value) <> ROOM_CARRIED%)
     Case 7
       ' Passes if the player is not in room <value>.
       pass = (r <> value)
@@ -326,15 +326,14 @@ Function evaluate_condition(code, value)
       ' Passes if the player is carrying nothing.
       pass = count_carried%() = 0
     Case 12
-      ' Passes if object <value> is not available;
-      ' i.e. not carried or in the current room.
-      pass = (ia(value) <> ROOM_CARRIED%) And (ia(value) <> r)
+      ' Passes if object <value> is not available; i.e. not carried or in the current room.
+      pass = (state.obj_rm%(value) <> ROOM_CARRIED%) And (state.obj_rm%(value) <> r)
     Case 13
       ' Passes if object <value> is not in the store room (0)
-      pass = (ia(value) <> ROOM_STORE%)
+      pass = (state.obj_rm%(value) <> ROOM_STORE%)
     Case 14
       ' Passes if object <value> is in the store room (0)
-      pass = (ia(value) = ROOM_STORE%)
+      pass = (state.obj_rm%(value) = ROOM_STORE%)
     Case 15
       ' Passes if counter <= the value.
       pass = (counter <= value)
@@ -343,10 +342,10 @@ Function evaluate_condition(code, value)
       pass = (counter > value)
     Case 17
       ' Passes if the numbered object is is the room it started in.
-      pass = (ia(value) = i2(value))
+      pass = (state.obj_rm%(value) = advent.obj_rm%(value))
     Case 18
       ' Passes if the numbered object is not in the room it started in.
-      pass = (ia(value) <> i2(value))
+      pass = (state.obj_rm%(value) <> advent.obj_rm%(value))
     Case 19
       ' Passes if the counter is equal to the value.
       pass = (counter = value)
@@ -360,7 +359,7 @@ End Function
 Function count_carried%()
   Local i%
   For i% = 0 To il
-    If ia(i) = ROOM_CARRIED% Then Inc count_carried%
+    If state.obj_rm%(i) = ROOM_CARRIED% Then Inc count_carried%
   Next
 End Function
 
@@ -385,8 +384,8 @@ Sub do_command(a, cmd, nstr$)
       If count_carried%() >= mx Then
         con.println("I've too much to carry. Try " + Chr$(34) + "Inventory" + Chr$(34) + ".")
       Else
-        redraw_flag% = redraw_flag% Or (ia(p) = r)
-        ia(p) = ROOM_CARRIED%
+        redraw_flag% = redraw_flag% Or (state.obj_rm%(p) = r)
+        state.obj_rm%(p) = ROOM_CARRIED%
       EndIf
 
     Case 53
@@ -394,7 +393,7 @@ Sub do_command(a, cmd, nstr$)
       ' Drop the Par #1 object in the current room.
       ' The object may be carried or in any other room
       p = get_parameter(a)
-      ia(p) = r
+      state.obj_rm%(p) = r
       redraw_flag% = 1
 
     Case 54
@@ -410,8 +409,8 @@ Sub do_command(a, cmd, nstr$)
       ' x->RM0
       ' Move the Par #1 object to room 0 (the storeroom).
       p = get_parameter(a)
-      redraw_flag% = redraw_flag% Or (ia(p) = r)
-      ia(p) = 0
+      redraw_flag% = redraw_flag% Or (state.obj_rm%(p) = r)
+      state.obj_rm%(p) = 0
 
     Case 56
       ' NIGHT
@@ -461,9 +460,9 @@ Sub do_command(a, cmd, nstr$)
       ' This will automatically display the room if the object came from,
       ' or went to the current room.
       x = get_parameter(a)
-      redraw_flag% = redraw_flag% Or (ia(x) = r)
-      ia(x) = get_parameter(a)
-      redraw_flag% = redraw_flag% Or (ia(x) = r)
+      redraw_flag% = redraw_flag% Or (state.obj_rm%(x) = r)
+      state.obj_rm%(x) = get_parameter(a)
+      redraw_flag% = redraw_flag% Or (state.obj_rm%(x) = r)
 
     Case 63
       ' FINI
@@ -488,7 +487,7 @@ Sub do_command(a, cmd, nstr$)
       ' them to the treasure room and what their percentage of the total is.
       x = 0
       For i = 1 To il
-        If ia(i) = tr And Left$(ia_str$(i), 1) = "*" Then Inc x
+        If state.obj_rm%(i) = tr And Left$(ia_str$(i), 1) = "*" Then Inc x
       Next
       con.print("I've stored " + Str$(x) + " treasures. On a scale of 0 to 100 that rates a ")
       con.println(Str$(Int(x / tt * 100)) + ".")
@@ -520,8 +519,8 @@ Sub do_command(a, cmd, nstr$)
       ' source (object 9). This command should be followed by a x->RM0 to store
       ' the unlighted light source (these are two different objects).
       lx = lt
-      redraw_flag% = redraw_flag% Or (ia(OBJ_LIGHT_SOURCE%) = r)
-      ia(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED%
+      redraw_flag% = redraw_flag% Or (state.obj_rm%(OBJ_LIGHT_SOURCE%) = r)
+      state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED%
 
     Case 70
       ' CLS
@@ -539,10 +538,10 @@ Sub do_command(a, cmd, nstr$)
       ' description will be displayed.
       x = get_parameter(a)  ' x = object 1
       y = get_parameter(a)  ' y = object 2
-      p = ia(x)             ' p = location of object 1
-      redraw_flag% = redraw_flag% Or (ia(x) = r) Or (ia(y) = r)
-      ia(x) = ia(y)
-      ia(y) = p
+      p = state.obj_rm%(x)  ' p = location of object 1
+      redraw_flag% = redraw_flag% Or (state.obj_rm%(x) = r) Or (state.obj_rm%(y) = r)
+      state.obj_rm%(x) = state.obj_rm%(y)
+      state.obj_rm%(y) = p
 
     Case 73
       ' CONT
@@ -558,8 +557,8 @@ Sub do_command(a, cmd, nstr$)
       ' Always pick up the Par #1 object, even if that would cause the carry limit to be exceeded.
       ' Otherwise, this is like command 52, GETx.
       p = get_parameter(a)
-      redraw_flag% = redraw_flag% Or (ia(p) = r)
-      ia(p) = ROOM_CARRIED%
+      redraw_flag% = redraw_flag% Or (state.obj_rm%(p) = r)
+      state.obj_rm%(p) = ROOM_CARRIED%
 
     Case 75
       ' BYx<-x
@@ -568,8 +567,8 @@ Sub do_command(a, cmd, nstr$)
       ' If this changes the objects in the current room, the room will be displayed again.
       x = get_parameter(a) ' x = object 1
       y = get_parameter(a) ' y = object 2
-      redraw_flag% = redraw_flag% Or (ia(x) = r) Or (ia(y) = r)
-      ia(x) = ia(y)
+      redraw_flag% = redraw_flag% Or (state.obj_rm%(x) = r) Or (state.obj_rm%(y) = r)
+      state.obj_rm%(x) = state.obj_rm%(y)
 
   '  Case 76
       ' DspRM
@@ -747,7 +746,7 @@ Sub dump_objects()
   Local i%, p%, q%, s$
   For i% = 0 To il
     con.print(str.rpad$(Str$(i%), 6))
-    con.print(str.rpad$(Str$(ia(i%)), 6))
+    con.print(str.rpad$(Str$(state.obj_rm%(i%)), 6))
     s$ = Choice(ia_str$(i%) = "", "<empty>", ia_str$(i%))
     p% = 1
     Do While p% <= Len(s$)
@@ -947,8 +946,8 @@ Sub do_get(noun, nstr$)
 
   For i = 0 To il
     If obj_noun$(i) = obj$ Then
-      If ia(i) = r Then
-        ia(i) = ROOM_CARRIED%
+      If state.obj_rm%(i) = r Then
+        state.obj_rm%(i) = ROOM_CARRIED%
         k = 3
         Exit For
       Else
@@ -991,8 +990,8 @@ Sub do_drop(noun, nstr$)
 
   For i = 0 To il
     If obj_noun$(i) = obj$ Then
-      If ia(i) = ROOM_CARRIED% Then
-        ia(i) = r
+      If state.obj_rm%(i) = ROOM_CARRIED% Then
+        state.obj_rm%(i) = r
         k = 3
         Exit For
       Else
@@ -1011,11 +1010,11 @@ End Sub
 
 Sub update_light()
   ' If carrying the lit light source ...
-  If ia(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED% Then
+  If state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED% Then
     Inc lx, -1 ' decrement its duration
     If lx < 0 Then
       con.println("Light has run out!")
-      ia(OBJ_LIGHT_SOURCE%) = ROOM_STORE%
+      state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_STORE%
     ElseIf lx < 25 Then
       con.println("Light runs out in " + Str$(lx) + " turns!")
     EndIf

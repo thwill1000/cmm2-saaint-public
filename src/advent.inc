@@ -65,8 +65,7 @@ Sub advent.read_header()
   Dim ca(cl, 7)      ' action table
   Dim nv_str$(nl, 1) ' vocabulary table - verbs at index 0, nouns at index 1
   Dim ia_str$(il)    ' object descriptions
-  Dim ia(il)         ' object locations
-  Dim i2(il)         ' backup copy of object locations
+  Dim advent.obj_rm%(il) ' initial object locations
   Dim rs$(rl)        ' room descriptions
   Dim rm(rl, 5)      ' room exits: N, S, E, W, U, D
   Dim ms$(ml)        ' messages table
@@ -196,8 +195,7 @@ Sub advent.read_objects()
   Local i
   For i = 0 To il
     ia_str$(i) = advent.read_string$()
-    ia(i) = advent.read_int%()
-    i2(i) = ia(i)
+    advent.obj_rm%(i) = advent.read_int%()
   Next
 End Sub
 
@@ -210,5 +208,5 @@ Sub advent.free()
   advent.file$ = ""
   il = 0 : cl = 0 : nl = 0 : rl = 0 : mx = 0 : ar = 0
   tt = 0 : ln = 0 : lt = 0 : ml = 0 : tr = 0
-  Erase ca, nv_str$, ia_str$, ia, i2, rs$, rm, ms$
+  Erase ca, nv_str$, ia_str$, advent.obj_rm%, rs$, rm, ms$
 End Sub

@@ -12,24 +12,25 @@ If sys.err$ <> "" Then Error sys.err$
 Const state.SAVE_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/../saves")
 Const state.FD% = 1
 
-Dim lx              ' light duration
-Dim df              ' dark flag
-Dim r               ' current room
-Dim sf              ' status flags
-Dim counter         ' main counter
-Dim alt_counter(7)  ' 8 alternate counters
-Dim alt_room(5)     ' 6 alternate room registers
-' And ia() which contains the current object locations,
-' but is declared by advent.read()
+Dim lx               ' light duration
+Dim df               ' dark flag
+Dim r                ' current room
+Dim sf               ' status flags
+Dim counter          ' main counter
+Dim alt_counter(7)   ' 8 alternate counters
+Dim alt_room(5)      ' 6 alternate room registers
+Dim state.obj_rm%(2) ' current object locations
+                     ' - initialised with a dummy size, reset by state.reset()
 
 Sub state.reset()
-  Local i
   r = ar  ' current room = starting room
   lx = lt ' light source starts full
   df = 0  ' dark flag is unset
   sf = 0  ' status flags are clear
-  For i = 0 To il : ia(i) = i2(i) : Next ' initial object locations
-  state = STATE_OK
+  Erase state.obj_rm%
+  Dim state.obj_rm%(il)
+  Local i%
+  For i% = 0 To il : state.obj_rm%(i%) = advent.obj_rm%(i%) : Next
 End Sub
 
 ' Saves the current game state to a file.
@@ -75,7 +76,7 @@ Function state.save%()
   Print #fd%, Str$(df)                                     ' dark flag
   Print #fd%, Str$(r)                                      ' current room
   Print #fd%, Str$(lx)                                     ' light duration
-  For i = 0 To il : Print #fd%, Str$(ia(i)) : Next         ' object locations
+  For i = 0 To il : Print #fd%, Str$(state.obj_rm%(i)) : Next ' object locations
   Print #fd%, Str$(counter)                                ' counter
   For i = 0 To 7 : Print #fd%, Str$(alt_counter(i)) : Next ' alternate counters
   For i = 0 To 5 : Print #fd%, Str$(alt_room(i)) : Next    ' alternate rooms
@@ -136,7 +137,9 @@ Function state.restore%()
     df = values(1)
     r  = values(2)
     lx = values(3)
-    For i = 4 To il + 4 : ia(i - 4) = values(i) : Next
+    Erase state.obj_rm%()
+    Dim state.obj_rm%(il)
+    For i = 4 To il + 4 : state.obj_rm%(i - 4) = values(i) : Next
     counter = values(il + 5)
     For i = il + 6 To il + 13 : alt_counter(i - il - 6) = values(i) : Next
     For i = il + 14 To il + 19 : alt_room(i - il - 14) = values(i) : Next
