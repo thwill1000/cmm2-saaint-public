@@ -54,29 +54,41 @@ Dim continue_flag = 0 ' Flag that, when set will cause the next action(s) to be
 ' TODO: This shouldn't be global
 Dim ip ' action parameter pointer
 
-Dim redraw_flag% = 1 ' Boolean flag that if set causes the current room to be described.
+Dim redraw_flag%          ' Boolean flag that is set when an action is performed that should
+                          ' (probably) cause the current room to be (re)described.
+
+Dim interp.room_state%(9) ' Encodes the state of the last described room:
+                          '   bits  0..15  - room number (though probably only bits 0..7)
+                          '   bit      16  - dark flag
+                          '   bits 17..63  - unused
+                          '   bits 64..639 - was object i + 64 in the room
+                          ' We use this to determine if we need to describe the current room.
 
 Sub game_loop()
   Local noun, nstr$, verb
 
   state = STATE_OK
 
-  describe_room()
+  describe_room(1)
 
   Do
     do_automatic_actions()
-    If redraw_flag% Then describe_room()
+    describe_room()
     If state = STATE_OK Then prompt_for_command(verb, noun, nstr$)
     If state = STATE_OK Then do_player_actions(verb, noun, nstr$)
-'    If redraw_flag% Then describe_room()
     If state = STATE_OK Then update_light()
   Loop While state = STATE_OK
 End Sub
 
-Sub describe_room()
-  Local count, i
+' Describe the current room if it has changed.
+'
+' @param  always%  if not 0 then describe the room even if it has not changed.
+Sub describe_room(always%)
 
+  ' Even if always% = 1 we call interp.has_changed%() to update interp.room_state%().
+  Local changed% = Choice(redraw_flag% Or always%, interp.has_changed%(), 0)
   redraw_flag% = 0
+  If Not changed% And Not always% Then Exit Sub
 
   If is_dark%() Then
     If debug Then con.print("[" + Str$(r) + "] ")
@@ -97,6 +109,7 @@ Sub describe_room()
   EndIf
 
   con.print("Obvious exits: ")
+  Local count, i
   For i = 0 To 5
     If rm(r, i) <> 0 Then
       Inc count
@@ -115,6 +128,38 @@ Sub describe_room()
   con.foreground("green")
 
 End Sub
+
+' Has the current room state changed:
+'  - is the player in a different room ?
+'  - has the dark flag changed ?
+'  - have the objects in the room changed ?
+'
+' As a side-effect this function updates interp.room_state%() to the NEW current room state.
+Function interp.has_changed%()
+
+  ' First 64-bits of room_state%() encodes current room and dark flag.
+  Local idx%, x%
+  x% = r + (df << 16)
+  If x% <> interp.room_state%(idx%) Then interp.has_changed% = 1
+  interp.room_state%(idx%) = x%
+  Inc idx%
+
+  ' Remaining 576-bits of room_state%() encodes objects in current room.
+  Local bit%, obj%
+  x% = 0
+  For obj% = 0 To il
+    Inc x%, (state.obj_rm%(obj%) = r) << bit%
+    Inc bit%
+    If bit% = 64 Or obj% = il Then
+      If x% <> interp.room_state%(idx%) Then interp.has_changed% = 1
+      interp.room_state%(idx%) = x%
+      bit% = 0
+      x% = 0
+      Inc idx%
+    EndIf
+  Next
+
+End Function
 
 ' Is the current room dark ?
 Function is_dark%()
@@ -691,7 +736,7 @@ Sub prompt_for_command(verb, noun, nstr$)
       Case VERB_DUMP_OBJECTS% : dump_objects()
       Case VERB_DUMP_STATE%   : dump_state()
       Case VERB_DUMP_VOCAB%   : dump_vocabulary()
-      Case VERB_LOOK%         : describe_room()
+      Case VERB_LOOK%         : describe_room(1)
       Case VERB_MORE%         : con.println("OK.") : con.more = (nstr$ = "on")
       Case VERB_RECORD%
         If nstr$ = "on" Then
