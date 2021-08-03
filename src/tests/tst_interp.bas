@@ -31,8 +31,12 @@ End Sub
 
 add_test("test_has_changed")
 add_test("test_is_dark")
+add_test("test_do_command_56 (NIGHT)", "test_do_command_56")
+add_test("test_do_command_57 (DAY)", "test_do_command_57")
+add_test("test_do_command_61 (DEAD)", "test_do_command_61")
 add_test("test_do_command_69 (FILL)", "test_do_command_69")
 add_test("test_do_command_81 (EXm,CT)", "test_do_command_81")
+add_test("test_go_direction_given_dark")
 add_test("test_update_light")
 
 run_tests()
@@ -44,10 +48,16 @@ Sub setup_test()
   For i% = 0 To 9 : interp.room_state%(i%) = 0 : Next
   r = 1
 
-  ' Allocate room for 100 objects.
+  ' Allocate 100 objects.
   il = 100
   Erase state.obj_rm%
-  Dim state.obj_rm%(100)
+  Dim state.obj_rm%(il)
+
+  ' Allocate 10 rooms.
+  rl = 10
+  On Error Skip
+  Erase rm
+  Dim rm(rl, 5)
 
   On Error Skip
   Erase ca
@@ -120,6 +130,40 @@ Sub test_is_dark()
   assert_int_equals(1, is_dark%())
 End Sub
 
+Sub test_do_command_56() ' NIGHT
+  ' Given currently light.
+  df = 0
+  do_command(0, 56, "")
+  assert_int_equals(1, df)
+
+  ' Given currently dark.
+  do_command(0, 56, "")
+  assert_int_equals(1, df)
+End Sub
+
+Sub test_do_command_57() ' DAY
+  ' Given currently dark.
+  df = 1
+  do_command(0, 57, "")
+  assert_int_equals(0, df)
+
+  ' Given currently light.
+  do_command(0, 57, "")
+  assert_int_equals(0, df)
+End Sub
+
+Sub test_do_command_61() ' DEAD
+  df = 1
+  r = 1
+  rl = 10
+
+  do_command(0, 61, "")
+
+  assert_int_equals(0, df)
+  assert_int_equals(10, r)
+  assert_string_equals("I'm dead..." + sys.CRLF$, con.buf$)
+End Sub
+
 Sub test_do_command_69() ' FILL
   lx = 10
   lt = 70
@@ -143,6 +187,28 @@ Sub test_do_command_81() ' EXm,CT
   assert_int_equals(25, lx)
 End Sub
 
+Sub test_go_direction_given_dark()
+  df = 1
+  state.obj_rm%(OBJ_LIGHT_SOURCE%) = 0
+  rm(1, 0) = 2
+  rl = 10
+
+  ' Given exit exists.
+  r = 1
+  go_direction(1)
+  assert_int_equals(2, r)
+  assert_string_equals("Dangerous to move in the dark!" + sys.CRLF$, con.buf$)
+
+  ' Given exit does not exist.
+  con.buf$ = ""
+  r = 1
+  go_direction(2)
+  assert_int_equals(10, r)
+  Local expected$ = "Dangerous to move in the dark!" + sys.CRLF$
+  Cat expected$, "I fell down and broke my neck." + sys.CRLF$
+  assert_string_equals(expected$, con.buf$)
+End Sub
+
 Sub test_update_light()
   ' Given light source plentiful.
   state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED%
@@ -153,7 +219,7 @@ Sub test_update_light()
 
   ' Given light source running out.
   con.buf$ = ""
-    lx = 25
+  lx = 25
   update_light()
   assert_int_equals(24, lx)
   assert_string_equals("Light runs out in 24 turns!" + sys.CRLF$, con.buf$)
