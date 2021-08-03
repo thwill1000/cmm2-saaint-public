@@ -283,8 +283,7 @@ Sub go_direction(noun)
       Exit Sub
     EndIf
   EndIf
-  r = k
-  redraw_flag% = 1
+  interp.move_player(k)
 End Sub
 
 Function evaluate_condition(code, value)
@@ -384,8 +383,7 @@ Sub do_command(a, cmd, nstr$)
       If count_carried%() >= mx Then
         con.println("I've too much to carry. Try " + Chr$(34) + "Inventory" + Chr$(34) + ".")
       Else
-        redraw_flag% = redraw_flag% Or (state.obj_rm%(p) = r)
-        state.obj_rm%(p) = ROOM_CARRIED%
+        interp.move_object(p, ROOM_CARRIED%)
       EndIf
 
     Case 53
@@ -393,8 +391,7 @@ Sub do_command(a, cmd, nstr$)
       ' Drop the Par #1 object in the current room.
       ' The object may be carried or in any other room
       p = get_parameter(a)
-      state.obj_rm%(p) = r
-      redraw_flag% = 1
+      interp.move_object(p, r)
 
     Case 54
       ' GOTOy
@@ -402,15 +399,13 @@ Sub do_command(a, cmd, nstr$)
       ' This command should be followed by a DspRM (64) command.
       ' Also it may need to be followed by a NIGHT (56) or DAY (57) command.
       p = get_parameter(a)
-      r = p
-      redraw_flag% = 1
+      interp.move_player(p)
 
     Case 55, 59
       ' x->RM0
       ' Move the Par #1 object to room 0 (the storeroom).
       p = get_parameter(a)
-      redraw_flag% = redraw_flag% Or (state.obj_rm%(p) = r)
-      state.obj_rm%(p) = 0
+      interp.move_object(p, 0)
 
     Case 56
       ' NIGHT
@@ -450,9 +445,8 @@ Sub do_command(a, cmd, nstr$)
       ' Goto the last room (usually some form of limbo),
       ' make it DAY and display the room.
       con.println("I'm dead...")
-      r = rl
       df = 0
-      redraw_flag% = 1
+      interp.move_player(rl)
 
     Case 62
       ' x->y
@@ -460,9 +454,8 @@ Sub do_command(a, cmd, nstr$)
       ' This will automatically display the room if the object came from,
       ' or went to the current room.
       x = get_parameter(a)
-      redraw_flag% = redraw_flag% Or (state.obj_rm%(x) = r)
-      state.obj_rm%(x) = get_parameter(a)
-      redraw_flag% = redraw_flag% Or (state.obj_rm%(x) = r)
+      y = get_parameter(a)
+      interp.move_object(x, y)
 
     Case 63
       ' FINI
@@ -519,8 +512,7 @@ Sub do_command(a, cmd, nstr$)
       ' source (object 9). This command should be followed by a x->RM0 to store
       ' the unlighted light source (these are two different objects).
       lx = lt
-      redraw_flag% = redraw_flag% Or (state.obj_rm%(OBJ_LIGHT_SOURCE%) = r)
-      state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED%
+      interp.move_object(OBJ_LIGHT_SOURCE%, ROOM_CARRIED%)
 
     Case 70
       ' CLS
@@ -539,9 +531,8 @@ Sub do_command(a, cmd, nstr$)
       x = get_parameter(a)  ' x = object 1
       y = get_parameter(a)  ' y = object 2
       p = state.obj_rm%(x)  ' p = location of object 1
-      redraw_flag% = redraw_flag% Or (state.obj_rm%(x) = r) Or (state.obj_rm%(y) = r)
-      state.obj_rm%(x) = state.obj_rm%(y)
-      state.obj_rm%(y) = p
+      interp.move_object(x, state.obj_rm%(y))
+      interp.move_object(y, p)
 
     Case 73
       ' CONT
@@ -557,8 +548,7 @@ Sub do_command(a, cmd, nstr$)
       ' Always pick up the Par #1 object, even if that would cause the carry limit to be exceeded.
       ' Otherwise, this is like command 52, GETx.
       p = get_parameter(a)
-      redraw_flag% = redraw_flag% Or (state.obj_rm%(p) = r)
-      state.obj_rm%(p) = ROOM_CARRIED%
+      interp.move_object(p, ROOM_CARRIED%)
 
     Case 75
       ' BYx<-x
@@ -567,8 +557,7 @@ Sub do_command(a, cmd, nstr$)
       ' If this changes the objects in the current room, the room will be displayed again.
       x = get_parameter(a) ' x = object 1
       y = get_parameter(a) ' y = object 2
-      redraw_flag% = redraw_flag% Or (state.obj_rm%(x) = r) Or (state.obj_rm%(y) = r)
-      state.obj_rm%(x) = state.obj_rm%(y)
+      interp.move_object(x, state.obj_rm%(y))
 
   '  Case 76
       ' DspRM
@@ -597,9 +586,8 @@ Sub do_command(a, cmd, nstr$)
       ' This should be followed by a GOTOy command if the alternate room register 0 had not already
       ' been set.
       x = r
-      r = alt_room(0)
+      interp.move_player(alt_room(0))
       alt_room(0) = x
-      redraw_flag% = 1
 
     Case 81
       ' EXm,CT
@@ -653,9 +641,8 @@ Sub do_command(a, cmd, nstr$)
       ' registers numbered from 0 to 5.
       p = get_parameter(a)
       x = r
-      r = alt_room(p)
+      interp.move_player(alt_room(p))
       alt_room(p) = x
-      redraw_flag% = 1
 
     Case 88
       ' DELAY
@@ -1018,5 +1005,19 @@ Sub update_light()
     ElseIf lx < 25 Then
       con.println("Light runs out in " + Str$(lx) + " turns!")
     EndIf
+  EndIf
+End Sub
+
+Sub interp.move_player(dst%)
+  If r <> dst% Then
+    r = dst%
+    redraw_flag% = 1
+  EndIf
+End Sub
+
+Sub interp.move_object(obj%, dst%)
+  If state.obj_rm%(obj%) <> dst% Then
+    If (state.obj_rm%(obj%) = r) Or (dst% = r) Then redraw_flag% = 1
+    state.obj_rm%(obj%) = dst%
   EndIf
 End Sub
