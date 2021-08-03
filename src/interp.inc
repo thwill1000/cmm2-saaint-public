@@ -5,7 +5,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("advent", "console", "map", "math", "persist", "state")
+sys.requires("advent", "console", "map", "math", "script", "state")
 sys.provides("interp")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -468,8 +468,8 @@ Sub do_command(a, cmd, nstr$)
     Case 63
       ' FINI
       ' Tell the player the game is over and ask if they want to play again.
-      If con.fd_out > 0 Then persist.record_off()
-      If con.fd_in > 0 Then persist.replay_off()
+      If con.fd_out > 0 Then script.record_off()
+      If con.fd_in > 0 Then script.replay_off()
       Local s$ = prompt$("The game is now over, would you like to play again [Y|n]? ")
       If LCase$(s$) = "n" Then state = STATE_QUIT Else state = STATE_RESTART
 
@@ -710,19 +710,19 @@ Sub prompt_for_command(verb, noun, nstr$)
       Case VERB_RECORD%
         If nstr$ = "on" Then
           seed_random_number_generator("record")
-          persist.record_on()
+          script.record_on()
         Else
-          persist.record_off()
+          script.record_off()
         EndIf
       Case VERB_REPLAY%
         If nstr$ = "on" Then
           seed_random_number_generator("record")
-          persist.replay_on()
+          script.replay_on()
         Else
-          persist.replay_off()
+          script.replay_off()
         EndIf
       Case VERB_SEED%         : seed_random_number_generator(nstr$)
-      Case VERB_WALKTHROUGH%  : seed_random_number_generator("record") : persist.walkthrough()
+      Case VERB_WALKTHROUGH%  : seed_random_number_generator("record") : script.walkthrough()
       Case Else               : Exit Do ' Handle 'verb' in calling code.
     End Select
 

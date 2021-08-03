@@ -21,10 +21,10 @@ Option Explicit On
 #Include "splib/vt100.inc"
 #Include "advent.inc"
 #Include "console.inc"
-#Include "persist.inc"
 #Include "metadata.inc"
 #Include "catalogue.inc"
 #Include "menus.inc"
+#Include "script.inc"
 #Include "state.inc"
 #Include "interp.inc"
 

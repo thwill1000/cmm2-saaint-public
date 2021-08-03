@@ -1,19 +1,20 @@
-' Implementation of Save/Restore and Record/Replay for SAAINT
 ' For Colour Maximite 2, MMBasic 5.07
 ' Copyright (c) 2020-2021 Thomas Hugo Williams
 ' Developed with the assistance of Bill McKinley
 
+' Implementation of script/walkthrough record and replay.
+
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("advent", "console", "crypt", "file")
-sys.provides("persist")
+sys.requires("advent", "crypt", "console", "file")
+sys.provides("script")
 If sys.err$ <> "" Then Error sys.err$
 
-Const persist.SCRIPT_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/../scripts")
-Const persist.SCRIPT_FD_IN% = 2
-Const persist.SCRIPT_FD_OUT% = 3
+Const script.DIR$ = file.get_canonical$(file.PROG_DIR$ + "/../scripts")
+Const script.FD_IN% = 2
+Const script.FD_OUT% = 3
 
-Sub persist.record_on()
+Sub script.record_on()
   Local f$, s$
 
   If con.fd_out <> 0 Then con.println("Already recording script.") : Exit Sub
@@ -22,8 +23,8 @@ Sub persist.record_on()
   con.println()
   con.println("Select script to record:")
   con.println()
-  Local script% = persist.select_script%()
-  If script% <> 0 Then f$ = persist.script_file$(script%)
+  Local script% = script.select_script%()
+  If script% <> 0 Then f$ = script.script_file$(script%)
 
   If script% <> 0 And file.exists%(f$) Then
     s$ = prompt$("Overwrite script " + Str$(script%) + " [y|N]? ")
@@ -41,7 +42,7 @@ Sub persist.record_on()
 
   file.mkdir(file.get_parent$(f$))
 
-  Const fd_out% = persist.SCRIPT_FD_OUT%
+  Const fd_out% = script.FD_OUT%
   con.open_out(fd_out%, f$)
   Print #fd_out%, "# " Date$ " " Time$
   Print #fd_out%, "# " s$
@@ -49,12 +50,12 @@ Sub persist.record_on()
 End Sub
 
 ' Prompts the user to select a script slot.
-Function persist.select_script%()
+Function script.select_script%()
   Local i, f$, s$
-  Const fd% = persist.SCRIPT_FD_IN%
+  Const fd% = script.FD_IN%
 
   For i = 1 To 10
-    f$ = persist.script_file$(i)
+    f$ = script.script_file$(i)
     con.print("  [" + Format$(i, "%2g") + "] ")
     If file.exists%(f$) Then
       Open f$ For Input As #fd%
@@ -72,37 +73,37 @@ Function persist.select_script%()
   s$ = prompt$("Script number ? ")
   Local script% = Val(s$)
   If script% < 1 Or script% > 10 Then script% = 0
-  persist.select_script% = script%
+  script.select_script% = script%
 
 End Function
 
 ' Gets the path to the file corresponding to script slot 'i'.
-Function persist.script_file$(i)
+Function script.script_file$(i)
   If i < 1 Or i > 10 Then Error "Invalid script number"
   Local name$ = file.trim_extension$(file.get_name$(advent.file$)) + "_" + Str$(i) + ".scr"
   Local parent_name$ = file.get_name$(file.get_parent$(advent.file$))
   If Right$(parent_name$, 1) = ":" Then
     parent_name$ = Left$(parent_name$, Len(parent_name$) - 1) + "-drive"
   EndIf
-  persist.script_file$ = persist.SCRIPT_DIR$ + "/" + parent_name$ + "/" + name$
+  script.script_file$ = script.DIR$ + "/" + parent_name$ + "/" + name$
 End Function
 
-Sub persist.record_off()
+Sub script.record_off()
   If con.fd_out = 0 Then con.println("A script is not being recorded!") : Exit Sub
   con.close_out()
   con.println("Recording stopped.")
 End Sub
 
-Sub persist.replay_on()
+Sub script.replay_on()
   If con.fd_out <> 0 Then con.println("Cannot replay whilst recording script.") : Exit Sub
   If con.fd_in <> 0  Then con.println("Already replaying script.") : Exit Sub
 
   con.println()
   con.println("Select script to replay:")
   con.println()
-  Local script% = persist.select_script%()
+  Local script% = script.select_script%()
   If script% <> 0 Then
-    Local f$ = persist.script_file$(script%)
+    Local f$ = script.script_file$(script%)
     If Not file.exists%(f$) Then script% = 0
   EndIf
 
@@ -110,17 +111,17 @@ Sub persist.replay_on()
 
   con.println("Replaying from '" + f$ + "' ...")
 
-  con.open_in(persist.SCRIPT_FD_IN%, f$)
+  con.open_in(script.FD_IN%, f$)
 End Sub
 
-Sub persist.replay_off()
+Sub script.replay_off()
   If con.fd_in = 0 Then con.println("A script is not being replayed!") : Exit Sub
   con.close_in()
   con.println("Replaying stopped.")
 End Sub
 
 ' Replays the walkthrough file (.wlk) for the current adventure.
-Sub persist.walkthrough()
+Sub script.walkthrough()
 
   Local f_in$ = file.trim_extension$(advent.file$) + ".wlk"
   If Not file.exists%(f_in$) Then con.println("No walkthrough available.") : Exit Sub
@@ -129,8 +130,8 @@ Sub persist.walkthrough()
   If con.fd_in <> 0  Then con.println("Cannot play walkthrough whilst replaying script.") : Exit Sub
 
   ' Handle unencrypted walkthrough.
-  If persist.is_unencrypted%(f_in$) Then
-    con.open_in(persist.SCRIPT_FD_IN%, f_in$)
+  If script.is_unencrypted%(f_in$) Then
+    con.open_in(script.FD_IN%, f_in$)
     Exit Sub
   EndIf
 
@@ -143,8 +144,8 @@ Sub persist.walkthrough()
 
   ' Decrypt walkthough to "walkthrough.tmp"
   Local f_out$ = TMP_DIR$ + "/walkthrough.tmp"
-  Const fd_in% = persist.SCRIPT_FD_IN%
-  Const fd_out% = persist.SCRIPT_FD_OUT%
+  Const fd_in% = script.FD_IN%
+  Const fd_out% = script.FD_OUT%
   Open f_in$ For Input As fd_in%
   Open f_out$ For Output As fd_out%
   ok% = crypt.xxtea_file%("decrypt", fd_in%, fd_out%, k%(), k%())
@@ -154,8 +155,8 @@ Sub persist.walkthrough()
   ' If successful then start replaying the walkthrough script, otherwise report the problem.
   If Not ok% Then
     con.println("Error: " + sys.err$)
-  ElseIf persist.is_unencrypted%(f_out$) Then
-    con.open_in(persist.SCRIPT_FD_IN%, f_out$)
+  ElseIf script.is_unencrypted%(f_out$) Then
+    con.open_in(script.FD_IN%, f_out$)
   Else
     con.println("Password incorrect!")
   EndIf
@@ -167,10 +168,10 @@ End Sub
 ' @param  f$  the file in question.
 ' @return     1 if there are no non-printable, non-whitespace control codes in the first 255 bytes
 '             of the file, otherwise 0.
-Function persist.is_unencrypted%(f$)
-  Const fd_in% = persist.SCRIPT_FD_IN%
+Function script.is_unencrypted%(f$)
+  Const fd_in% = script.FD_IN%
   Open f$ For Input As fd_in%
   Local s$ = LCase$(Input$(255, #fd_in%))
   Close fd_in%
-  persist.is_unencrypted% = str.is_plain_ascii%(s$)
+  script.is_unencrypted% = str.is_plain_ascii%(s$)
 End Function
