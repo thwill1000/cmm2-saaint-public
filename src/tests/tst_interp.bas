@@ -16,14 +16,24 @@ Option Default Integer
 #Include "../splib/vt100.inc"
 #Include "/sptools/src/sptest/unittest.inc"
 #Include "../advent.inc"
-#Include "../console.inc"
 
+sys.provides("console") ' Stub dependency on "console.inc".
 sys.provides("script") ' Stub dependency on "script.inc".
 
 #Include "../state.inc"
 #Include "../interp.inc"
 
+Dim con.buf$
+
+Sub con.println(s$)
+  Cat con.buf$, s$ + sys.CRLF$
+End Sub
+
 add_test("test_has_changed")
+add_test("test_is_dark")
+add_test("test_do_command_69 (FILL)", "test_do_command_69")
+add_test("test_do_command_81 (EXm,CT)", "test_do_command_81")
+add_test("test_update_light")
 
 run_tests()
 
@@ -38,6 +48,12 @@ Sub setup_test()
   il = 100
   Erase state.obj_rm%
   Dim state.obj_rm%(100)
+
+  On Error Skip
+  Erase ca
+  Dim ca(100, 7)
+
+  con.buf$ = ""
 End Sub
 
 Sub teardown_test()
@@ -82,4 +98,77 @@ Sub test_has_changed()
   expected%(1) = &b100000001010000000000
   expected%(2) = &b10100000000
   assert_int_array_equals(expected%(), interp.room_state%())
+End Sub
+
+Sub test_is_dark()
+  ' Given dark flag unset.
+  df = 0
+  assert_int_equals(0, is_dark%())
+
+  ' Given carrying light source.
+  df = 1
+  state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED%
+  assert_int_equals(0, is_dark%())
+
+  ' Given light source in room.
+  r = 1
+  state.obj_rm%(OBJ_LIGHT_SOURCE%) = r
+  assert_int_equals(0, is_dark%())
+
+  ' Given light source is elsewhere.
+  state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_STORE%
+  assert_int_equals(1, is_dark%())
+End Sub
+
+Sub test_do_command_69() ' FILL
+  lx = 10
+  lt = 70
+  state.obj_rm%(OBJ_LIGHT_SOURCE%) = 5
+
+  do_command(0, 69, "")
+
+  assert_int_equals(70, lx)
+  assert_int_equals(-1, state.obj_rm%(OBJ_LIGHT_SOURCE%))
+End Sub
+
+Sub test_do_command_81() ' EXm,CT
+  lx = 10
+  counter = 25
+  ip = 0 : ca(0, 1) = 160 ' Gives a 1st parameter value of 8.
+
+  do_command(0, 81, "")
+
+  ' Expect counter and lx to have been swapped.
+  assert_int_equals(10, counter)
+  assert_int_equals(25, lx)
+End Sub
+
+Sub test_update_light()
+  ' Given light source plentiful.
+  state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED%
+  lx = 26
+  update_light()
+  assert_int_equals(25, lx)
+  assert_string_equals("", con.buf$)
+
+  ' Given light source running out.
+  con.buf$ = ""
+    lx = 25
+  update_light()
+  assert_int_equals(24, lx)
+  assert_string_equals("Light runs out in 24 turns!" + sys.CRLF$, con.buf$)
+
+  ' Given light source exhausted.
+  con.buf$ = ""
+  lx = 0
+  update_light()
+  assert_int_equals(-1, lx)
+  assert_string_equals("Light has run out!" + sys.CRLF$, con.buf$)
+
+  ' Given light source not being carried.
+  con.buf$ = ""
+  lx = 25
+  update_light()
+  assert_int_equals(25, lx)
+  assert_string_equals("", con.buf$)
 End Sub
