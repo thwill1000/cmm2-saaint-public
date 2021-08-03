@@ -5,162 +5,13 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("file", "crypt", "console", "advent")
+sys.requires("advent", "console", "crypt", "file")
 sys.provides("persist")
 If sys.err$ <> "" Then Error sys.err$
 
-Const persist.SAVE_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/../saves")
 Const persist.SCRIPT_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/../scripts")
-Const persist.FD% = 1
 Const persist.SCRIPT_FD_IN% = 2
 Const persist.SCRIPT_FD_OUT% = 3
-
-' Saves the current game state to a file.
-'
-' @return 1 on success, otherwise 0.
-Function persist.save%()
-  Local f$, i, s$
-
-  con.println()
-  con.println("Select saved game:")
-  con.println()
-  Local game% = persist.select_game%()
-  If game% <> 0 Then
-    f$ = persist.save_file$(game%)
-    If file.exists%(f$) Then
-      s$ = prompt$("Overwrite game " + Str$(game%) + " [y|N]? ")
-      If LCase$(s$) <> "y" Then game% = 0
-    EndIf
-  EndIf
-
-  If game% <> 0 Then
-    s$ = prompt$("Saved game name ? ")
-    If s$ = "" Then game% = 0
-  EndIf
-
-  If game% = 0 Then con.println("Cancelled.") : Exit Function
-
-  con.println("Saving '" + f$ + "' ...")
-
-  file.mkdir(file.get_parent$(f$))
-
-  Const fd% = persist.FD%
-  Open f$ For Output As #fd%
-
-  ' Write file header
-  Print #fd%, "SAAINT save file"
-  Print #fd%, "2" ' file format version
-  Print #fd%, Date$ + " " + Time$
-  Print #fd%, s$
-
-  ' Write state
-  Print #fd%, "&b" Bin$(sf, 32)                            ' status flags
-  Print #fd%, Str$(df)                                     ' dark flag
-  Print #fd%, Str$(r)                                      ' current room
-  Print #fd%, Str$(lx)                                     ' light duration
-  For i = 0 To il : Print #fd%, Str$(ia(i)) : Next         ' object locations
-  Print #fd%, Str$(counter)                                ' counter
-  For i = 0 To 7 : Print #fd%, Str$(alt_counter(i)) : Next ' alternate counters
-  For i = 0 To 5 : Print #fd%, Str$(alt_room(i)) : Next    ' alternate rooms
-
-  Close #fd%
-
-  persist.save% = 1
-End Function
-
-' Gets the path to the file corresponding to saved game slot 'i'.
-Function persist.save_file$(i)
-  If i < 1 Or i > 10 Then Error "Invalid saved game number"
-  Local name$ = file.trim_extension$(file.get_name$(advent.file$)) + "_" + Str$(i) + ".sav"
-  Local parent_name$ = file.get_name$(file.get_parent$(advent.file$))
-  If Right$(parent_name$, 1) = ":" Then
-    parent_name$ = Left$(parent_name$, Len(parent_name$) - 1) + "-drive"
-  EndIf
-  persist.save_file$ = persist.SAVE_DIR$ + "/" + parent_name$ + "/" + name$
-End Function
-
-' Restores game state from a file.
-'
-' @return 1 on success, otherwise 0.
-Function persist.restore%()
-  Local err$, f$, i, s$, values(19 + il)
-
-  con.println()
-  con.println("Select saved game to restore:")
-  con.println()
-  Local game% = persist.select_game%()
-  If game% <> 0 Then
-    f$ = persist.save_file$(game%)
-    If Not file.exists%(f$) Then game% = 0
-  EndIf
-
-  If game% = 0 Then con.println("Cancelled.") : Exit Function
-
-  Const fd% = persist.FD%
-  Open f$ For Input As #fd%
-
-  ' Read file header
-  Line Input #fd%, s$
-  Line Input #fd%, s$
-  Line Input #fd%, s$
-  Line Input #fd%, s$
-  con.println("Restoring '" + s$ + "' ...")
-
-  For i = 0 To 19 + il
-    Line Input #fd%, s$
-    If s$ = "" Then err$ = "missing data" : Exit For
-    values(i) = Val(s$)
-  Next i
-  If Not Eof(#fd%) And err$ = "" Then err$ = "unexpected data"
-
-  If err$ = "" Then
-    ' Update game state with values read from file.
-    sf = values(0)
-    df = values(1)
-    r  = values(2)
-    lx = values(3)
-    For i = 4 To il + 4 : ia(i - 4) = values(i) : Next
-    counter = values(il + 5)
-    For i = il + 6 To il + 13 : alt_counter(i - il - 6) = values(i) : Next
-    For i = il + 14 To il + 19 : alt_room(i - il - 14) = values(i) : Next
-
-    persist.restore% = 1
-  Else
-    con.println("Save file is invalid: " + err$)
-  EndIf
-
-  Close #fd%
-End Function
-
-' Prompts the user to select a saved game slot.
-Function persist.select_game%()
-  Local i, f$, s$(3) Length 64
-  Const fd% = persist.FD%
-
-  For i = 1 To 10
-    f$ = persist.save_file$(i)
-    con.print("  [" + Format$(i, "%2g") + "] ")
-    If file.exists%(f$) Then
-      Open f$ For Input As fd%
-      Line Input #fd%, s$(0) ' header
-      Line Input #fd%, s$(1) ' version
-      Line Input #fd%, s$(2) ' date/time
-      Line Input #fd%, s$(3) ' game name
-      Close #fd%
-      ' TODO: verify header / version ?
-      con.println(s$(2) + " - " + s$(3))
-    Else
-      con.println("Empty")
-    EndIf
-  Next i
-
-  con.println()
-  s$(0) = prompt$("Saved game number ? ")
-  Local game% = Val(s$(0))
-  If game% < 1 Or game% > 10 Then game% = 0
-  persist.select_game% = game%
-
-End Function
 
 Sub persist.record_on()
   Local f$, s$
@@ -200,7 +51,7 @@ End Sub
 ' Prompts the user to select a script slot.
 Function persist.select_script%()
   Local i, f$, s$
-  Const fd% = persist.FD%
+  Const fd% = persist.SCRIPT_FD_IN%
 
   For i = 1 To 10
     f$ = persist.script_file$(i)

@@ -25,6 +25,7 @@ Option Explicit On
 #Include "metadata.inc"
 #Include "catalogue.inc"
 #Include "menus.inc"
+#Include "state.inc"
 #Include "interp.inc"
 
 Const SAAINT_VERSION$ = "2.0.4"
@@ -99,12 +100,12 @@ adventure_menu:
 
 new_game:
 
-  reset_state()
+  state.reset()
   Goto play_game
 
 restore_game:
 
-  If persist.restore%() Then Goto play_game
+  If state.restore%() Then Goto play_game
   Pause 2000
   Goto adventure_menu
 

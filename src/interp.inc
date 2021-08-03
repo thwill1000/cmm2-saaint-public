@@ -5,7 +5,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("map", "string", "math", "advent", "console", "persist")
+sys.requires("advent", "console", "map", "math", "persist", "state")
 sys.provides("interp")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -46,17 +46,6 @@ Dim DIRECTIONS$(5) Length 10 = ("North", "South", "East", "West", "Up", "Down")
 Dim options$(map.new%(10))
 map.init(options$())
 
-' These global variables hold the current game state
-Dim lx              ' light duration
-Dim df              ' dark flag
-Dim r               ' current room
-Dim sf              ' status flags
-Dim counter         ' main counter
-Dim alt_counter(7)  ' 8 alternate counters
-Dim alt_room(5)     ' 6 alternate room registers
-' And ia() which contains the current object locations,
-' but is declared by advent.read()
-
 Dim state
 Dim debug
 Dim continue_flag = 0 ' Flag that, when set will cause the next action(s) to be
@@ -66,16 +55,6 @@ Dim continue_flag = 0 ' Flag that, when set will cause the next action(s) to be
 Dim ip ' action parameter pointer
 
 Dim redraw_flag% = 1 ' Boolean flag that if set causes the current room to be described.
-
-Sub reset_state()
-  Local i
-  r = ar  ' current room = starting room
-  lx = lt ' light source starts full
-  df = 0  ' dark flag is unset
-  sf = 0  ' status flags are clear
-  For i = 0 To il : ia(i) = i2(i) : Next ' initial object locations
-  state = STATE_OK
-End Sub
 
 Sub game_loop()
   Local noun, nstr$, verb
@@ -551,7 +530,7 @@ Sub do_command(a, cmd, nstr$)
     Case 71
       ' SAVEz
       ' This command saves the current game state to a file.
-      x = persist.save%()
+      x = state.save%()
 
     Case 72
       ' EXx,x
