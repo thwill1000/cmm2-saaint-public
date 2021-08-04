@@ -44,7 +44,11 @@ add_test("test_do_command_81 (EXm,CT)", "test_do_command_81")
 add_test("test_evaluate_condition_8 (is flag set)", "test_evaluate_condition_8")
 add_test("test_evaluate_condition_9 (is flag clear)", "test_evaluate_condition_9")
 add_test("test_go_direction_given_dark")
-add_test("test_update_light")
+add_test("test_update_light (if carrying)", "test_update_light_carrying")
+add_test("test_update_light (if stored)", "test_update_light_stored")
+add_test("test_update_light (if in same room)", "test_update_light_same")
+add_test("test_update_light (if in different room)", "test_update_light_different"))
+add_test("test_update_light (non-prehistoric lamp)", "test_update_light_modern"))
 
 run_tests()
 
@@ -229,11 +233,13 @@ Sub test_do_command_69() ' FILL
   lx = 10
   lt = 70
   state.obj_rm%(OBJ_LIGHT_SOURCE%) = 5
+  bits.set(sf, state.LAMP_OUT_BIT%)
 
   do_command(0, 69, "")
 
   assert_int_equals(70, lx)
   assert_int_equals(-1, state.obj_rm%(OBJ_LIGHT_SOURCE%))
+  assert_false(bits.get%(sf, state.LAMP_OUT_BIT%))
 End Sub
 
 Sub test_do_command_81() ' EXm,CT
@@ -297,32 +303,160 @@ Sub test_go_direction_given_dark()
   assert_string_equals(expected$, con.buf$)
 End Sub
 
-Sub test_update_light()
-  ' Given light source plentiful.
-  state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED%
-  lx = 26
-  update_light()
-  assert_int_equals(25, lx)
-  assert_string_equals("", con.buf$)
+Sub test_update_light_carrying()
+  Const lamp_room% = ROOM_CARRIED%
+  r = 2
+  map.put(options$(), "prehistoric_lamp", "1")
 
-  ' Given light source running out.
-  con.buf$ = ""
-  lx = 25
+  ' Given duration > 25
+  setup_update_light(26, lamp_room%)
   update_light()
-  assert_int_equals(24, lx)
-  assert_string_equals("Light runs out in 24 turns!" + sys.CRLF$, con.buf$)
+  assert_light_state(25, lamp_room%, 0)
 
-  ' Given light source exhausted.
-  con.buf$ = ""
-  lx = 0
+  ' Given duration <= 25
+  setup_update_light(25, lamp_room%)
   update_light()
-  assert_int_equals(-1, lx)
-  assert_string_equals("Light has run out!" + sys.CRLF$, con.buf$)
+  assert_light_state(24, lamp_room%, 0, "Light runs out in 24 turns!")
 
-  ' Given light source not being carried.
-  con.buf$ = ""
-  lx = 25
+  ' Given duration = 1
+  setup_update_light(1, lamp_room%)
   update_light()
-  assert_int_equals(25, lx)
-  assert_string_equals("", con.buf$)
+  assert_light_state(0, ROOM_STORE%, 1, "Light has run out!")
+
+  ' Given duration = 0
+  setup_update_light(0, lamp_room%)
+  update_light()
+  assert_light_state(0, ROOM_STORE%, 1, "Light has run out!")
+
+  ' Given duration = -1
+  setup_update_light(-1, lamp_room%)
+  update_light()
+  assert_light_state(-1, lamp_room%, 0)
+End Sub
+
+Sub setup_update_light(duration%, lamp_room%)
+  lx = duration%
+  state.obj_rm%(OBJ_LIGHT_SOURCE%) = lamp_room%
+  bits.clear(sf, state.LAMP_OUT_BIT%)
+  con.buf$ = ""
+End Sub
+
+Sub assert_light_state(duration%, lamp_room%, lamp_out%, msg$)
+  assert_int_equals(duration%, lx)
+  assert_int_equals(lamp_room%, state.obj_rm%(OBJ_LIGHT_SOURCE%))
+  assert_int_equals(lamp_out%, bits.get%(sf, state.LAMP_OUT_BIT%))
+  assert_string_equals(Choice(msg$ = "", "", msg$ + sys.CRLF$), con.buf$)
+End Sub
+
+' The light duration is not decreased if it is in the 'store'.
+Sub test_update_light_stored()
+  Const lamp_room% = ROOM_STORE%
+  r = 2
+  map.put(options$(), "prehistoric_lamp", "1")
+
+  ' Given duration > 25
+  setup_update_light(26, lamp_room%)
+  update_light()
+  assert_light_state(26, lamp_room%, 0)
+
+  ' Given duration <= 25
+  setup_update_light(25, lamp_room%)
+  update_light()
+  assert_light_state(25, lamp_room%, 0)
+
+  ' Given duration = 1
+  setup_update_light(1, lamp_room%)
+  update_light()
+  assert_light_state(1, lamp_room%, 0)
+
+  ' Given duration = 0
+  setup_update_light(0, lamp_room%)
+  update_light()
+  assert_light_state(0, lamp_room%, 0)
+
+  ' Given duration = -1
+  setup_update_light(-1, lamp_room%)
+  update_light()
+  assert_light_state(-1, lamp_room%, 0)
+End Sub
+
+Sub test_update_light_same()
+  Const lamp_room% = 2
+  r = 2
+  map.put(options$(), "prehistoric_lamp", "1")
+
+  ' Given duration > 25
+  setup_update_light(26, lamp_room%)
+  update_light()
+  assert_light_state(25, lamp_room%, 0)
+
+  ' Given duration <= 25
+  setup_update_light(25, lamp_room%)
+  update_light()
+  assert_light_state(24, lamp_room%, 0, "Light runs out in 24 turns!")
+
+  ' Given duration = 1
+  setup_update_light(1, lamp_room%)
+  update_light()
+  assert_light_state(0, ROOM_STORE%, 1, "Light has run out!")
+
+  ' Given duration = 0
+  setup_update_light(0, lamp_room%)
+  update_light()
+  assert_light_state(0, ROOM_STORE%, 1, "Light has run out!")
+
+  ' Given duration = -1
+  setup_update_light(-1, lamp_room%)
+  update_light()
+  assert_light_state(-1, lamp_room%, 0)
+End Sub
+
+' No light messages if player is not carrying or in same room as light.
+Sub test_update_light_different()
+  Const lamp_room% = 3
+  r = 2
+  map.put(options$(), "prehistoric_lamp", "1")
+
+  ' Given duration > 25
+  setup_update_light(26, lamp_room%)
+  update_light()
+  assert_light_state(25, lamp_room%, 0)
+
+  ' Given duration <= 25
+  setup_update_light(25, lamp_room%)
+  update_light()
+  assert_light_state(24, lamp_room%, 0)
+
+  ' Given duration = 1
+  setup_update_light(1, lamp_room%)
+  update_light()
+  assert_light_state(0, ROOM_STORE%, 1)
+
+  ' Given duration = 0
+  setup_update_light(0, lamp_room%)
+  update_light()
+  assert_light_state(0, ROOM_STORE%, 1)
+
+  ' Given duration = -1
+  setup_update_light(-1, lamp_room%)
+  update_light()
+  assert_light_state(-1, lamp_room%, 0)
+End Sub
+
+' With the non-prehistoric lamp the light source is not moved to
+' ROOM_STORE% when it is exhausted.
+Sub test_update_light_modern()
+  Const lamp_room% = ROOM_CARRIED%
+  r = 2
+  map.put(options$(), "prehistoric_lamp", "0")
+
+  ' Given duration = 1
+  setup_update_light(1, lamp_room%)
+  update_light()
+  assert_light_state(0, lamp_room%, 1, "Light has run out!")
+
+  ' Given duration = 0
+  setup_update_light(0, lamp_room%)
+  update_light()
+  assert_light_state(0, lamp_room%, 1, "Light has run out!")
 End Sub

@@ -550,6 +550,7 @@ Sub do_command(a, cmd, nstr$)
       ' the unlighted light source (these are two different objects).
       lx = lt
       state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED%
+      bits.clear(sf, state.LAMP_OUT_BIT%)
 
     Case 70
       ' CLS
@@ -1033,14 +1034,34 @@ Sub do_drop(noun, nstr$)
 End Sub
 
 Sub update_light()
-  ' If carrying the lit light source ...
-  If state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED% Then
-    Inc lx, -1 ' decrement its duration
-    If lx < 0 Then
+  ' Don't update the light duration if it is in the store.
+  If state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_STORE% Then Exit Sub
+
+  ' Don't update the light duration if <= -1;
+  ' the value of -1 is used by Brian Howarth's games to indicate infinite duration.
+  If lx <= -1 Then Exit Sub
+
+  ' Decrement the duration but don't go below 0.
+  If lx > 0 Then Inc lx, -1
+
+  If lx >= 25 Then Exit Sub
+
+  ' Only display messages about the light if the player is carrying or in the same room as it.
+  Local r_light% = state.obj_rm%(OBJ_LIGHT_SOURCE%)
+  If r_light% = ROOM_CARRIED% Or r_light% = r Then
+    If lx = 0 Then
       con.println("Light has run out!")
-      state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_STORE%
-    ElseIf lx < 25 Then
+    Else
       con.println("Light runs out in " + Str$(lx) + " turns!")
+    EndIf
+  EndIf
+
+  If lx = 0 Then
+    bits.set(sf, state.LAMP_OUT_BIT%)
+
+    ' Apparently only older adventures automatically return the lamp to the store.
+    If map.get$(options$(), "prehistoric_lamp") = "1" Then
+      state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_STORE%
     EndIf
   EndIf
 End Sub

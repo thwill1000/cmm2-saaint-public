@@ -160,6 +160,12 @@ Sub read_inifile()
     Case Else     : map.put(options$(), "more", "1")
   End Select
 
+  s$ = map.get$(options$(), "prehistoric_lamp")
+  Select Case s$
+    Case "0", "1" : ' the value is valid so do nothing.
+    Case Else     : map.put(options$(), "prehistoric_lamp", "1")
+  End Select
+
   s$ = map.get$(options$(), "seed")
   ' If the value isn't a +ve integer then make it 0.
   If Str$(Int(Val(s$))) <> s$ Or Val(s$) < 0 Then map.put(options$(), "seed", "0")

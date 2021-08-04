@@ -11,7 +11,8 @@ If sys.err$ <> "" Then Error sys.err$
 
 Const state.SAVE_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/../saves")
 Const state.FD% = 1
-Const state.DARK_BIT% = 15 ' The status flag bit that is set when it is dark.
+Const state.DARK_BIT%     = 15 ' The status flag that is set when it is dark.
+Const state.LAMP_OUT_BIT% = 16 ' The status flag that is set when the lamp goes out.
 
 Dim lx               ' light duration
 Dim r                ' current room

@@ -7,6 +7,10 @@ Version 2.0.4 - ??-???-2021:
     - was incorrectly being maintained separately from bit 15 of the status
       flags with which it is supposed to be synonymous. This is probably only
       significant for later adventures that make more use of the status flags.
+  - Fixed various bugs with handling of the "lamp" (lit light source):
+    - the most significant being that its duration was only being decremented
+      whilst it was being carried, which was actually the original behaviour in
+      some of the older Scott Adams adventures.
   - Added *OBJECTS meta-command:
     - prints the id, current location and name of every object in the adventure.
     - WARNING! may contain spoilers.
