@@ -5,7 +5,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("advent", "console", "file", "string")
+sys.requires("advent", "bits", "console", "file", "string")
 sys.provides("state")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -72,7 +72,7 @@ Function state.save%()
 
   ' Write state
   Print #fd%, "&b" Bin$(sf, 32)                            ' status flags
-  Print #fd%, Str$((sf And 1 << state.DARK_BIT%) > 0)      ' dark flag, stored for historical
+  Print #fd%, Str$(bits.get%(sf, state.DARK_BIT%))         ' dark flag, stored for historical
                                                            ' purposes as now synonymous with
                                                            ' status flag 15
   Print #fd%, Str$(r)                                      ' current room
@@ -137,11 +137,7 @@ Function state.restore%()
     sf = values(0)
 
     ' Historically we saved a "dark flag" which is synonymous with status flag 15.
-    If values(1) Then
-      sf = sf Or 1 << state.DARK_BIT%
-    Else
-      sf = sf And Inv (1 << state.DARK_BIT%)
-    EndIf
+    If values(1) Then bits.set(sf, state.DARK_BIT%) Else bits.clear(sf, state.DARK_BIT%)
 
     r  = values(2)
     lx = values(3)

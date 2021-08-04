@@ -5,7 +5,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("advent", "console", "map", "math", "script", "state")
+sys.requires("advent", "bits", "console", "map", "math", "script", "state")
 sys.provides("interp")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -133,8 +133,7 @@ End Sub
 Function interp.has_changed%()
 
   ' First 64-bits of room_state%() encodes current room and dark flag.
-  Local df% = (sf And 1 << state.DARK_BIT%) > 0
-  Local x% = r + (df% << 16)
+  Local x% = r + (bits.get%(sf, state.DARK_BIT%) << 16)
   Local idx% = 0
   If x% <> interp.room_state%(idx%) Then interp.has_changed% = 1
   interp.room_state%(idx%) = x%
@@ -159,7 +158,7 @@ End Function
 
 ' Is the current room dark ?
 Function is_dark%()
-  If (sf And 1 << state.DARK_BIT%) = 0 Then Exit Function
+  If Not bits.get%(sf, state.DARK_BIT%) Then Exit Function
   If state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED% Then Exit Function
   If state.obj_rm%(OBJ_LIGHT_SOURCE%) = r Then Exit Function
   is_dark% = 1
@@ -318,7 +317,7 @@ Sub go_direction(noun)
     If dark% Then
       con.println("I fell down and broke my neck.")
       k = rl
-      sf = sf And Inv (1 << state.DARK_BIT%)
+      bits.clear(sf, state.DARK_BIT%)
     Else
       con.println("I can't go in that direction.")
       Exit Sub
@@ -355,10 +354,10 @@ Function evaluate_condition(code, value)
       pass = (r <> value)
     Case 8
       ' Passes if numbered flag-bit set.
-      pass = (sf And Int(2 ^ value + 0.5)) <> 0
+      pass = bits.get%(sf, value)
     Case 9
       ' Passes if numbered flag-bit clear.
-      pass = (sf And Int(2 ^ value + 0.5)) = 0
+      pass = Not bits.get%(sf, value)
     Case 10
       ' Passes if the player is carrying anything.
       pass = count_carried%() > 0
@@ -453,19 +452,19 @@ Sub do_command(a, cmd, nstr$)
       ' Set the darkness flag-bit (15).
       ' It will be dark if the artificial light source is not available,
       ' so this should be followed by a DspRM (64) command.
-      sf = sf Or 1 << state.DARK_BIT%
+      bits.set(sf, state.DARK_BIT%)
 
     Case 57
       ' DAY
       ' Clear the darkness flag-bit (15).
       ' This should be followed by a DspRM (64) command.
-      sf = sf And Inv (1 << state.DARK_BIT%)
+      bits.clear(sf, state.DARK_BIT%)
 
     Case 58
       ' SETz
       ' Set the Par #1 flag-bit.
       p = get_parameter(a)
-      sf = sf Or 1 << p
+      bits.set(sf, p)
 
   ' Case 59
       ' x->RM
@@ -475,7 +474,7 @@ Sub do_command(a, cmd, nstr$)
       ' CLRz
       ' Clear the Par #1 flag-bit.
       p = get_parameter(a)
-      sf = (sf Or 1 << p) Xor 1 << p
+      bits.clear(sf, p)
 
     Case 61
       ' DEAD
@@ -483,7 +482,7 @@ Sub do_command(a, cmd, nstr$)
       ' Goto the last room (usually some form of limbo),
       ' make it DAY and display the room.
       con.println("I'm dead...")
-      sf = sf And Inv (1 << state.DARK_BIT%)
+      bits.clear(sf, state.DARK_BIT%)
       r = rl
 
     Case 62
@@ -536,12 +535,12 @@ Sub do_command(a, cmd, nstr$)
     Case 67
       ' SET0
       ' Sets the flag-bit numbered 0 (this may be convenient because no parameter is used).
-      sf = sf Or 1
+      bits.set(sf, 0)
 
     Case 68
       ' CLR0
       ' Clears the flag-bit numbered 0 (this may be convenient because no parameter is used).
-      sf = (sf Or 1) Xor 1
+      bits.clear(sf, 0)
 
     Case 69
       ' FILL
@@ -800,7 +799,7 @@ Sub dump_state()
   con.print("Set flags:       ")
   Local count, i
   For i = 0 To 31
-    If sf And 1 << i Then
+    If bits.set(sf, i) Then
       Inc count
       If count > 1 Then con.print(", ")
       con.print(Str$(i))

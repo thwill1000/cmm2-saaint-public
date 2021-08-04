@@ -10,6 +10,7 @@ Option Explicit On
 
 #Include "splib/system.inc"
 #Include "splib/array.inc"
+#Include "splib/bits.inc"
 #Include "splib/list.inc"
 #Include "splib/map.inc"
 #Include "splib/string.inc"
