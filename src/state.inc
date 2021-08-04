@@ -14,7 +14,7 @@ Const state.FD% = 1
 Const state.DARK_BIT%     = 15 ' The status flag that is set when it is dark.
 Const state.LAMP_OUT_BIT% = 16 ' The status flag that is set when the lamp goes out.
 
-Dim lx               ' light duration
+Dim lx               ' lamp duration
 Dim r                ' current room
 Dim sf               ' status flags
 Dim counter          ' main counter
@@ -25,7 +25,7 @@ Dim state.obj_rm%(2) ' current object locations
 
 Sub state.reset()
   r = ar  ' current room = starting room
-  lx = lt ' light source starts full
+  lx = lt ' lamp starts full
   sf = 0  ' status flags are clear
   Erase state.obj_rm%
   Dim state.obj_rm%(il)
@@ -77,7 +77,7 @@ Function state.save%()
                                                            ' purposes as now synonymous with
                                                            ' status flag 15
   Print #fd%, Str$(r)                                      ' current room
-  Print #fd%, Str$(lx)                                     ' light duration
+  Print #fd%, Str$(lx)                                     ' lamp duration
   For i = 0 To il : Print #fd%, Str$(state.obj_rm%(i)) : Next ' object locations
   Print #fd%, Str$(counter)                                ' counter
   For i = 0 To 7 : Print #fd%, Str$(alt_counter(i)) : Next ' alternate counters

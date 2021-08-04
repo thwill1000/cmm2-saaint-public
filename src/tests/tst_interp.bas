@@ -44,11 +44,11 @@ add_test("test_do_command_81 (EXm,CT)", "test_do_command_81")
 add_test("test_evaluate_condition_8 (is flag set)", "test_evaluate_condition_8")
 add_test("test_evaluate_condition_9 (is flag clear)", "test_evaluate_condition_9")
 add_test("test_go_direction_given_dark")
-add_test("test_update_light (if carrying)", "test_update_light_carrying")
-add_test("test_update_light (if stored)", "test_update_light_stored")
-add_test("test_update_light (if in same room)", "test_update_light_same")
-add_test("test_update_light (if in different room)", "test_update_light_different"))
-add_test("test_update_light (non-prehistoric lamp)", "test_update_light_modern"))
+add_test("test_update_lamp (if carrying)", "test_update_lamp_carrying")
+add_test("test_update_lamp (if stored)", "test_update_lamp_stored")
+add_test("test_update_lamp (if in same room)", "test_update_lamp_same")
+add_test("test_update_lamp (if in different room)", "test_update_lamp_different"))
+add_test("test_update_lamp (non-prehistoric lamp)", "test_update_lamp_modern"))
 
 run_tests()
 
@@ -131,18 +131,18 @@ Sub test_is_dark()
   bits.clear(sf, state.DARK_BIT%)
   assert_int_equals(0, is_dark%())
 
-  ' Given carrying light source.
+  ' Given carrying artificial light source.
   bits.set(sf, state.DARK_BIT%)
-  state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED%
+  state.obj_rm%(OBJ_LIT_LAMP%) = ROOM_CARRIED%
   assert_int_equals(0, is_dark%())
 
-  ' Given light source in room.
+  ' Given artificial light source in room.
   r = 1
-  state.obj_rm%(OBJ_LIGHT_SOURCE%) = r
+  state.obj_rm%(OBJ_LIT_LAMP%) = r
   assert_int_equals(0, is_dark%())
 
-  ' Given light source is elsewhere.
-  state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_STORE%
+  ' Given artificial light source is elsewhere.
+  state.obj_rm%(OBJ_LIT_LAMP%) = ROOM_STORE%
   assert_int_equals(1, is_dark%())
 End Sub
 
@@ -232,13 +232,13 @@ End Sub
 Sub test_do_command_69() ' FILL
   lx = 10
   lt = 70
-  state.obj_rm%(OBJ_LIGHT_SOURCE%) = 5
+  state.obj_rm%(OBJ_LIT_LAMP%) = 5
   bits.set(sf, state.LAMP_OUT_BIT%)
 
   do_command(0, 69, "")
 
   assert_int_equals(70, lx)
-  assert_int_equals(-1, state.obj_rm%(OBJ_LIGHT_SOURCE%))
+  assert_int_equals(-1, state.obj_rm%(OBJ_LIT_LAMP%))
   assert_false(bits.get%(sf, state.LAMP_OUT_BIT%))
 End Sub
 
@@ -281,7 +281,7 @@ End Sub
 
 Sub test_go_direction_given_dark()
   bits.set(sf, state.DARK_BIT%)
-  state.obj_rm%(OBJ_LIGHT_SOURCE%) = 0
+  state.obj_rm%(OBJ_LIT_LAMP%) = 0
   rm(1, 0) = 2
   rl = 10
 
@@ -303,160 +303,160 @@ Sub test_go_direction_given_dark()
   assert_string_equals(expected$, con.buf$)
 End Sub
 
-Sub test_update_light_carrying()
+Sub test_update_lamp_carrying()
   Const lamp_room% = ROOM_CARRIED%
   r = 2
   map.put(options$(), "prehistoric_lamp", "1")
 
   ' Given duration > 25
-  setup_update_light(26, lamp_room%)
-  update_light()
-  assert_light_state(25, lamp_room%, 0)
+  setup_update_lamp(26, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(25, lamp_room%, 0)
 
   ' Given duration <= 25
-  setup_update_light(25, lamp_room%)
-  update_light()
-  assert_light_state(24, lamp_room%, 0, "Light runs out in 24 turns!")
+  setup_update_lamp(25, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(24, lamp_room%, 0, "Light runs out in 24 turns!")
 
   ' Given duration = 1
-  setup_update_light(1, lamp_room%)
-  update_light()
-  assert_light_state(0, ROOM_STORE%, 1, "Light has run out!")
+  setup_update_lamp(1, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(0, ROOM_STORE%, 1, "Light has run out!")
 
   ' Given duration = 0
-  setup_update_light(0, lamp_room%)
-  update_light()
-  assert_light_state(0, ROOM_STORE%, 1, "Light has run out!")
+  setup_update_lamp(0, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(0, ROOM_STORE%, 1, "Light has run out!")
 
   ' Given duration = -1
-  setup_update_light(-1, lamp_room%)
-  update_light()
-  assert_light_state(-1, lamp_room%, 0)
+  setup_update_lamp(-1, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(-1, lamp_room%, 0)
 End Sub
 
-Sub setup_update_light(duration%, lamp_room%)
+Sub setup_update_lamp(duration%, lamp_room%)
   lx = duration%
-  state.obj_rm%(OBJ_LIGHT_SOURCE%) = lamp_room%
+  state.obj_rm%(OBJ_LIT_LAMP%) = lamp_room%
   bits.clear(sf, state.LAMP_OUT_BIT%)
   con.buf$ = ""
 End Sub
 
-Sub assert_light_state(duration%, lamp_room%, lamp_out%, msg$)
+Sub assert_lamp_state(duration%, lamp_room%, lamp_out%, msg$)
   assert_int_equals(duration%, lx)
-  assert_int_equals(lamp_room%, state.obj_rm%(OBJ_LIGHT_SOURCE%))
+  assert_int_equals(lamp_room%, state.obj_rm%(OBJ_LIT_LAMP%))
   assert_int_equals(lamp_out%, bits.get%(sf, state.LAMP_OUT_BIT%))
   assert_string_equals(Choice(msg$ = "", "", msg$ + sys.CRLF$), con.buf$)
 End Sub
 
 ' The light duration is not decreased if it is in the 'store'.
-Sub test_update_light_stored()
+Sub test_update_lamp_stored()
   Const lamp_room% = ROOM_STORE%
   r = 2
   map.put(options$(), "prehistoric_lamp", "1")
 
   ' Given duration > 25
-  setup_update_light(26, lamp_room%)
-  update_light()
-  assert_light_state(26, lamp_room%, 0)
+  setup_update_lamp(26, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(26, lamp_room%, 0)
 
   ' Given duration <= 25
-  setup_update_light(25, lamp_room%)
-  update_light()
-  assert_light_state(25, lamp_room%, 0)
+  setup_update_lamp(25, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(25, lamp_room%, 0)
 
   ' Given duration = 1
-  setup_update_light(1, lamp_room%)
-  update_light()
-  assert_light_state(1, lamp_room%, 0)
+  setup_update_lamp(1, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(1, lamp_room%, 0)
 
   ' Given duration = 0
-  setup_update_light(0, lamp_room%)
-  update_light()
-  assert_light_state(0, lamp_room%, 0)
+  setup_update_lamp(0, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(0, lamp_room%, 0)
 
   ' Given duration = -1
-  setup_update_light(-1, lamp_room%)
-  update_light()
-  assert_light_state(-1, lamp_room%, 0)
+  setup_update_lamp(-1, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(-1, lamp_room%, 0)
 End Sub
 
-Sub test_update_light_same()
+Sub test_update_lamp_same()
   Const lamp_room% = 2
   r = 2
   map.put(options$(), "prehistoric_lamp", "1")
 
   ' Given duration > 25
-  setup_update_light(26, lamp_room%)
-  update_light()
-  assert_light_state(25, lamp_room%, 0)
+  setup_update_lamp(26, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(25, lamp_room%, 0)
 
   ' Given duration <= 25
-  setup_update_light(25, lamp_room%)
-  update_light()
-  assert_light_state(24, lamp_room%, 0, "Light runs out in 24 turns!")
+  setup_update_lamp(25, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(24, lamp_room%, 0, "Light runs out in 24 turns!")
 
   ' Given duration = 1
-  setup_update_light(1, lamp_room%)
-  update_light()
-  assert_light_state(0, ROOM_STORE%, 1, "Light has run out!")
+  setup_update_lamp(1, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(0, ROOM_STORE%, 1, "Light has run out!")
 
   ' Given duration = 0
-  setup_update_light(0, lamp_room%)
-  update_light()
-  assert_light_state(0, ROOM_STORE%, 1, "Light has run out!")
+  setup_update_lamp(0, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(0, ROOM_STORE%, 1, "Light has run out!")
 
   ' Given duration = -1
-  setup_update_light(-1, lamp_room%)
-  update_light()
-  assert_light_state(-1, lamp_room%, 0)
+  setup_update_lamp(-1, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(-1, lamp_room%, 0)
 End Sub
 
 ' No light messages if player is not carrying or in same room as light.
-Sub test_update_light_different()
+Sub test_update_lamp_different()
   Const lamp_room% = 3
   r = 2
   map.put(options$(), "prehistoric_lamp", "1")
 
   ' Given duration > 25
-  setup_update_light(26, lamp_room%)
-  update_light()
-  assert_light_state(25, lamp_room%, 0)
+  setup_update_lamp(26, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(25, lamp_room%, 0)
 
   ' Given duration <= 25
-  setup_update_light(25, lamp_room%)
-  update_light()
-  assert_light_state(24, lamp_room%, 0)
+  setup_update_lamp(25, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(24, lamp_room%, 0)
 
   ' Given duration = 1
-  setup_update_light(1, lamp_room%)
-  update_light()
-  assert_light_state(0, ROOM_STORE%, 1)
+  setup_update_lamp(1, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(0, ROOM_STORE%, 1)
 
   ' Given duration = 0
-  setup_update_light(0, lamp_room%)
-  update_light()
-  assert_light_state(0, ROOM_STORE%, 1)
+  setup_update_lamp(0, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(0, ROOM_STORE%, 1)
 
   ' Given duration = -1
-  setup_update_light(-1, lamp_room%)
-  update_light()
-  assert_light_state(-1, lamp_room%, 0)
+  setup_update_lamp(-1, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(-1, lamp_room%, 0)
 End Sub
 
-' With the non-prehistoric lamp the light source is not moved to
+' With the non-prehistoric lamp the artificial light source is not moved to
 ' ROOM_STORE% when it is exhausted.
-Sub test_update_light_modern()
+Sub test_update_lamp_modern()
   Const lamp_room% = ROOM_CARRIED%
   r = 2
   map.put(options$(), "prehistoric_lamp", "0")
 
   ' Given duration = 1
-  setup_update_light(1, lamp_room%)
-  update_light()
-  assert_light_state(0, lamp_room%, 1, "Light has run out!")
+  setup_update_lamp(1, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(0, lamp_room%, 1, "Light has run out!")
 
   ' Given duration = 0
-  setup_update_light(0, lamp_room%)
-  update_light()
-  assert_light_state(0, lamp_room%, 1, "Light has run out!")
+  setup_update_lamp(0, lamp_room%)
+  interp.update_lamp()
+  assert_lamp_state(0, lamp_room%, 1, "Light has run out!")
 End Sub

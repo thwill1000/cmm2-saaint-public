@@ -18,7 +18,7 @@ Const ACTION_UNKNOWN   = 4
 Const ACTION_NOT_YET   = 5
 
 ' Hardcoded Object Id's.
-Const OBJ_LIGHT_SOURCE% = 9 ' The LIT light source.
+Const OBJ_LIT_LAMP% = 9 ' The artificial light source.
 
 ' Hardcoded Room Id's.
 Const ROOM_CARRIED% = -1
@@ -73,7 +73,7 @@ Sub game_loop()
     describe_room()
     If state = STATE_OK Then prompt_for_command(verb, noun, nstr$)
     If state = STATE_OK Then do_player_actions(verb, noun, nstr$)
-    If state = STATE_OK Then update_light()
+    If state = STATE_OK Then interp.update_lamp()
   Loop While state = STATE_OK
 End Sub
 
@@ -159,8 +159,8 @@ End Function
 ' Is the current room dark ?
 Function is_dark%()
   If Not bits.get%(sf, state.DARK_BIT%) Then Exit Function
-  If state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED% Then Exit Function
-  If state.obj_rm%(OBJ_LIGHT_SOURCE%) = r Then Exit Function
+  If state.obj_rm%(OBJ_LIT_LAMP%) = ROOM_CARRIED% Then Exit Function
+  If state.obj_rm%(OBJ_LIT_LAMP%) = r Then Exit Function
   is_dark% = 1
 End Function
 
@@ -549,7 +549,7 @@ Sub do_command(a, cmd, nstr$)
       ' source (object 9). This command should be followed by a x->RM0 to store
       ' the unlighted light source (these are two different objects).
       lx = lt
-      state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED%
+      state.obj_rm%(OBJ_LIT_LAMP%) = ROOM_CARRIED%
       bits.clear(sf, state.LAMP_OUT_BIT%)
 
     Case 70
@@ -638,7 +638,7 @@ Sub do_command(a, cmd, nstr$)
         Case 0 To 7
           counter = alt_counter(p)
           alt_counter(p) = x
-        Case 8  ' light level
+        Case 8  ' lamp duration.
           counter = lx
           lx = x
         Case Else
@@ -1033,11 +1033,11 @@ Sub do_drop(noun, nstr$)
 
 End Sub
 
-Sub update_light()
-  ' Don't update the light duration if it is in the store.
-  If state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_STORE% Then Exit Sub
+Sub interp.update_lamp()
+  ' Don't update the lamp duration if it is in the store.
+  If state.obj_rm%(OBJ_LIT_LAMP%) = ROOM_STORE% Then Exit Sub
 
-  ' Don't update the light duration if <= -1;
+  ' Don't update the lamp duration if <= -1;
   ' the value of -1 is used by Brian Howarth's games to indicate infinite duration.
   If lx <= -1 Then Exit Sub
 
@@ -1046,9 +1046,9 @@ Sub update_light()
 
   If lx >= 25 Then Exit Sub
 
-  ' Only display messages about the light if the player is carrying or in the same room as it.
-  Local r_light% = state.obj_rm%(OBJ_LIGHT_SOURCE%)
-  If r_light% = ROOM_CARRIED% Or r_light% = r Then
+  ' Only display messages about the lamp if the player is carrying or in the same room as it.
+  Local lamp_room% = state.obj_rm%(OBJ_LIT_LAMP%)
+  If lamp_room% = ROOM_CARRIED% Or lamp_room% = r Then
     If lx = 0 Then
       con.println("Light has run out!")
     Else
@@ -1061,7 +1061,7 @@ Sub update_light()
 
     ' Apparently only older adventures automatically return the lamp to the store.
     If map.get$(options$(), "prehistoric_lamp") = "1" Then
-      state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_STORE%
+      state.obj_rm%(OBJ_LIT_LAMP%) = ROOM_STORE%
     EndIf
   EndIf
 End Sub
