@@ -11,9 +11,9 @@ If sys.err$ <> "" Then Error sys.err$
 
 Const state.SAVE_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/../saves")
 Const state.FD% = 1
+Const state.DARK_BIT% = 15 ' The status flag bit that is set when it is dark.
 
 Dim lx               ' light duration
-Dim df               ' dark flag
 Dim r                ' current room
 Dim sf               ' status flags
 Dim counter          ' main counter
@@ -25,7 +25,6 @@ Dim state.obj_rm%(2) ' current object locations
 Sub state.reset()
   r = ar  ' current room = starting room
   lx = lt ' light source starts full
-  df = 0  ' dark flag is unset
   sf = 0  ' status flags are clear
   Erase state.obj_rm%
   Dim state.obj_rm%(il)
@@ -73,7 +72,9 @@ Function state.save%()
 
   ' Write state
   Print #fd%, "&b" Bin$(sf, 32)                            ' status flags
-  Print #fd%, Str$(df)                                     ' dark flag
+  Print #fd%, Str$((sf And 1 << state.DARK_BIT%) > 0)      ' dark flag, stored for historical
+                                                           ' purposes as now synonymous with
+                                                           ' status flag 15
   Print #fd%, Str$(r)                                      ' current room
   Print #fd%, Str$(lx)                                     ' light duration
   For i = 0 To il : Print #fd%, Str$(state.obj_rm%(i)) : Next ' object locations
@@ -134,7 +135,14 @@ Function state.restore%()
   If err$ = "" Then
     ' Update game state with values read from file.
     sf = values(0)
-    df = values(1)
+
+    ' Historically we saved a "dark flag" which is synonymous with status flag 15.
+    If values(1) Then
+      sf = sf Or 1 << state.DARK_BIT%
+    Else
+      sf = sf And Inv (1 << state.DARK_BIT%)
+    EndIf
+
     r  = values(2)
     lx = values(3)
     Erase state.obj_rm%()

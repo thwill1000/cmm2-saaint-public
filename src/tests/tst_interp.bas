@@ -7,6 +7,7 @@ Option Default Integer
 
 #Include "../splib/system.inc"
 #Include "../splib/array.inc"
+#Include "../splib/bits.inc"
 #Include "../splib/list.inc"
 #Include "../splib/string.inc"
 #Include "../splib/file.inc"
@@ -48,6 +49,10 @@ Sub setup_test()
   For i% = 0 To 9 : interp.room_state%(i%) = 0 : Next
   r = 1
 
+  ' Initialise 'sf' with a pattern so we have a chance of
+  ' detecting flags being accidentally cleared/set.
+  sf = &b11110000111100001111000011110000
+
   ' Allocate 100 objects.
   il = 100
   Erase state.obj_rm%
@@ -72,6 +77,7 @@ End Sub
 Sub test_has_changed()
   Local i%
 
+  bits.clear(sf, state.DARK_BIT%)
   r% = 5
   state.obj_rm%(10) = 5
   state.obj_rm%(12) = 5
@@ -87,8 +93,8 @@ Sub test_has_changed()
   assert_int_equals(0, interp.has_changed%())
   assert_int_array_equals(expected%(), interp.room_state%())
 
-  ' Change the dark flag.
-  df = 1
+  ' Set the dark status bit.
+  bits.set(sf, state.DARK_BIT%)
   assert_int_equals(1, interp.has_changed%())
   expected%(0) = 5 + 65536
   assert_int_array_equals(expected%(), interp.room_state%())
@@ -111,12 +117,12 @@ Sub test_has_changed()
 End Sub
 
 Sub test_is_dark()
-  ' Given dark flag unset.
-  df = 0
+  ' Given dark status bit unset.
+  bits.clear(sf, state.DARK_BIT%)
   assert_int_equals(0, is_dark%())
 
   ' Given carrying light source.
-  df = 1
+  bits.set(sf, state.DARK_BIT%)
   state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED%
   assert_int_equals(0, is_dark%())
 
@@ -132,34 +138,39 @@ End Sub
 
 Sub test_do_command_56() ' NIGHT
   ' Given currently light.
-  df = 0
+  bits.clear(sf, state.DARK_BIT%)
   do_command(0, 56, "")
-  assert_int_equals(1, df)
+  assert_true(bits.get%(sf, state.DARK_BIT%))
+  assert_hex_equals(&b11110000111100001111000011110000, sf)
 
   ' Given currently dark.
   do_command(0, 56, "")
-  assert_int_equals(1, df)
+  assert_true(bits.get%(sf, state.DARK_BIT%))
+  assert_hex_equals(&b11110000111100001111000011110000, sf)
 End Sub
 
 Sub test_do_command_57() ' DAY
   ' Given currently dark.
-  df = 1
+  bits.set(sf, state.DARK_BIT%)
   do_command(0, 57, "")
-  assert_int_equals(0, df)
+  assert_false(bits.get%(sf, state.DARK_BIT%))
+  assert_hex_equals(&b11110000111100000111000011110000, sf)
 
   ' Given currently light.
   do_command(0, 57, "")
-  assert_int_equals(0, df)
+  assert_false(bits.get%(sf, state.DARK_BIT%))
+  assert_hex_equals(&b11110000111100000111000011110000, sf)
 End Sub
 
 Sub test_do_command_61() ' DEAD
-  df = 1
+  bits.set(sf, state.DARK_BIT%)
   r = 1
   rl = 10
 
   do_command(0, 61, "")
 
-  assert_int_equals(0, df)
+  assert_false(bits.get%(sf, state.DARK_BIT%))
+  assert_hex_equals(&b11110000111100000111000011110000, sf)
   assert_int_equals(10, r)
   assert_string_equals("I'm dead..." + sys.CRLF$, con.buf$)
 End Sub
@@ -188,7 +199,7 @@ Sub test_do_command_81() ' EXm,CT
 End Sub
 
 Sub test_go_direction_given_dark()
-  df = 1
+  bits.set(sf, state.DARK_BIT%)
   state.obj_rm%(OBJ_LIGHT_SOURCE%) = 0
   rm(1, 0) = 2
   rl = 10
@@ -204,6 +215,8 @@ Sub test_go_direction_given_dark()
   r = 1
   go_direction(2)
   assert_int_equals(10, r)
+  assert_false(bits.get%(sf, state.DARK_BIT%))
+  assert_hex_equals(&b11110000111100000111000011110000, sf)
   Local expected$ = "Dangerous to move in the dark!" + sys.CRLF$
   Cat expected$, "I fell down and broke my neck." + sys.CRLF$
   assert_string_equals(expected$, con.buf$)

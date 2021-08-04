@@ -133,8 +133,9 @@ End Sub
 Function interp.has_changed%()
 
   ' First 64-bits of room_state%() encodes current room and dark flag.
-  Local idx%, x%
-  x% = r + (df << 16)
+  Local df% = (sf And 1 << state.DARK_BIT%) > 0
+  Local x% = r + (df% << 16)
+  Local idx% = 0
   If x% <> interp.room_state%(idx%) Then interp.has_changed% = 1
   interp.room_state%(idx%) = x%
   Inc idx%
@@ -158,7 +159,7 @@ End Function
 
 ' Is the current room dark ?
 Function is_dark%()
-  If Not df Then Exit Function
+  If (sf And 1 << state.DARK_BIT%) = 0 Then Exit Function
   If state.obj_rm%(OBJ_LIGHT_SOURCE%) = ROOM_CARRIED% Then Exit Function
   If state.obj_rm%(OBJ_LIGHT_SOURCE%) = r Then Exit Function
   is_dark% = 1
@@ -317,7 +318,7 @@ Sub go_direction(noun)
     If dark% Then
       con.println("I fell down and broke my neck.")
       k = rl
-      df = 0
+      sf = sf And Inv (1 << state.DARK_BIT%)
     Else
       con.println("I can't go in that direction.")
       Exit Sub
@@ -452,16 +453,13 @@ Sub do_command(a, cmd, nstr$)
       ' Set the darkness flag-bit (15).
       ' It will be dark if the artificial light source is not available,
       ' so this should be followed by a DspRM (64) command.
-      df = 1
-      ' TODO: 'df' is not flag-bit 15.
-      '       The incorrect comment probably refer to a later version of the
-      '       original Scott Adams interpreter.
+      sf = sf Or 1 << state.DARK_BIT%
 
     Case 57
       ' DAY
       ' Clear the darkness flag-bit (15).
       ' This should be followed by a DspRM (64) command.
-      df = 0
+      sf = sf And Inv (1 << state.DARK_BIT%)
 
     Case 58
       ' SETz
@@ -485,7 +483,7 @@ Sub do_command(a, cmd, nstr$)
       ' Goto the last room (usually some form of limbo),
       ' make it DAY and display the room.
       con.println("I'm dead...")
-      df = 0
+      sf = sf And Inv (1 << state.DARK_BIT%)
       r = rl
 
     Case 62

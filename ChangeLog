@@ -3,6 +3,10 @@ ChangeLog
 
 Version 2.0.4 - ??-???-2021:
   - Fixed bug that caused "Ghost Town" to describe initial location twice.
+  - Fixed bug with handling of "dark flag":
+    - was incorrectly being maintained separately from bit 15 of the status
+      flags with which it is supposed to be synonymous. This is probably only
+      significant for later adventures that make more use of the status flags.
   - Added *OBJECTS meta-command:
     - prints the id, current location and name of every object in the adventure.
     - WARNING! may contain spoilers.
