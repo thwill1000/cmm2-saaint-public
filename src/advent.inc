@@ -62,6 +62,14 @@ Sub advent.read_header()
   ml = advent.read_int%()
   tr = advent.read_int%()
 
+  ' The interpreter expects at least 10 objects, numbered from 0,
+  ' this is so the artifical light source (hardcoded as object 9) exists.
+  If il < 9 Then Error "a well formed adventure must contain at least 10 objects"
+
+  ' The interpreter expects at least 19 verbs, numbered from 0,
+  ' this is so that DROP (hardcoded as verb 18) exists.
+  If nl < 18 Then Error "a well formed adventure must contain at least 19 verbs"
+
   Dim ca(cl, 7)      ' action table
   Dim nv_str$(nl, 1) ' vocabulary table - verbs at index 0, nouns at index 1
   Dim ia_str$(il)    ' object descriptions
@@ -108,6 +116,7 @@ Function advent.peek_char%()
   If advent.buf_ptr% > Len(advent.buf$) Then
     advent.buf_ptr% = 1
     advent.buf$ = Input$(255, advent.FD_IN%)
+    If advent.buf$ = "" Then Error "adventure file is truncated: " + file.get_name$(advent.file$)
   EndIf
   advent.peek_char% = Peek(Var advent.buf$, advent.buf_ptr%)
 End Function

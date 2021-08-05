@@ -1,7 +1,7 @@
 ChangeLog
 ---------
 
-Version 2.0.4 - ??-???-2021:
+Version 2.0.4 - 6-Aug-2021:
   - Fixed bug that caused "Ghost Town" to describe initial location twice.
   - Fixed bug with handling of "dark flag":
     - was incorrectly being maintained separately from bit 15 of the status
@@ -15,6 +15,8 @@ Version 2.0.4 - ??-???-2021:
     0 treasures:
     - a well formed adventure with 0 treasures should either not implement the
       SCORE command or not use the default treasure based implementation.
+  - Fixed hang when adventure .dat file contains too little data, e.g. has
+    been truncated.
   - Added *OBJECTS meta-command:
     - prints the id, current location and name of every object in the adventure.
     - WARNING! may contain spoilers.
@@ -26,6 +28,9 @@ Version 2.0.4 - ??-???-2021:
     - the noun table does not necessarily contain the nouns for all the
       adventure's objects, see the output of *OBJECTS.
     - WARNING! may contain spoilers.
+  - Added some more checks that adventure .dat file is well formed:
+    - contains at least 10 objects.
+    - contains at least 19 verbs.
 
 Version 2.0.3 - 20-Jul-2021:
  - Added support for unencrypted walkthough (.wlk) files.
