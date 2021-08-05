@@ -519,11 +519,13 @@ Sub do_command(a, cmd, nstr$)
       For i = 1 To il
         If state.obj_rm%(i) = tr And Left$(ia_str$(i), 1) = "*" Then Inc x
       Next
-      con.print("I've stored " + Str$(x) + " treasures. On a scale of 0 to 100 that rates a ")
-      con.println(Str$(Int(x / tt * 100)) + ".")
-      If x = tt Then
-        con.println("WELL DONE !!!")
-        do_command(a, 63, nstr$)
+      con.println("I've stored " + Str$(x) + " of " + Str$(tt) + " treasures.")
+      If tt > 0 Then
+        con.println("On a scale of 0 to 100 that rates a " + Str$(Int(x / tt * 100)) + ".")
+        If x = tt Then
+          con.println("WELL DONE !!!")
+          do_command(a, 63, nstr$)
+        EndIf
       EndIf
 
     Case 66

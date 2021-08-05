@@ -16,19 +16,57 @@ Option Default Integer
 #Include "../splib/set.inc"
 #Include "../splib/vt100.inc"
 #Include "/sptools/src/sptest/unittest.inc"
-#Include "../advent.inc"
+'#Include "../advent.inc"
 
-sys.provides("console") ' Stub dependency on "console.inc".
-sys.provides("script") ' Stub dependency on "script.inc".
+' Stub dependencies on "advent.inc" ----------------------------------------------------------------
+sys.provides("advent")
+Dim cl = 100, il = 100, lt, rl = 10, tr, tt
+Dim ca(cl, 7)
+Dim ia_str$(il) Length 64
+Dim rm(rl, 5)
 
-#Include "../state.inc"
-#Include "../interp.inc"
+' Stub dependencies on "console.inc" ---------------------------------------------------------------
+sys.provides("console")
 
-Dim con.buf$
+Dim con.buf$, con.fd_in, con.fd_out, con.in_buf$
+
+Sub con.foreground(s$)
+End Sub
+
+Function con.in$(p$, echo%)
+  con.in$ = con.in_buf$
+End Function
+
+Sub con.print(s$)
+  Cat con.buf$, s$
+End Sub
 
 Sub con.println(s$)
-  Cat con.buf$, s$ + sys.CRLF$
+  con.print(s$ + sys.CRLF$)
 End Sub
+
+' Stub dependencies on "script.inc" ----------------------------------------------------------------
+sys.provides("script")
+
+Dim script.buf$
+
+Sub script.record_off()
+  If script.buf$ <> "" Then Cat script.buf$, ", "
+  Cat script.buf$, "record_off"
+End Sub
+
+Sub script.replay_off()
+  If script.buf$ <> "" Then Cat script.buf$, ", "
+  Cat script.buf$, "replay_off"
+End Sub
+
+' End of stubs -------------------------------------------------------------------------------------
+
+#Include "../state.inc"
+Erase state.obj_rm%
+Dim state.obj_rm%(il)
+
+#Include "../interp.inc"
 
 add_test("test_has_changed")
 add_test("test_is_dark")
@@ -37,6 +75,8 @@ add_test("test_do_command_57 (DAY)", "test_do_command_57")
 add_test("test_do_command_58 (SETz)", "test_do_command_58")
 add_test("test_do_command_60 (CLRz)", "test_do_command_60")
 add_test("test_do_command_61 (DEAD)", "test_do_command_61")
+add_test("test_do_command_63 (FINI)", "test_do_command_63")
+add_test("test_do_command_65 (SCORE)", "test_do_command_65")
 add_test("test_do_command_67 (SET0)", "test_do_command_67")
 add_test("test_do_command_68 (CLR0)", "test_do_command_68")
 add_test("test_do_command_69 (FILL)", "test_do_command_69")
@@ -55,30 +95,28 @@ run_tests()
 End
 
 Sub setup_test()
-  Local i%
-  For i% = 0 To 9 : interp.room_state%(i%) = 0 : Next
+  Local i%, j%
   r = 1
 
   ' Initialise 'sf' with a pattern so we have a chance of
   ' detecting flags being accidentally cleared/set.
   sf = &b11110000111100001111000011110000
 
-  ' Allocate 100 objects.
-  il = 100
-  Erase state.obj_rm%
-  Dim state.obj_rm%(il)
+  For i% = 0 To 9 : interp.room_state%(i%) = 0 : Next
 
-  ' Allocate 10 rooms.
-  rl = 10
-  On Error Skip
-  Erase rm
-  Dim rm(rl, 5)
+  For i% = 0 To cl
+    For j% = 0 To 7 : ca(i%, j%) = 0 : Next
+  Next
 
-  On Error Skip
-  Erase ca
-  Dim ca(100, 7)
+  For i% = 0 To il : ia_str$(i%) = "" : state.obj_rm%(i%) = 0 : Next
+
+  For i% = 0 To rl
+    For j% = 0 To 5 : rm(i%, j%) = 0 : Next
+  Next
 
   con.buf$ = ""
+  con.in_buf$ = ""
+  script.buf$ = ""
 End Sub
 
 Sub teardown_test()
@@ -209,6 +247,78 @@ Sub test_do_command_61() ' DEAD
   assert_hex_equals(&b11110000111100000111000011110000, sf)
   assert_int_equals(10, r)
   assert_string_equals("I'm dead..." + sys.CRLF$, con.buf$)
+End Sub
+
+Sub test_do_command_63() ' FINI
+  ' Given player answers "y" to play again.
+  con.buf$ = ""
+  con.in_buf$ = "y"
+  state = STATE_OK
+  do_command(0, 63, "")
+  assert_string_equals("", script.buf$)
+  assert_string_equals("The game is now over, would you like to play again [Y|n]? ", con.buf$)
+  assert_int_equals(STATE_RESTART, state)
+
+  ' Given player answers "n" to play again.
+  con.buf$ = ""
+  con.in_buf$ = "n"
+  state = STATE_OK
+  do_command(0, 63, "")
+  assert_string_equals("", script.buf$)
+  assert_string_equals("The game is now over, would you like to play again [Y|n]? ", con.buf$)
+  assert_int_equals(STATE_QUIT, state)
+
+  ' Given currently replaying.
+  script.buf$ = ""
+  con.fd_in = 1
+  con.fd_out = 0
+  do_command(0, 63, "")
+  assert_string_equals("replay_off", script.buf$)
+
+  ' Given currently recording.
+  script.buf$ = ""
+  con.fd_in = 0
+  con.fd_out = 1
+  do_command(0, 63, "")
+  assert_string_equals("record_off", script.buf$)
+End Sub
+
+Sub test_do_command_65() ' SCORE
+  Local expected$
+
+  tr = 5
+  tt = 3
+  ia_str$(1) = "*gold"         : state.obj_rm%(1) = tr
+  ia_str$(2) = "*frankincense" : state.obj_rm%(2) = tr
+  ia_str$(3) = "*myrrh"        : state.obj_rm%(3) = 1
+  ia_str$(4) = "rock"          : state.obj_rm%(4) = tr
+  ia_str$(5) = "paper"         : state.obj_rm%(5) = tr
+
+  ' Given not all treasures stored.
+  do_command(0, 65, "")
+  Cat expected$, "I've stored 2 of 3 treasures." + sys.CRLF$
+  Cat expected$, "On a scale of 0 to 100 that rates a 66." + sys.CRLF$
+  assert_string_equals(expected$, con.buf$)
+
+  ' Given all treasures stored.
+  state.obj_rm%(3) = tr
+  con.buf$ = ""
+  do_command(0, 65, "")
+  expected$ = "I've stored 3 of 3 treasures." + sys.CRLF$
+  Cat expected$, "On a scale of 0 to 100 that rates a 100." + sys.CRLF$
+  Cat expected$, "WELL DONE !!!" + sys.CRLF$
+  Cat expected$, "The game is now over, would you like to play again [Y|n]? "
+  assert_string_equals(expected$, con.buf$)
+
+  ' Given adventure has 0 treasures.
+  tt = 0
+  ia_str$(1) = "tom"
+  ia_str$(2) = "dick"
+  ia_str$(3) = "harry"
+  con.buf$ = ""
+  do_command(0, 65, "")
+  expected$ = "I've stored 0 of 0 treasures." + sys.CRLF$
+  assert_string_equals(expected$, con.buf$)
 End Sub
 
 Sub test_do_command_67() ' SET0

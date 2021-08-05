@@ -11,6 +11,10 @@ Version 2.0.4 - ??-???-2021:
     - the most significant being that its duration was only being decremented
       whilst it was being carried, which was actually the original behaviour in
       some of the older Scott Adams adventures.
+  - Fixed division by zero error when SCORE command issued for an adventure with
+    0 treasures:
+    - a well formed adventure with 0 treasures should either not implement the
+      SCORE command or not use the default treasure based implementation.
   - Added *OBJECTS meta-command:
     - prints the id, current location and name of every object in the adventure.
     - WARNING! may contain spoilers.
