@@ -203,7 +203,11 @@ End Sub
 Sub advent.read_objects()
   Local i
   For i = 0 To il
-    ia_str$(i) = advent.read_string$()
+    ' Trim the object name because the " * RUBY */RUB/" treasure in "advent08.dat" (Pyramid of Doom)
+    ' has a leading space which otherwise breaks its recognition as a treasure; due to the name not
+    ' starting with a '*'.
+    ' TODO: should advent.read_string$() always trim its return value ?
+    ia_str$(i) = str.trim$(advent.read_string$())
     advent.obj_rm%(i) = advent.read_int%()
   Next
 End Sub

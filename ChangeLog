@@ -2,6 +2,10 @@ ChangeLog
 ---------
 
 Version 2.0.4 - 10-Aug-2021:
+  - Fixed bug that caused the RUBY in "Pyramid of Doom" to not be recognised as
+    a *TREASURE*:
+    - the object name had a superflous leading space, such leading and trailing
+      spaces are now trimmed.
   - Fixed bug that caused player to start "Pyramid of Doom" without the empty
     canteen and pistol:
     - the value -1 was being used for the room Id for carried objects when
