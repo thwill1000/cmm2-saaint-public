@@ -348,7 +348,7 @@ Sub test_do_command_69() ' FILL
   do_command(0, 69, "")
 
   assert_int_equals(70, lx)
-  assert_int_equals(-1, state.obj_rm%(OBJ_LIT_LAMP%))
+  assert_int_equals(ROOM_CARRIED%, state.obj_rm%(OBJ_LIT_LAMP%))
   assert_false(bits.get%(sf, state.LAMP_OUT_BIT%))
 End Sub
 

@@ -21,7 +21,7 @@ Const ACTION_NOT_YET   = 5
 Const OBJ_LIT_LAMP% = 9 ' The artificial light source.
 
 ' Hardcoded Room Id's.
-Const ROOM_CARRIED% = -1
+Const ROOM_CARRIED% = 255 ' Not -1 as used in original BYTE magazine version of "Pirate Adventure".
 Const ROOM_STORE% = 0
 
 ' Hardcoded Verb Id's.

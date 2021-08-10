@@ -1,7 +1,11 @@
 ChangeLog
 ---------
 
-Version 2.0.4 - 6-Aug-2021:
+Version 2.0.4 - 10-Aug-2021:
+  - Fixed bug that caused player to start "Pyramid of Doom" without the empty
+    canteen and pistol:
+    - the value -1 was being used for the room Id for carried objects when
+      infact it should have been 255.
   - Fixed bug that caused "Ghost Town" to describe initial location twice.
   - Fixed bug with handling of "dark flag":
     - was incorrectly being maintained separately from bit 15 of the status
