@@ -55,9 +55,9 @@ Dim continue_flag = 0 ' Flag that, when set will cause the next action(s) to be
 Dim ip ' action parameter pointer
 
 Dim interp.room_state%(9) ' Encodes the state of the last described room:
-                          '   bits  0..15  - room number (though probably only bits 0..7)
-                          '   bit      16  - dark flag
-                          '   bits 17..63  - unused
+                          '   bit       0  - was it light (0) or dark (1)
+                          '   bits  8..23  - room number (though probably only bits 8..15)
+                          '   bits 24..63  - unused
                           '   bits 64..639 - was object i + 64 in the room
                           ' We use this to determine if we need to describe the current room.
 
@@ -124,16 +124,20 @@ Sub describe_room(always%)
 
 End Sub
 
-' Has the current room state changed:
-'  - is the player in a different room ?
-'  - has the dark flag changed ?
-'  - have the objects in the room changed ?
+' Has the current room changed such that is should be redescribed ?
+'
+' @return 1 iff:
+'           - has changed from light to dark or vice-versa.
+'           - has remained light but the player is in a different room.
+'           - has remained light but the objects in the room have changed.
 '
 ' As a side-effect this function updates interp.room_state%() to the NEW current room state.
 Function interp.has_changed%()
 
-  ' First 64-bits of room_state%() encodes current room and dark flag.
-  Local x% = r + (bits.get%(sf, state.DARK_BIT%) << 16)
+  Local was_dark% = interp.room_state%(0) And &h1
+
+  ' First 64-bits of room_state%() encodes whether it is dark and the current room.
+  Local x% = is_dark%() + (r << 8)
   Local idx% = 0
   If x% <> interp.room_state%(idx%) Then interp.has_changed% = 1
   interp.room_state%(idx%) = x%
@@ -154,6 +158,8 @@ Function interp.has_changed%()
     EndIf
   Next
 
+  ' If the room was dark and is still dark then return 0/false.
+  If was_dark% And (interp.room_state%(0) And &h1) Then interp.has_changed% = 0
 End Function
 
 ' Is the current room dark ?

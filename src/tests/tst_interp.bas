@@ -134,31 +134,39 @@ Sub test_has_changed()
   state.obj_rm%(74) = 5
   state.obj_rm%(100) = 10
   assert_int_equals(1, interp.has_changed%())
-  Local expected%(9) = (5, &b100000001010000000000, &b10100000000, 0, 0, 0, 0, 0, 0, 0)
+  Local expected%(9) = (&b10100000000, &b100000001010000000000, &b10100000000, 0, 0, 0, 0, 0, 0, 0)
   assert_int_array_equals(expected%(), interp.room_state%())
 
-  ' A subsequent call without changing any of the room state returns 0.
+  ' Given nothing has changed.
   assert_int_equals(0, interp.has_changed%())
   assert_int_array_equals(expected%(), interp.room_state%())
 
-  ' Set the dark status bit.
+  ' Given the room has gone dark.
   bits.set(sf, state.DARK_BIT%)
   assert_int_equals(1, interp.has_changed%())
-  expected%(0) = 5 + 65536
+  expected%(0) = &b10100000001
   assert_int_array_equals(expected%(), interp.room_state%())
 
-  ' Change the current room.
+  ' Given moved to a different room, but still dark.
   r = 10
-  assert_int_equals(1, interp.has_changed%())
-  expected%(0) = 10 + 65536
+  assert_int_equals(0, interp.has_changed%())
+  expected%(0) = &b101000000001
   expected%(1) = 0
   expected%(2) = &b1000000000000000000000000000000000000
   assert_int_array_equals(expected%(), interp.room_state%())
 
-  ' Change the current room back.
+  ' Given lamp is lit.
+  state.obj_rm%(OBJ_LIT_LAMP%) = ROOM_CARRIED%
+  assert_int_equals(1, interp.has_changed%())
+  expected%(0) = &b101000000000
+  expected%(1) = 0
+  expected%(2) = &b1000000000000000000000000000000000000
+  assert_int_array_equals(expected%(), interp.room_state%())
+
+  ' Given returned to the original room.
   r = 5
   assert_int_equals(1, interp.has_changed%())
-  expected%(0) = 5 + 65536
+  expected%(0) = &b10100000000
   expected%(1) = &b100000001010000000000
   expected%(2) = &b10100000000
   assert_int_array_equals(expected%(), interp.room_state%())
