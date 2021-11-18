@@ -1,6 +1,11 @@
 ChangeLog
 ---------
 
+Version 2.0.5 - ??-????-????:
+  - Fixed more bugs in the logic determining when a room description should
+    be printed.
+  - Fixed "IA is not declared" bug in "dump.bas"
+
 Version 2.0.4 - 10-Aug-2021:
   - Fixed bug that caused the RUBY in "Pyramid of Doom" to not be recognised as
     a *TREASURE*:

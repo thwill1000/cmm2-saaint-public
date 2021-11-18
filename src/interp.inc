@@ -330,6 +330,7 @@ Sub go_direction(noun)
     EndIf
   EndIf
   r = k
+  describe_room(1)
 End Sub
 
 Function evaluate_condition(code, value)
@@ -515,7 +516,7 @@ Sub do_command(a, cmd, nstr$)
       ' light (object 9) is not available.
       ' If there is light, it displays the room description, the objects in
       ' the room and any obvious exits.
-      describe_room()
+      describe_room(1)
 
     Case 65
       ' SCORE
