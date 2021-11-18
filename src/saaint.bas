@@ -70,7 +70,7 @@ main_menu:
       Case "#select"       : Goto select_adventure
       Case "#credits"      : menus.credits(1)
       Case "#instructions" : menus.instructions(1)
-      Case "#quit"         : Goto quit
+      Case "#quit"         : Goto quit_game
     End Select
   Loop
 
@@ -95,7 +95,7 @@ adventure_menu:
       Case "#credits"      : menus.credits()
       Case "#instructions" : menus.instructions()
       Case "#back"         : Goto select_adventure
-      Case "#quit"         : Goto quit
+      Case "#quit"         : Goto quit_game
     End Select
   Loop
 
@@ -122,7 +122,7 @@ play_game:
   write_inifile() ' Updates .ini file with any options changed during play.
   If state <> STATE_QUIT Then Goto adventure_menu
 
-quit:
+quit_game:
 
   con.endl()
   con.println("Goodbye!", 1)
