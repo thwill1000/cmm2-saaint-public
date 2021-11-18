@@ -320,7 +320,7 @@ Sub dump_objects(fd)
   For i = 0 To il
     s$ = ia_str$(i)
     If s$ = "" Then s$ = "<empty>"
-    Print #fd, str.rpad$(Str$(i) + ":", 6) str.rpad$(Str$(ia(i)), 6) s$
+    Print #fd, str.rpad$(Str$(i) + ":", 6) str.rpad$(Str$(advent.obj_rm%(i)), 6) s$
   Next i
 End Sub
 
