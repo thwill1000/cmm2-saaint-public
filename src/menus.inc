@@ -177,7 +177,7 @@ Function menus.choose_advent$()
   Do
     k$ = Inkey$
     Select Case Asc(k$)
-      Case 13, 27, 32, 113 ' Enter, Escape, Space or Q
+      Case 10, 13, 27, 32, 113 ' Enter, Escape, Space or Q
         Exit Do
       Case 128 ' Up
         new_sel% = sel% - 1
@@ -249,7 +249,9 @@ Function menus.choose_advent$()
   Loop
 
   ' Enter or Space to select.
-  If Asc(k$) = 13 Or Asc(k$) = 32 Then menus.choose_advent$ = map.get$(m$(), m$(sel%))
+  Select Case Asc(k$)
+    Case 10, 13, 32 : menus.choose_advent$ = map.get$(m$(), m$(sel%))
+  End Select
 
   Option Console Both
   twm.free()

@@ -34,10 +34,17 @@ Const ROOT_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/..")
 Const TMP_DIR$ = ROOT_DIR$ + "/tmp"
 Const INI_FILE$ = ROOT_DIR$ + "/saaint.ini"
 
-con.HEIGHT = 33
-con.WIDTH  = 80
+con.HEIGHT% = 33
+con.WIDTH%  = 80
 
-Mode 2
+If Left$(Mm.Device$, 17) = "Colour Maximite 2" Then
+  Mode 2
+ElseIf Mm.Device$ = "MMB4L" Then
+  Option CodePage "MMB4L"
+  Console SetSize con.WIDTH%, con.HEIGHT%
+  Console SetTitle "SAAINT v" + SAAINT_VERSION$
+EndIf
+
 main()
 End
 
