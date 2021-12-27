@@ -491,6 +491,7 @@ Sub do_command(a, cmd, nstr$)
       con.println("I'm dead...")
       bits.clear(sf, state.DARK_BIT%)
       r = rl
+      describe_room(1)
 
     Case 62
       ' x->y
