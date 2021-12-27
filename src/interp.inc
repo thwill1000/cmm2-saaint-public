@@ -804,12 +804,12 @@ Sub dump_state()
   con.println("GAME STATE")
   con.println("----------")
   con.println("Current room:    " + Str$(r))
-  con.println("Dark flag:       " + Str$(df))
+  con.println("Dark flag:       " + Str$(bits.get%(sf, state.DARK_BIT%)))
   con.println("Remaining light: " + Str$(lx))
   con.print("Set flags:       ")
   Local count, i
   For i = 0 To 31
-    If bits.set(sf, i) Then
+    If bits.get%(sf, i) Then
       Inc count
       If count > 1 Then con.print(", ")
       con.print(Str$(i))
