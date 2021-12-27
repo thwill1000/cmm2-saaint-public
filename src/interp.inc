@@ -804,17 +804,31 @@ Sub dump_state()
   con.println()
   con.println("GAME STATE")
   con.println("----------")
-  con.println("Current room:    " + Str$(r))
-  con.println("Dark flag:       " + Str$(bits.get%(sf, state.DARK_BIT%)))
-  con.println("Remaining light: " + Str$(lx))
-  con.print("Set flags:       ")
-  Local count, i
-  For i = 0 To 31
-    If bits.get%(sf, i) Then
-      Inc count
-      If count > 1 Then con.print(", ")
-      con.print(Str$(i))
+  con.println("Current room:          " + Str$(r))
+  con.println("Dark flag:             " + Str$(bits.get%(sf, state.DARK_BIT%)))
+  con.println("Remaining light:       " + Str$(lx))
+  con.print("Set flags:             ")
+  Local count%, i%
+  For i% = 0 To 31
+    If bits.get%(sf, i%) Then
+      Inc count%
+      If count% > 1 Then con.print(", ")
+      con.print(Str$(i%))
     EndIf
+  Next
+  con.println()
+  con.println("Counter:               " + Str$(counter))
+  con.println("                       0,   1,   2,   3,   4,   5,   6,   7")
+  con.print("Alternate counters: ")
+  For i% = 0 To 7
+    If i% > 0 Then con.print(",")
+    con.print(Str$(alt_counter(i%), 4))
+  Next
+  con.println()
+  con.print("Alternate rooms:    ")
+  For i% = 0 To 5
+    If i% > 0 Then con.print(",")
+    con.print(Str$(alt_room(i%), 4))
   Next
   con.println()
 End Sub

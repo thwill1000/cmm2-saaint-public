@@ -148,6 +148,9 @@ the interpreter itself rather than being specific to an adventure:
          - the value of the "dark flag".
          - the value of the "remaining light" counter.
          - the indexes of the status bits that are currently set.
+         - the value of the counter.
+         - the values of the 8 alternate counters.
+         - the values of the 6 alternate room registers.
  - ```*vocab```
    - prints the adventure's verb and noun tables.
     - the tables usually only contain the first 3-5 significant characters of each word.
@@ -208,7 +211,7 @@ Visit https://intfiction.org/
 
 SAAINT interprets adventures saved in the TRS-80 /
 [ScottFree](http://www.ifwiki.org/index.php/ScottFree) / .dat file format which is documented in
-detail [here](https://github.com/pdxiv/LuaScott/blob/master/doc/The_ADVENTURE_Data_Base_Format_(1980).md)
+detail [here](https://github.com/pdxiv/LuaScott/blob/master/doc/The_ADVENTURE_Data_Base_Format_(1980).md).
 
 **4. How do I contact the author ?**
 
