@@ -5,6 +5,10 @@ Version 2.0.5 - ??-????-????:
   - Added support so SAAINT will also run on MMB4L (2022.01.00-a3).
   - Added 'counter', 'alternate counters' and 'alternate room registers' to
     output of *STATE meta-command.
+  - Fixed bug where 'counter', 'alternate counters' and
+    'alternate room registers' were not reset when the player started a new
+    adventure; this may have been harmless since a well behaved adventure would
+    always setup these as required.
   - Fixed bug where the "limbo" room was not described when the player dies.
   - Fixed "DF is not declared" bug when *STATE meta-command was used.
   - Fixed more bugs in the logic determining when a room description should

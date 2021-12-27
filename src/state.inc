@@ -27,9 +27,12 @@ Sub state.reset()
   r = ar  ' current room = starting room
   lx = lt ' lamp starts full
   sf = 0  ' status flags are clear
+  counter = 0
+  Local i%
+  For i% = 0 To 7 : alt_counter(i%) = 0 : Next
+  For i% = 0 To 5 : alt_room(i%) = 0 : Next
   Erase state.obj_rm%
   Dim state.obj_rm%(il)
-  Local i%
   For i% = 0 To il : state.obj_rm%(i%) = advent.obj_rm%(i%) : Next
 End Sub
 
