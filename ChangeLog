@@ -5,6 +5,8 @@ Version 2.0.5 - ??-????-????:
   - Added support so SAAINT will also run on MMB4L (2022.01.00-a3).
   - Added 'counter', 'alternate counters' and 'alternate room registers' to
     output of *STATE meta-command.
+  - Changed format of object lists from comma separated to one object per line,
+    I may make this configurable behaviour in a later version.
   - Fixed bug where 'counter', 'alternate counters' and
     'alternate room registers' were not reset when the player started a new
     adventure; this may have been harmless since a well behaved adventure would

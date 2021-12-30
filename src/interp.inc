@@ -40,6 +40,10 @@ Const VERB_REPLAY%       = -10
 Const VERB_SEED%         = -11
 Const VERB_WALKTHROUGH%  = -12
 
+' Format used for printing lists of objects.
+Const OBJ_LIST_FMT_COMMA%   = 1  ' Comma separated.
+Const OBJ_LIST_FMT_NEWLINE% = 2  ' Each object on a newline.
+
 Dim DIRECTIONS$(5) Length 10 = ("North", "South", "East", "West", "Up", "Down")
 
 ' Game options persisted to .ini file.
@@ -60,6 +64,8 @@ Dim interp.room_state%(9) ' Encodes the state of the last described room:
                           '   bits 24..63  - unused
                           '   bits 64..639 - was object i + 64 in the room
                           ' We use this to determine if we need to describe the current room.
+
+Dim interp.obj_list_fmt% = OBJ_LIST_FMT_NEWLINE%
 
 Sub game_loop()
   Local noun, nstr$, verb
@@ -176,7 +182,14 @@ Sub print_object_list(rm, none$)
   For i = 0 To il
     If state.obj_rm%(i) = rm Then
       Inc count
-      If count > 1 Then con.print(", ")
+      Select Case interp.obj_list_fmt%
+        Case OBJ_LIST_FMT_COMMA%
+          If count > 1 Then con.print(", ")
+        Case OBJ_LIST_FMT_NEWLINE%
+          con.println()
+          con.print("  ")
+        Case Else : Error
+      End Select
       If debug Then con.print("[" + Str$(i) + "] ")
       p = InStr(ia_str$(i), "/")
       If p < 1 Then
@@ -187,8 +200,13 @@ Sub print_object_list(rm, none$)
     EndIf
   Next
 
-  If count = 0 Then con.print(none$)
-  con.println(".")
+  If count = 0 Then
+    con.println(none$ + ".")
+  ElseIf interp.obj_list_fmt% = OBJ_LIST_FMT_COMMA% Then
+    con.println(".")
+  Else
+    con.println()
+  EndIf
 End Sub
 
 Sub do_automatic_actions()
