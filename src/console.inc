@@ -1,4 +1,4 @@
-' Copyright (c) 2019-21 Thomas Hugo Williams
+' Copyright (c) 2019-22 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.07
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
@@ -10,8 +10,7 @@ If sys.err$ <> "" Then Error sys.err$
 Dim con.buf$     ' console write buffer
 Dim con.space    ' was the last character written to con.buf$ a space?
 Dim con.lines    ' number of lines that have been output since the last prompt
-Dim con.count    ' number of consecutive calls to con.endl() without an
-                 ' intervening call to con.print()
+Dim con.count    ' number of newlines without an intervening character being printed
 Dim con.x = 1    ' current horizontal cursor position, indexed from 1
 Dim con.spin     ' is the spinning cursor currently displayed?
 Dim con.fd_in    ' file descriptor to read input from
@@ -64,8 +63,6 @@ End Function
 Sub con.print(s$)
   Local c$, i
 
-  con.count = 0
-
   For i = 1 To Len(s$)
     c$ = Mid$(s$, i, 1)
     Select Case c$
@@ -74,20 +71,22 @@ Sub con.print(s$)
 
       Case con.LF$ :
         con.endl()
-        con.count = 0
         con.space = 0
 
       Case " " :
         If Not con.space Then con.flush() : con.space = 1
         Cat con.buf$, " "
+        con.count = 0
 
       Case "`" :
         If con.space Then con.flush() : con.space = 0
         Cat con.buf$, "'"
+        con.count = 0
 
       Case Else :
         If con.space Then con.flush() : con.space = 0
         Cat con.buf$, c$
+        con.count = 0
 
     End Select
   Next
@@ -142,8 +141,8 @@ Sub con.endl()
   EndIf
 
   Print
-  con.count = con.count + 1
-  con.lines = con.lines + 1
+  Inc con.count
+  Inc con.lines
   con.x = 1
 End Sub
 

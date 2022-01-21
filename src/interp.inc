@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.07
 
 ' This file implements the actual interpreter loop.
@@ -68,11 +68,14 @@ Dim interp.room_state%(9) ' Encodes the state of the last described room:
 Dim interp.obj_list_fmt% = OBJ_LIST_FMT_NEWLINE%
 
 Sub game_loop()
-  Local noun, nstr$, verb
+  Local i%, noun, nstr$, verb
 
   state = STATE_OK
 
-  describe_room(1)
+  ' Clear the room_state to ensure first call to describe_room() describes the room.
+  For i% = Bound(interp.room_state%(), 0) To Bound(interp.room_state%(), 1)
+    interp.room_state%(i%) = 0
+  Next
 
   Do
     do_automatic_actions()
@@ -99,7 +102,7 @@ Sub describe_room(always%)
 
   con.foreground("white")
 
-  If Mm.Info(VPOS) > 0 Then con.println()
+  If con.count <= 1 Then con.println()
 
   If debug Then con.print("[" + Str$(r) + "] ")
   If Left$(rs$(r), 1) = "*" Then
