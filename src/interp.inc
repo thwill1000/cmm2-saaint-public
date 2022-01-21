@@ -759,9 +759,9 @@ Sub prompt_for_command(verb, noun, nstr$)
       Case VERB_NONE%          : ' Do nothing, user will be prompted for command again.
       Case VERB_TOO_MANY%      : con.println("I only understand two word commands!")
       Case VERB_DEBUG%         : con.println("OK.") : debug = (nstr$ = "on")
-      Case VERB_DUMP_MESSAGES% : dump_messages()
-      Case VERB_DUMP_OBJECTS%  : dump_objects()
-      Case VERB_DUMP_ROOMS%    : dump_rooms()
+      Case VERB_DUMP_MESSAGES% : dump_messages(nstr$)
+      Case VERB_DUMP_OBJECTS%  : dump_objects(nstr$)
+      Case VERB_DUMP_ROOMS%    : dump_rooms(nstr$)
       Case VERB_DUMP_STATE%    : dump_state()
       Case VERB_DUMP_VOCAB%    : dump_vocabulary()
       Case VERB_LOOK%          : describe_room(1)
@@ -796,85 +796,113 @@ Function prompt$(s$, echo)
   con.foreground("green")
 End Function
 
-Sub dump_messages()
-  con.println()
-  con.println("MESSAGES")
-  con.println("--------")
-  con.println()
-
-  Local i%, s$
-  For i% = 0 To ml
-    s$ = ms$(i%)
-    If s$ = "" Then s$ = "<empty>"
-    con.println(str.rpad$(Str$(i%) + ":", 6) + s$)
-  Next
-
-  con.println()
-End Sub
-
-Sub dump_objects()
-  con.println()
-  con.println("OBJECTS")
-  con.println("-------")
-  con.println("Id    Room")
-  con.println()
-
-  Local i%, p%, q%, s$
-  For i% = 0 To il
-    con.print(str.rpad$(Str$(i%), 6))
-    con.print(str.rpad$(Str$(state.obj_rm%(i%)), 6))
-    s$ = Choice(ia_str$(i%) = "", "<empty>", ia_str$(i%))
-    p% = 1
-    Do While p% <= Len(s$)
-      q% = InStr(p%, s$, sys.CRLF$)
-      If q% Then
-        con.println(Mid$(s$, p%, q% - p%))
-        con.print("            ")
-        p% = q% + 2
-      Else
-        con.println(Mid$(s$, p%))
-        p% = 256
-      EndIf
-    Loop
-  Next
-
-  con.println()
-End Sub
-
-Sub dump_rooms()
-  con.println()
-  con.println("ROOMS")
-  con.println("-----")
-  con.println()
-
-  Local count%, i%, j%, s$
-  For i% = 0 To rl
-    s$ = rs$(i%)
-    If s$ = "" Then
-      If i% = 0 Then s$ = "<storeroom>" Else s$ = "<empty>"
+Sub dump_messages(nstr$)
+  If nstr$ = "-1" Then
+    con.println()
+    con.println("MESSAGES")
+    con.println("--------")
+    con.println()
+    Local i%
+    For i% = 0 To ml : dump_message(i%) : Next
+    con.println()
+  Else
+    Local idx% = Int(Val(nstr$))
+    If idx% < 0 Or idx% > ml Then
+      con.println("Invalid message index.")
+    Else
+      dump_message(idx%)
     EndIf
-    con.println(str.rpad$(Str$(i%) + ":", 6) + s$)
-    con.print("      Exits: ")
-    count% = 0
-    For j% = 0 To 5
-      If rm(i%, j%) > 0 Then
-        Inc count%
-        If count% > 1 Then con.print(", ")
-        Select Case j%
-          Case 0 : con.print("North")
-          Case 1 : con.print("South")
-          Case 2 : con.print("East")
-          Case 3 : con.print("West")
-          Case 4 : con.print("Up")
-          Case 5 : con.print("Down")
-        End Select
-        con.print(" [" + Str$(rm(i%, j%)) + "]")
-      EndIf
-    Next
-    con.println(Choice(count% = 0, "None", ""))
-  Next
+  EndIf
+End Sub
 
-  con.println()
+Sub dump_message(idx%)
+  Local s$ = ms$(idx%)
+  If s$ = "" Then s$ = "<empty>"
+  con.println(str.rpad$(Str$(idx%) + ":", 6) + s$)
+End Sub
+
+Sub dump_objects(nstr$)
+  If nstr$ = "-1" Then
+    con.println()
+    con.println("OBJECTS")
+    con.println("-------")
+    con.println("Id    Room")
+    con.println()
+    Local i%
+    For i% = 0 To il : dump_object(i%) : Next
+    con.println()
+  Else
+    Local idx% = Int(Val(nstr$))
+    If idx% < 0 Or idx% > il Then
+      con.println("Invalid object index.")
+    Else
+      dump_object(idx%)
+    EndIf
+  EndIf
+End Sub
+
+Sub dump_object(idx%)
+  con.print(str.rpad$(Str$(idx%), 6))
+  con.print(str.rpad$(Str$(state.obj_rm%(idx%)), 6))
+  Local s$ = Choice(ia_str$(idx%) = "", "<empty>", ia_str$(idx%))
+  Local p% = 1, q%
+  Do While p% <= Len(s$)
+    q% = InStr(p%, s$, sys.CRLF$)
+    If q% Then
+      con.println(Mid$(s$, p%, q% - p%))
+      con.print("            ")
+      p% = q% + 2
+    Else
+      con.println(Mid$(s$, p%))
+      p% = 256
+    EndIf
+  Loop
+End Sub
+
+Sub dump_rooms(nstr$)
+  If nstr$ = "-1" Then
+    con.println()
+    con.println("ROOMS")
+    con.println("-----")
+    con.println()
+    Local i%
+    For i% = 0 To rl : dump_room(i%) : Next
+    con.println()
+  Else
+    Local idx% = Int(Val(nstr$))
+    If idx% < 0 Or idx% > rl Then
+      con.println("Invalid room index.")
+    Else
+      dump_room(idx%)
+    EndIf
+  EndIf
+End Sub
+
+Sub dump_room(idx%)
+  Local s$ = rs$(idx%)
+  If s$ = "" Then
+    If idx% = 0 Then s$ = "<storeroom>" Else s$ = "<empty>"
+  EndIf
+  con.println(str.rpad$(Str$(idx%) + ":", 6) + s$)
+  con.print("      Exits: ")
+  Local count% = 0
+  Local j%
+  For j% = 0 To 5
+    If rm(idx%, j%) > 0 Then
+      Inc count%
+      If count% > 1 Then con.print(", ")
+      Select Case j%
+        Case 0 : con.print("North")
+        Case 1 : con.print("South")
+        Case 2 : con.print("East")
+        Case 3 : con.print("West")
+        Case 4 : con.print("Up")
+        Case 5 : con.print("Down")
+      End Select
+      con.print(" [" + Str$(rm(idx%, j%)) + "]")
+    EndIf
+  Next
+  con.println(Choice(count% = 0, "None", ""))
 End Sub
 
 Sub dump_state()
@@ -980,19 +1008,20 @@ Sub parse(s$, verb, noun, nstr$)
 End Sub
 
 Function lookup_meta_command(vstr$, nstr$)
-  Const TYPE_BOOLEAN% = 1, TYPE_OTHER% = 2
+  Const TYPE_BOOLEAN% = 1, TYPE_INDEX% = 2, TYPE_OTHER% = 3
   Local verb%, type%
 
   Select Case Left$(vstr$, 4)
-    Case "*deb" : verb% = VERB_DEBUG%  : type% = TYPE_BOOLEAN%
+    Case "*deb" : verb% = VERB_DEBUG%         : type% = TYPE_BOOLEAN%
     Case "*loo" : verb% = VERB_LOOK%
-    Case "*mor" : verb% = VERB_MORE%   : type% = TYPE_BOOLEAN%
-    Case "*mes", "*msg" : verb% = VERB_DUMP_MESSAGES%
-    Case "*obj" : verb% = VERB_DUMP_OBJECTS%
-    Case "*rec" : verb% = VERB_RECORD% : type% = TYPE_BOOLEAN%
-    Case "*rep" : verb% = VERB_REPLAY% : type% = TYPE_BOOLEAN%
-    Case "*roo" : verb% = VERB_DUMP_ROOMS%
-    Case "*see" : verb% = VERB_SEED%   : type% = TYPE_OTHER%
+    Case "*mes" : verb% = VERB_DUMP_MESSAGES% : type% = TYPE_INDEX%
+    Case "*mor" : verb% = VERB_MORE%          : type% = TYPE_BOOLEAN%
+    Case "*msg" : verb% = VERB_DUMP_MESSAGES% : type% = TYPE_INDEX%
+    Case "*obj" : verb% = VERB_DUMP_OBJECTS%  : type% = TYPE_INDEX%
+    Case "*rec" : verb% = VERB_RECORD%        : type% = TYPE_BOOLEAN%
+    Case "*rep" : verb% = VERB_REPLAY%        : type% = TYPE_BOOLEAN%
+    Case "*roo" : verb% = VERB_DUMP_ROOMS%    : type% = TYPE_INDEX%
+    Case "*see" : verb% = VERB_SEED%          : type% = TYPE_OTHER%
     Case "*sta" : verb% = VERB_DUMP_STATE%
     Case "*voc" : verb% = VERB_DUMP_VOCAB%
     Case "*wal" : verb% = VERB_WALKTHROUGH%
@@ -1006,6 +1035,8 @@ Function lookup_meta_command(vstr$, nstr$)
     Case TYPE_BOOLEAN%
       If nstr$ = "" Then nstr$ = "on"
       If nstr$ <> "on" And nstr$ <> "off" Then Exit Function ' Invalid noun.
+    Case TYPE_INDEX%
+      If nstr$ = "" Then nstr$ = "-1"
   End Select
 
   lookup_meta_command = verb%
