@@ -25,20 +25,22 @@ Const ROOM_CARRIED% = 255 ' Not -1 as used in original BYTE magazine version of 
 Const ROOM_STORE% = 0
 
 ' Hardcoded Verb Id's.
-Const VERB_GET%          = 10
-Const VERB_DROP%         = 18
-Const VERB_NONE%         = -1
-Const VERB_TOO_MANY%     = -2
-Const VERB_DEBUG%        = -3
-Const VERB_DUMP_OBJECTS% = -4
-Const VERB_DUMP_STATE%   = -5
-Const VERB_DUMP_VOCAB%   = -6
-Const VERB_LOOK%         = -7
-Const VERB_MORE%         = -8
-Const VERB_RECORD%       = -9
-Const VERB_REPLAY%       = -10
-Const VERB_SEED%         = -11
-Const VERB_WALKTHROUGH%  = -12
+Const VERB_GET%           = 10
+Const VERB_DROP%          = 18
+Const VERB_NONE%          = -1
+Const VERB_TOO_MANY%      = -2
+Const VERB_DEBUG%         = -3
+Const VERB_DUMP_MESSAGES% = -4
+Const VERB_DUMP_OBJECTS%  = -5
+Const VERB_DUMP_ROOMS%    = -6
+Const VERB_DUMP_STATE%    = -7
+Const VERB_DUMP_VOCAB%    = -8
+Const VERB_LOOK%          = -9
+Const VERB_MORE%          = -10
+Const VERB_RECORD%        = -11
+Const VERB_REPLAY%        = -12
+Const VERB_SEED%          = -13
+Const VERB_WALKTHROUGH%   = -14
 
 ' Format used for printing lists of objects.
 Const OBJ_LIST_FMT_COMMA%   = 1  ' Comma separated.
@@ -753,15 +755,17 @@ Sub prompt_for_command(verb, noun, nstr$)
     parse(s$, verb, noun, nstr$)
 
     Select Case verb
-      Case 0                  : con.println("You use word(s) I don't know!")
-      Case VERB_NONE%         : ' Do nothing, user will be prompted for command again.
-      Case VERB_TOO_MANY%     : con.println("I only understand two word commands!")
-      Case VERB_DEBUG%        : con.println("OK.") : debug = (nstr$ = "on")
-      Case VERB_DUMP_OBJECTS% : dump_objects()
-      Case VERB_DUMP_STATE%   : dump_state()
-      Case VERB_DUMP_VOCAB%   : dump_vocabulary()
-      Case VERB_LOOK%         : describe_room(1)
-      Case VERB_MORE%         : con.println("OK.") : con.more = (nstr$ = "on")
+      Case 0                   : con.println("You use word(s) I don't know!")
+      Case VERB_NONE%          : ' Do nothing, user will be prompted for command again.
+      Case VERB_TOO_MANY%      : con.println("I only understand two word commands!")
+      Case VERB_DEBUG%         : con.println("OK.") : debug = (nstr$ = "on")
+      Case VERB_DUMP_MESSAGES% : dump_messages()
+      Case VERB_DUMP_OBJECTS%  : dump_objects()
+      Case VERB_DUMP_ROOMS%    : dump_rooms()
+      Case VERB_DUMP_STATE%    : dump_state()
+      Case VERB_DUMP_VOCAB%    : dump_vocabulary()
+      Case VERB_LOOK%          : describe_room(1)
+      Case VERB_MORE%          : con.println("OK.") : con.more = (nstr$ = "on")
       Case VERB_RECORD%
         If nstr$ = "on" Then
           seed_random_number_generator("record")
@@ -776,9 +780,9 @@ Sub prompt_for_command(verb, noun, nstr$)
         Else
           script.replay_off()
         EndIf
-      Case VERB_SEED%         : seed_random_number_generator(nstr$)
-      Case VERB_WALKTHROUGH%  : seed_random_number_generator("record") : script.walkthrough()
-      Case Else               : Exit Do ' Handle 'verb' in calling code.
+      Case VERB_SEED%          : seed_random_number_generator(nstr$)
+      Case VERB_WALKTHROUGH%   : seed_random_number_generator("record") : script.walkthrough()
+      Case Else                : Exit Do ' Handle 'verb' in calling code.
     End Select
 
   Loop
@@ -791,6 +795,22 @@ Function prompt$(s$, echo)
   prompt$ = con.in$("", echo)
   con.foreground("green")
 End Function
+
+Sub dump_messages()
+  con.println()
+  con.println("MESSAGES")
+  con.println("--------")
+  con.println()
+
+  Local i%, s$
+  For i% = 0 To ml
+    s$ = ms$(i%)
+    If s$ = "" Then s$ = "<empty>"
+    con.println(str.rpad$(Str$(i%) + ":", 6) + s$)
+  Next
+
+  con.println()
+End Sub
 
 Sub dump_objects()
   con.println()
@@ -816,6 +836,42 @@ Sub dump_objects()
         p% = 256
       EndIf
     Loop
+  Next
+
+  con.println()
+End Sub
+
+Sub dump_rooms()
+  con.println()
+  con.println("ROOMS")
+  con.println("-----")
+  con.println()
+
+  Local count%, i%, j%, s$
+  For i% = 0 To rl
+    s$ = rs$(i%)
+    If s$ = "" Then
+      If i% = 0 Then s$ = "<storeroom>" Else s$ = "<empty>"
+    EndIf
+    con.println(str.rpad$(Str$(i%) + ":", 6) + s$)
+    con.print("      Exits: ")
+    count% = 0
+    For j% = 0 To 5
+      If rm(i%, j%) > 0 Then
+        Inc count%
+        If count% > 1 Then con.print(", ")
+        Select Case j%
+          Case 0 : con.print("North")
+          Case 1 : con.print("South")
+          Case 2 : con.print("East")
+          Case 3 : con.print("West")
+          Case 4 : con.print("Up")
+          Case 5 : con.print("Down")
+        End Select
+        con.print(" [" + Str$(rm(i%, j%)) + "]")
+      EndIf
+    Next
+    con.println(Choice(count% = 0, "None", ""))
   Next
 
   con.println()
@@ -931,9 +987,11 @@ Function lookup_meta_command(vstr$, nstr$)
     Case "*deb" : verb% = VERB_DEBUG%  : type% = TYPE_BOOLEAN%
     Case "*loo" : verb% = VERB_LOOK%
     Case "*mor" : verb% = VERB_MORE%   : type% = TYPE_BOOLEAN%
+    Case "*mes", "*msg" : verb% = VERB_DUMP_MESSAGES%
     Case "*obj" : verb% = VERB_DUMP_OBJECTS%
     Case "*rec" : verb% = VERB_RECORD% : type% = TYPE_BOOLEAN%
     Case "*rep" : verb% = VERB_REPLAY% : type% = TYPE_BOOLEAN%
+    Case "*roo" : verb% = VERB_DUMP_ROOMS%
     Case "*see" : verb% = VERB_SEED%   : type% = TYPE_OTHER%
     Case "*sta" : verb% = VERB_DUMP_STATE%
     Case "*voc" : verb% = VERB_DUMP_VOCAB%

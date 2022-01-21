@@ -121,6 +121,9 @@ the interpreter itself rather than being specific to an adventure:
      - disables debug diagnostics.
  - ```*look```
      - redescribes the current room. Useful for those adventures that don't implement the ```look``` verb without a noun as a standard command.
+ - ```*messages```
+     - prints the id and content of every message in the adventure.
+     - WARNING! may contain spoilers.
  - ```*more```
      - enables output paging so that a ```[MORE]``` prompt is shown whenever more output than can be shown on a single screen is generated; this is only likely to happen when replaying a script, see ```*replay``` below.
      - this initially defaults to ```on```, but is persisted across SAAINT sessions.
@@ -138,6 +141,9 @@ the interpreter itself rather than being specific to an adventure:
  - ```*replay off```
      - halts replaying.
      - only makes sense if inserted manually into a script file to prevent it from replaying to its end.
+ - ```*rooms```
+     - prints the id, description and exits of every room in the adventure.
+     - WARNING! may contain spoilers.
  - ```*seed <+ve integer>```
      - immediately re-seeds the pseudo-random number generator used by the interpreter with the given value.
      - this command is DEPRECATED. Instead specify ```seed = <+ve integer>``` in the "saaint.ini" file to provide a seed that will automatically be used when an adventure is started or restored.

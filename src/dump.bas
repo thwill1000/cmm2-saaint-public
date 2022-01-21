@@ -289,6 +289,7 @@ Sub dump_rooms(fd)
           Case 4 : Print #fd, "Up";
           Case 5 : Print #fd, "Down";
         End Select
+        Print #fd, " [" Str$(rm(i, j)) "]";
       EndIf
     Next j
     If count = 0 Then Print #fd, "None" Else Print #fd
