@@ -3,6 +3,10 @@ ChangeLog
 
 Version 2.0.5 - ??-????-????:
   - Added support so SAAINT will also run on MMB4L (2022.01.00-a3).
+  - Added *ACTIONS <index> meta-command:
+    - prints action <index>.
+    - if <index> is omitted then prints all the actions in the adventure.
+    - WARNING! may contain spoilers.
   - Added *MESSAGES <index> meta-command:
     - prints content of message <index>.
     - if <index> is omitted then prints all the messages in the adventure.

@@ -19,6 +19,159 @@ Sub debug.println(s$)
   con.println(s$)
 End Sub
 
+Sub debug.dump_actions(nstr$, one_line%)
+  Local i%
+  If nstr$ = "-1" Then
+    debug.println("ACTIONS")
+    debug.println("-------")
+    debug.println()
+    For i% = 0 To cl : debug.dump_action(i%, one_line%) : Next
+    debug.println()
+  Else
+    i% = Int(Val(nstr$))
+    If i% < 0 Or i% > cl Then
+      debug.println("Invalid action index.")
+    Else
+      debug.dump_action(i%)
+    EndIf
+  End If
+End Sub
+
+Sub debug.dump_action(idx%, one_line%)
+  Local cmd%(3), cond%(4, 1), j%, noun%, n$, verb%, v$
+
+  verb% = Int(ca(idx%, 0) / 150)
+  noun% = ca(idx%, 0) - verb% * 150
+
+  For j% = 0 To 4
+    cond(j%, 1) = Int(ca(idx%, j% + 1) / 20)
+    cond(j%, 0) = ca(idx%, j% + 1) - cond(j%, 1) * 20
+  Next j
+
+  cmd%(0) = Int(ca(idx%, 6) / 150)
+  cmd%(1) = ca(idx%, 6) - cmd%(0) * 150
+  cmd%(2) = Int(ca(idx%, 7) / 150)
+  cmd%(3) = ca(idx%, 7) - cmd%(2) * 150
+
+  If verb% = 0 Then
+    n$ = Str$(noun%)
+    v$ = Str$(verb%)
+  Else
+    n$ = debug.get_noun$(noun%)
+    v$ = debug.get_verb$(verb%)
+  EndIf
+
+  debug.print(str.rpad$(Str$(idx%) + ":", 6))
+  debug.print(str.rpad$(v$, 6))
+  debug.print(str.rpad$(n$, 6))
+  debug.print(str.rpad$(debug.get_cond$(cond%(0, 0), cond%(0, 1)), 9))
+  debug.print(str.rpad$(debug.get_cond$(cond%(1, 0), cond%(1, 1)), 9))
+  debug.print(str.rpad$(debug.get_cond$(cond%(2, 0), cond%(2, 1)), 9))
+  debug.print(str.rpad$(debug.get_cond$(cond%(3, 0), cond%(3, 1)), 9))
+  debug.print(str.rpad$(debug.get_cond$(cond%(4, 0), cond%(4, 1)), 9))
+  If Not one_line% Then debug.println() : debug.print("                  ")
+  debug.print(str.rpad$(debug.get_cmd$(cmd%(0)), 9))
+  debug.print(str.rpad$(debug.get_cmd$(cmd%(1)), 9))
+  debug.print(str.rpad$(debug.get_cmd$(cmd%(2)), 9))
+  debug.println(debug.get_cmd$(cmd%(3)))
+End Sub
+
+Function debug.get_cond$(code%, num%)
+  Local s$
+  Select Case code%
+    Case 0 : s$ = "Par"
+    Case 1 : s$ = "HAS"
+    Case 2 : s$ = "IN/W"
+    Case 3 : s$ = "AVL"
+    Case 4 : s$ = "IN"
+    Case 5 : s$ = "-IN/W"
+    Case 6 : s$ = "-HAVE"
+    Case 7 : s$ = "-IN"
+    Case 8 : s$ = "BIT"
+    Case 9 : s$ = "-BIT"
+    Case 10 : s$ = "ANY"
+    Case 11 : s$ = "-ANY"
+    Case 12 : s$ = "-AVL"
+    Case 13 : s$ = "-RM0"
+    Case 14 : s$ = "RM0"
+    Case 15 : s$ = "CT<="
+    Case 16 : s$ = "CT>"
+    Case 17 : s$ = "ORIG"
+    Case 18 : s$ = "-ORIG"
+    Case 19 : s$ = "CT="
+    Case Else : s$ = "<Unknown: " + Str$(code%) + ">"
+  End Select
+  debug.get_cond$ = s$ + " " + Str$(num%)
+End Function
+
+Function debug.get_verb$(v%)
+  If v% > Bound(nv_str$(), 1) Then
+    debug.println()
+    debug.println("  WARNING: unknown verb " + Str$(v%))
+    debug.get_verb$ = "<" + Str$(v%) + ">"
+  Else
+    debug.get_verb$ = nv_str$(v%, 0)
+  EndIf
+End Function
+
+Function debug.get_noun$(n%)
+  If n% > Bound(nv_str$(), 1) Then
+    debug.println()
+    debug.println("  WARNING: unknown noun" + Str$(n%))
+    debug.get_noun$ = "<" + Str$(n%) + ">"
+  Else
+    debug.get_noun$ = nv_str$(n%, 1)
+  EndIf
+End Function
+
+Function debug.get_cmd$(c%)
+  Local s$
+  Select Case c%
+    Case 0 : s$ = "0"
+    Case 1 To 51 : s$ = "MSG:" + Str$(c%)
+    Case 52 : s$ = "GETx"
+    Case 53 : s$ = "DROPx"
+    Case 54 : s$ = "GOTOy"
+    Case 55 : s$ = "x->RM0"
+    Case 56 : s$ = "NIGHT"
+    Case 57 : s$ = "DAY"
+    Case 58 : s$ = "SETz"
+    Case 59 : s$ = "x->RM0" ' same as 55
+    Case 60 : s$ = "CLRz"
+    Case 61 : s$ = "DEAD"
+    Case 62 : s$ = "x->y"
+    Case 63 : s$ = "FINI"
+    Case 64 : s$ = "DspRM"
+    Case 65 : s$ = "SCORE"
+    Case 66 : s$ = "INV"
+    Case 67 : s$ = "SET0"
+    Case 68 : s$ = "CLR0"
+    Case 69 : s$ = "FILL"
+    Case 70 : s$ = "CLS"
+    Case 71 : s$ = "SAVEz"
+    Case 72 : s$ = "EXx,x"
+    Case 73 : s$ = "CONT"
+    Case 74 : s$ = "AGETx"
+    Case 75 : s$ = "BYx<-x"
+    Case 76 : s$ = "DspRM"
+    Case 77 : s$ = "CT-1"
+    Case 78 : s$ = "DspCT"
+    Case 79 : s$ = "CT<-n"
+    Case 80 : s$ = "EXRM0"
+    Case 81 : s$ = "EXm,CT"
+    Case 82 : s$ = "CT+n"
+    Case 83 : s$ = "CT-n"
+    Case 84 : s$ = "SAYw"
+    Case 85 : s$ = "SAYwCR"
+    Case 86 : s$ = "SAYCR"
+    Case 87 : s$ = "EXc,CR"
+    Case 88 : s$ = "DELAY"
+    Case 102 To 149 : s$ = "MSG:" + Str$(c% - 50)
+    Case Else : s$ = "<Unknown: " + Str$(c%) + ">"
+  End Select
+  debug.get_cmd$ = s$
+End Function
+
 Sub debug.dump_messages(nstr$)
   If nstr$ = "-1" Then
     debug.println()

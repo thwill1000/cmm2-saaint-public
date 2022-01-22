@@ -112,6 +112,10 @@ Many more SAAINT compatible adventures can be downloaded from the
 The interpreter includes a number of meta-commands all prefixed with a ```*``` that are provided by
 the interpreter itself rather than being specific to an adventure:
 
+ - ```*actions <index>```
+     - prints action ```<index>```.
+     - if ```<index>``` is omitted then prints all the actions in the adventure.
+     - WARNING! may contain spoilers.
  - ```*debug```
      - enables debug diagnostics:
          - room descriptions are prefixed with the room number.

@@ -30,17 +30,18 @@ Const VERB_DROP%          = 18
 Const VERB_NONE%          = -1
 Const VERB_TOO_MANY%      = -2
 Const VERB_DEBUG%         = -3
-Const VERB_DUMP_MESSAGES% = -4
-Const VERB_DUMP_OBJECTS%  = -5
-Const VERB_DUMP_ROOMS%    = -6
-Const VERB_DUMP_STATE%    = -7
-Const VERB_DUMP_VOCAB%    = -8
-Const VERB_LOOK%          = -9
-Const VERB_MORE%          = -10
-Const VERB_RECORD%        = -11
-Const VERB_REPLAY%        = -12
-Const VERB_SEED%          = -13
-Const VERB_WALKTHROUGH%   = -14
+Const VERB_DUMP_ACTIONS%  = -4
+Const VERB_DUMP_MESSAGES% = -5
+Const VERB_DUMP_OBJECTS%  = -6
+Const VERB_DUMP_ROOMS%    = -7
+Const VERB_DUMP_STATE%    = -8
+Const VERB_DUMP_VOCAB%    = -9
+Const VERB_LOOK%          = -10
+Const VERB_MORE%          = -11
+Const VERB_RECORD%        = -12
+Const VERB_REPLAY%        = -13
+Const VERB_SEED%          = -14
+Const VERB_WALKTHROUGH%   = -15
 
 ' Format used for printing lists of objects.
 Const OBJ_LIST_FMT_COMMA%   = 1  ' Comma separated.
@@ -759,6 +760,7 @@ Sub prompt_for_command(verb, noun, nstr$)
       Case VERB_NONE%          : ' Do nothing, user will be prompted for command again.
       Case VERB_TOO_MANY%      : con.println("I only understand two word commands!")
       Case VERB_DEBUG%         : con.println("OK.") : debug.enabled% = (nstr$ = "on")
+      Case VERB_DUMP_ACTIONS%  : debug.dump_actions(nstr$)
       Case VERB_DUMP_MESSAGES% : debug.dump_messages(nstr$)
       Case VERB_DUMP_OBJECTS%  : debug.dump_objects(nstr$)
       Case VERB_DUMP_ROOMS%    : debug.dump_rooms(nstr$)
@@ -850,6 +852,7 @@ Function lookup_meta_command(vstr$, nstr$)
   Local verb%, type%
 
   Select Case Left$(vstr$, 4)
+    Case "*act" : verb% = VERB_DUMP_ACTIONS%  : type% = TYPE_INDEX%
     Case "*deb" : verb% = VERB_DEBUG%         : type% = TYPE_BOOLEAN%
     Case "*loo" : verb% = VERB_LOOK%
     Case "*mes" : verb% = VERB_DUMP_MESSAGES% : type% = TYPE_INDEX%
