@@ -41,6 +41,7 @@ If Left$(Mm.Device$, 17) = "Colour Maximite 2" Then
   Mode 2
 ElseIf Mm.Device$ = "MMB4L" Then
   Option CodePage "MMB4L"
+  On Error Skip 1 ' CONSOLE SETSIZE can fail, but keep going if it does.
   Console SetSize con.WIDTH%, con.HEIGHT%
   Console SetTitle "SAAINT v" + SAAINT_VERSION$
 EndIf
