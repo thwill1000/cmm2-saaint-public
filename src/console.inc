@@ -7,6 +7,9 @@ sys.requires("vt100")
 sys.provides("console")
 If sys.err$ <> "" Then Error sys.err$
 
+Const con.SCREEN% = &h01
+Const con.SERIAL% = &h02
+
 Dim con.buf$     ' console write buffer
 Dim con.space    ' was the last character written to con.buf$ a space?
 Dim con.lines    ' number of lines that have been output since the last prompt
@@ -17,6 +20,7 @@ Dim con.fd_in    ' file descriptor to read input from
 Dim con.fd_out   ' file descriptor to echo input to
 Dim con.more = 1 ' show the [MORE] prompt if more than a page of output
                  ' (approx con.HEIGHT lines) is written without a prompt
+Dim con.history%(255) ' history buffer for user input.
 
 '!comment_if INLINE_CONSTANTS
 Const con.CR$ = Chr$(13)
@@ -32,21 +36,26 @@ Function con.in$(p$, echo)
   con.print(p$)
   con.flush()
 
-  Line Input #con.fd_in, s$
+  If con.fd_in Then
+    Line Input #con.fd_in, s$
+    If s$ <> "" Then con.history_put(con.history%(), s$)
+  Else
+    s$ = con.readln$("", con.history%())
+  EndIf
 
   ' If we read from a file then echo what we read.
-  If con.fd_in > 0 Then con.println(s$)
+  If con.fd_in Then con.println(s$)
 
   ' If we read from the console then clear con.lines.
-  If con.fd_in = 0 Then con.lines = 0 : con.count = 1
+  If Not con.fd_in Then con.lines = 0 : con.count = 1
 
   con.x = 1
-  If con.fd_in > 0 Then
+  If con.fd_in Then
     If Eof(#con.fd_in) Then Close #con.fd_in : con.fd_in = 0
   EndIf
 
   If echo Then
-    If con.fd_out > 0 Then
+    If con.fd_out Then
       If s$ <> "" Then Print #con.fd_out, s$
     EndIf
   EndIf
@@ -192,7 +201,7 @@ Sub con.open_in(fd, f$)
 End Sub
 
 Sub con.close_in()
-  If con.fd_in <> 0 Then Close #con.fd_in
+  If con.fd_in Then Close #con.fd_in
   con.fd_in = 0
 End Sub
 
@@ -203,7 +212,7 @@ Sub con.open_out(fd, f$)
 End Sub
 
 Sub con.close_out()
-  If con.fd_out <> 0 Then Close #con.fd_out
+  If con.fd_out Then Close #con.fd_out
   con.fd_out = 0
 End Sub
 
@@ -213,23 +222,242 @@ Sub con.close_all()
 End Sub
 
 Sub con.foreground(c$)
-  Local s$ = LCase$(Mm.Info(Option Console))
-
-  If s$ <> "serial" Then
-    Local vga_colour% = RGB(White)
-    Select Case c$
-      Case "green" : vga_colour% = RGB(Green)
-      ' TODO: more colours
+  Local type% = con.get_type%()
+  If type% And con.SCREEN% Then
+    Local scol%
+    Select Case LCase$(c$)
+      Case "green" : scol% = RGB(Green)
+      Case Else    : scol% = RGB(White)
     End Select
-    Colour(vga_colour%)
+    Colour scol%
   EndIf
+  If type% And con.SERIAL% Then
+    con.set_type(con.SERIAL%)
+    Print vt100.colour$(c$);
+    con.set_type(type%)
+  EndIf
+End Sub
 
-  Select Case s$
-    Case "both"
-      Option Console Serial
-      Print vt100.colour$(c$);
-      Option Console Both
-    Case "serial"
-      Print vt100.colour$(c$);
+Sub con.bell()
+  Local type% = con.get_type%()
+  If type% And con.SCREEN% Then Play Tone 329.63, 329.63, 100 ' Note E4
+  If type% And con.SERIAL% Then
+    con.set_type(con.SERIAL%)
+    Print Chr$(7);
+    con.set_type(type%)
+  EndIf
+End Sub
+
+' Gets the console type.
+' Note that in many cases you don't want to test the return value using equals
+' '=' but instead using AND.
+' e.g. to test whether the type supports:
+'  - serial console do: IF con.get_type%() AND con.SERIAL% THEN
+'  - screen console do: IF con.get_type%() AND con.SCREEN% THEN
+Function con.get_type%()
+  Select Case LCase$(Mm.Info(Option Console))
+    Case "both"   : con.get_type% = con.SCREEN% Or con.SERIAL%
+    Case "screen" : con.get_type% = con.SCREEN%
+    Case "serial" : con.get_type% = con.SERIAL%
+    Case Else     : Error "Unknown console type"
   End Select
+End Function
+
+Sub con.set_type(type%)
+  Select Case type%
+    Case con.SCREEN% : Option Console Screen
+    Case con.SERIAL% : Option Console Serial
+    Case &h03        : Option Console Both
+    Case Else        : Error "Unknown console type"
+  End Select
+End Sub
+
+' Gets a string element from the command history.
+'
+' @param  h%()  buffer containing the command history.
+' @param  idx%  index of the element to retrieve, the first element is always
+'               idx% = 0 irrespective of OPTION BASE.
+' @return       string element, or empty string if idx% >= number of elements.
+Function con.history_get$(h%(), idx%)
+  If idx% < 0 Then Error "index out of bounds: " + Str$(idx%)
+
+  Local h_addr% = Peek(VarAddr h%())
+  Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
+  Local i%, p% = h_addr%
+  For i% = 0 To idx%
+    If Peek(Byte p%) = 0 Then Exit Function ' Return empty string.
+    If i% < idx% Then Inc p%, Peek(Byte p%) + 1
+  Next
+  If p% + Peek(Byte p%) < h_addr% + h_size% Then
+    Memory Copy p%, Peek(VarAddr con.history_get$), Peek(Byte p%) + 1
+  EndIf
+End Function
+
+Sub con.history_fill(h%(), items$())
+  Local h_addr% = Peek(VarAddr h%())
+  Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
+  Memory Set h_addr%, &h00, h_size%
+  Local i%
+  For i% = Bound(items$(), 1) To Bound(items$(), 0) Step -1
+    con.history_put(h%(), items$(i%))
+  Next
+End Sub
+
+Function con.history_find%(h%(), needle$)
+  If needle$ = "" Then Error "invalid argument: needle$"
+
+  ' TODO: could be faster by not calling con.history_get()
+  Local i% = -1, s$
+  Do
+    Inc i%
+    s$ = con.history_get$(h%(), i%)
+  Loop Until s$ = "" Or s$ = needle$
+
+  con.history_find% = Choice(s$ = "", -1, i%)
+End Function
+
+Sub con.history_put(h%(), s$)
+  If s$ = "" Then Error "invalid empty string"
+
+  Local h_addr% = Peek(VarAddr h%())
+  Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
+  If Peek(Byte h_addr%) > 0 Then
+    ' Can't use MEMORY COPY because the CMM2 does not handle case where src and dst overlap.
+    ' Memory Copy h_addr%, h_addr% + 1 + Len(s$), h_size% - 1 - Len(s$)
+    Local dst% = h_addr% + h_size% - 1
+    Local src% = dst% - Len(s$) - 1
+    Do While src% >= h_addr%
+      Poke Byte dst%, Peek(Byte src%)
+      Inc dst%, -1
+      Inc src%, -1
+    Loop
+  EndIf
+  Memory Copy Peek(VarAddr s$), h_addr%, Len(s$) + 1
+End Sub
+
+Function con.readln$(initial$, history%())
+  Local ch$, hidx%, p%, old$, overwrite%, s$
+
+  con.readln$ = initial$
+  p% = Len(initial$) + 1
+  Print initial$;
+  hidx% = Choice(initial$ = "", -1, con.history_find%(history%(), initial$))
+
+  Local show% = 1
+  Local t% = Timer + 500
+
+  Do While Inkey$ <>  "" : Loop ' Discard anything else in the keyboard buffer.
+
+  Do ' While Not sys.break_flag%
+    If Timer > t% Then show% = Not show% : t% = Timer + 500
+    con.show_cursor(show%)
+
+    ch$ = Inkey$
+    If ch$ = "" Then Continue Do
+    con.show_cursor(0)
+
+    Select Case Asc(ch$)
+      Case 8 ' Backspace
+        If p% = 1 Then
+          con.bell()
+        Else
+          ' Delete the character immediately to the left.
+          s$ = Mid$(con.readln$, p%)
+          con.readln$ = Left$(con.readln$, p% - 2) + s$
+          Print Chr$(&h08) s$ " " String$(Len(s$) + 1, &h08);
+          Inc p%, -1
+        EndIf
+
+      Case 10, 13 ' Enter
+        Print
+        If con.readln$ <> "" Then con.history_put(history%(), con.readln$)
+        Exit Do
+
+      Case 127 ' Delete
+        If p% = Len(con.readln$) + 1 Then
+          con.bell()
+        Else
+          ' Delete the current character.
+          s$ = Mid$(con.readln$, p% + 1)
+          con.readln$ = Left$(con.readln$, p% - 1) + s$
+          Print s$ " " String$(Len(s$) + 1, &h08);
+        EndIf
+
+      Case 128, 129 ' Up, Down
+        If hidx% = -1 Then old$ = con.readln$
+        Inc hidx%, Choice(Asc(ch$) = 128, 1, -1)
+        If hidx% <= -1 Then
+          hidx% = -1
+          s$ = old$
+        Else
+          s$ = con.history_get$(history%(), hidx%)
+          If s$ = "" Then s$ = con.readln$ : Inc hidx%, -1
+        EndIf
+
+        Print String$(p% - 1, &h08) String$(p% - 1, " ") String$(p% - 1, &h08) s$;
+        con.readln$ = s$
+        p% = Len(s$) + 1
+
+      Case 130 ' Left
+        If p% > 1 Then
+          Inc p%, -1
+          Print Chr$(&h08);
+        EndIf
+
+      Case 131 ' Right
+        If p% <= Len(con.readln$) Then
+          Print Mid$(con.readln$, p%, 1);
+          Inc p%
+        EndIf
+
+      Case 132 ' Insert
+        overwrite% = Not overwrite%
+
+      Case 134 ' Home
+        Print String$(p% - 1, &h08);
+        p% = 1
+
+      Case 135 ' End
+        Do While p% <= Len(con.readln$)
+          Print Mid$(con.readln$, p%, 1);
+          Inc p%
+        Loop
+
+      Case < 32, > 126
+        ' Print "<" Str$(Asc(ch$)) ">";
+        ' con.bell()
+
+      Case Else
+        If Len(con.readln$) = 255 Then
+          con.bell()
+        ElseIf p% > Len(con.readln$) Then
+          Cat con.readln$, ch$
+          Print ch$;
+          Inc p%
+        ElseIf overwrite% Then
+          con.readln$ = Left$(con.readln$, p% - 1) + ch$ + Mid$(con.readln$, p% + 1)
+          Print ch$;
+          Inc p%
+        Else
+          s$ = Mid$(con.readln$, p%)
+          con.readln$ = Left$(con.readln$, p% - 1) + ch$ + s$
+          Print ch$ s$ String$(Len(s$), &h08);
+          Inc p%
+        EndIf
+    End Select
+  Loop
+
+  ' If sys.break_flag% Then con.readln$ = ""
+End Function
+
+' Hide/show cursor on the VGA/LCD screen.
+Sub con.show_cursor(show%)
+  Local type% = con.get_type%()
+  If type% And con.SCREEN% Then
+    con.set_type(con.SCREEN%)
+    Local w% = Mm.Info(Font Width), x% = Mm.HPos, y% = Mm.VPos
+    Text x%, y% + 1, "_", , , , Choice(show%, RGB(White), RGB(Black)), -1
+    Text x% - w% + 1, y%, ""
+    con.set_type(type%)
+  EndIf
 End Sub
