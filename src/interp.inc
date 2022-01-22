@@ -79,6 +79,8 @@ Sub game_loop()
     interp.room_state%(i%) = 0
   Next
 
+  debug.print_flags% = debug.NEW_LINES% Or debug.TWO_LINES% Or debug.NO_STARS%
+
   Do
     do_automatic_actions()
     describe_room()
@@ -848,20 +850,20 @@ Sub parse(s$, verb, noun, nstr$)
 End Sub
 
 Function lookup_meta_command(vstr$, nstr$)
-  Const TYPE_BOOLEAN% = 1, TYPE_INDEX% = 2, TYPE_OTHER% = 3
+  Const TYPE_BOOLEAN% = 1, TYPE_OTHER% = 2
   Local verb%, type%
 
   Select Case Left$(vstr$, 4)
-    Case "*act" : verb% = VERB_DUMP_ACTIONS%  : type% = TYPE_INDEX%
+    Case "*act" : verb% = VERB_DUMP_ACTIONS%  : type% = TYPE_OTHER%
     Case "*deb" : verb% = VERB_DEBUG%         : type% = TYPE_BOOLEAN%
     Case "*loo" : verb% = VERB_LOOK%
-    Case "*mes" : verb% = VERB_DUMP_MESSAGES% : type% = TYPE_INDEX%
+    Case "*mes" : verb% = VERB_DUMP_MESSAGES% : type% = TYPE_OTHER%
     Case "*mor" : verb% = VERB_MORE%          : type% = TYPE_BOOLEAN%
-    Case "*msg" : verb% = VERB_DUMP_MESSAGES% : type% = TYPE_INDEX%
-    Case "*obj" : verb% = VERB_DUMP_OBJECTS%  : type% = TYPE_INDEX%
+    Case "*msg" : verb% = VERB_DUMP_MESSAGES% : type% = TYPE_OTHER%
+    Case "*obj" : verb% = VERB_DUMP_OBJECTS%  : type% = TYPE_OTHER%
     Case "*rec" : verb% = VERB_RECORD%        : type% = TYPE_BOOLEAN%
     Case "*rep" : verb% = VERB_REPLAY%        : type% = TYPE_BOOLEAN%
-    Case "*roo" : verb% = VERB_DUMP_ROOMS%    : type% = TYPE_INDEX%
+    Case "*roo" : verb% = VERB_DUMP_ROOMS%    : type% = TYPE_OTHER%
     Case "*see" : verb% = VERB_SEED%          : type% = TYPE_OTHER%
     Case "*sta" : verb% = VERB_DUMP_STATE%
     Case "*voc" : verb% = VERB_DUMP_VOCAB%
@@ -876,8 +878,6 @@ Function lookup_meta_command(vstr$, nstr$)
     Case TYPE_BOOLEAN%
       If nstr$ = "" Then nstr$ = "on"
       If nstr$ <> "on" And nstr$ <> "off" Then Exit Function ' Invalid noun.
-    Case TYPE_INDEX%
-      If nstr$ = "" Then nstr$ = "-1"
   End Select
 
   lookup_meta_command = verb%

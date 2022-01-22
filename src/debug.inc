@@ -9,24 +9,39 @@ sys.requires("advent", "bits", "console", "state", "string")
 sys.provides("debug")
 If sys.err$ <> "" Then Error sys.err$
 
-Dim debug.enabled%
+Const debug.NEW_LINES% = &h01  ' Put a new line before and after each table dump.
+Const debug.TWO_LINES% = &h02  ' Dump each action on two lines rather than one.
+Const debug.NO_STARS%  = &h04  ' Use + rather than * for synonyms in the vocab table.
+
+Dim debug.enabled% = 0
+Dim debug.fd% = 0
+Dim debug.print_flags% = 0
 
 Sub debug.print(s$)
-  con.print(s$)
+  If debug.fd% Then
+    Print #debug.fd%, s$;
+  Else
+    con.print(s$)
+  EndIf
 End Sub
 
 Sub debug.println(s$)
-  con.println(s$)
+  If debug.fd% Then
+    Print #debug.fd%, s$
+  Else
+    con.println(s$)
+  EndIf
 End Sub
 
-Sub debug.dump_actions(nstr$, one_line%)
+Sub debug.dump_actions(nstr$)
   Local i%
-  If nstr$ = "-1" Then
+  If nstr$ = "" Then
+    If debug.print_flags% And debug.NEW_LINES% Then debug.println()
     debug.println("ACTIONS")
     debug.println("-------")
     debug.println()
-    For i% = 0 To cl : debug.dump_action(i%, one_line%) : Next
-    debug.println()
+    For i% = 0 To cl : debug.dump_action(i%) : Next
+    If debug.print_flags% And debug.NEW_LINES% Then debug.println()
   Else
     i% = Int(Val(nstr$))
     If i% < 0 Or i% > cl Then
@@ -37,7 +52,7 @@ Sub debug.dump_actions(nstr$, one_line%)
   End If
 End Sub
 
-Sub debug.dump_action(idx%, one_line%)
+Sub debug.dump_action(idx%)
   Local cmd%(3), cond%(4, 1), j%, noun%, n$, verb%, v$
 
   verb% = Int(ca(idx%, 0) / 150)
@@ -69,7 +84,10 @@ Sub debug.dump_action(idx%, one_line%)
   debug.print(str.rpad$(debug.get_cond$(cond%(2, 0), cond%(2, 1)), 9))
   debug.print(str.rpad$(debug.get_cond$(cond%(3, 0), cond%(3, 1)), 9))
   debug.print(str.rpad$(debug.get_cond$(cond%(4, 0), cond%(4, 1)), 9))
-  If Not one_line% Then debug.println() : debug.print("                  ")
+  If debug.print_flags% And debug.TWO_LINES% Then
+    debug.println()
+    debug.print("                  ")
+  EndIf
   debug.print(str.rpad$(debug.get_cmd$(cmd%(0)), 9))
   debug.print(str.rpad$(debug.get_cmd$(cmd%(1)), 9))
   debug.print(str.rpad$(debug.get_cmd$(cmd%(2)), 9))
@@ -173,20 +191,20 @@ Function debug.get_cmd$(c%)
 End Function
 
 Sub debug.dump_messages(nstr$)
-  If nstr$ = "-1" Then
-    debug.println()
+  Local i%
+  If nstr$ = "" Then
+    If debug.print_flags% And debug.NEW_LINES% Then debug.println()
     debug.println("MESSAGES")
     debug.println("--------")
     debug.println()
-    Local i%
     For i% = 0 To ml : debug.dump_message(i%) : Next
-    debug.println()
+    If debug.print_flags% And debug.NEW_LINES% Then debug.println()
   Else
-    Local idx% = Int(Val(nstr$))
-    If idx% < 0 Or idx% > ml Then
+    i% = Int(Val(nstr$))
+    If i% < 0 Or i% > ml Then
       debug.println("Invalid message index.")
     Else
-      debug.dump_message(idx%)
+      debug.dump_message(i%)
     EndIf
   EndIf
 End Sub
@@ -198,21 +216,21 @@ Sub debug.dump_message(idx%)
 End Sub
 
 Sub debug.dump_objects(nstr$)
-  If nstr$ = "-1" Then
-    debug.println()
+  Local i%
+  If nstr$ = "" Then
+    If debug.print_flags% And debug.NEW_LINES% Then debug.println()
     debug.println("OBJECTS")
     debug.println("-------")
     debug.println("Id    Room")
     debug.println()
-    Local i%
     For i% = 0 To il : debug.dump_object(i%) : Next
-    debug.println()
+    If debug.print_flags% And debug.NEW_LINES% Then debug.println()
   Else
-    Local idx% = Int(Val(nstr$))
-    If idx% < 0 Or idx% > il Then
+    i% = Int(Val(nstr$))
+    If i% < 0 Or i% > il Then
       debug.println("Invalid object index.")
     Else
-      debug.dump_object(idx%)
+      debug.dump_object(i%)
     EndIf
   EndIf
 End Sub
@@ -236,17 +254,17 @@ Sub debug.dump_object(idx%)
 End Sub
 
 Sub debug.dump_rooms(nstr$)
-  If nstr$ = "-1" Then
-    debug.println()
+  Local i%
+  If nstr$ = "" Then
+    If debug.print_flags% And debug.NEW_LINES% Then debug.println()
     debug.println("ROOMS")
     debug.println("-----")
     debug.println()
-    Local i%
     For i% = 0 To rl : debug.dump_room(i%) : Next
-    debug.println()
+    If debug.print_flags% And debug.NEW_LINES% Then debug.println()
   Else
-    Local idx% = Int(Val(nstr$))
-    If idx% < 0 Or idx% > rl Then
+    i% = Int(Val(nstr$))
+    If i% < 0 Or i% > rl Then
       debug.println("Invalid room index.")
     Else
       debug.dump_room(idx%)
@@ -315,7 +333,7 @@ Sub debug.dump_state()
 End Sub
 
 Sub debug.dump_vocabulary()
-  debug.println()
+  If debug.print_flags% And debug.NEW_LINES% Then debug.println()
   debug.println("VOCABULARY")
   debug.println("----------")
   debug.println("Id    Verb      Noun")
@@ -325,11 +343,12 @@ Sub debug.dump_vocabulary()
   For i% = 0 To nl
     s$ = str.rpad$(Str$(i%), 6)
     For j% = 0 To 1
-      w$ = Choice(nv_str$(i%, j%) = "", "<empty>", str.replace$(nv_str$(i%, j%), "*", "+"))
+      w$ = Choice(nv_str$(i%, j%) = "", "<empty>", nv_str$(i%, j%))
+      If debug.print_flags% And debug.NO_STARS% Then w$ = str.replace$(w$, "*", "+")
       Cat s$, Choice(j% = 0, str.rpad$(w$, 10), w$)
     Next
     debug.println(s$)
   Next
 
-  debug.println()
+  If debug.print_flags% And debug.NEW_LINES% Then debug.println()
 End Sub
