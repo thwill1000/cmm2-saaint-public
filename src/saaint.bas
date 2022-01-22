@@ -27,6 +27,7 @@ Option Explicit On
 #Include "menus.inc"
 #Include "script.inc"
 #Include "state.inc"
+#Include "debug.inc"
 #Include "interp.inc"
 
 Const SAAINT_VERSION$ = "2.0.5"
