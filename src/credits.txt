@@ -1,6 +1,6 @@
 The Scott Adams Adventure Interpreter (SAAINT) for Colour Maximite 2
 was written by Thomas Hugo Williams with the assistance of Bill
-McKinley in 2020-2021.
+McKinley in 2020-2022.
 
 Although it consists almost entirely of new code it is derived
 *with permission* from:
