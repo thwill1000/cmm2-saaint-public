@@ -1,4 +1,4 @@
-' Copyright (c) 2021 Thomas Hugo Williams
+' Copyright (c) 2021-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For Colour Maximite 2, MMBasic 5.07
 
@@ -15,8 +15,7 @@ Option Default Integer
 #Include "../splib/math.inc"
 #Include "../splib/set.inc"
 #Include "../splib/vt100.inc"
-#Include "/sptools/src/sptest/unittest.inc"
-'#Include "../advent.inc"
+#Include "../../../sptools/src/sptest/unittest.inc"
 
 ' Stub dependencies on "advent.inc" ----------------------------------------------------------------
 sys.provides("advent")
@@ -24,11 +23,12 @@ Dim cl = 100, il = 100, lt, rl = 10, tr, tt
 Dim ca(cl, 7)
 Dim ia_str$(il) Length 64
 Dim rm(rl, 5)
+Dim rs$(rl)
 
 ' Stub dependencies on "console.inc" ---------------------------------------------------------------
 sys.provides("console")
 
-Dim con.buf$, con.fd_in, con.fd_out, con.in_buf$
+Dim con.buf$, con.count, con.fd_in, con.fd_out, con.in_buf$, con.width = 64
 
 Sub con.foreground(s$)
 End Sub
@@ -59,6 +59,10 @@ Sub script.replay_off()
   If script.buf$ <> "" Then Cat script.buf$, ", "
   Cat script.buf$, "replay_off"
 End Sub
+
+' Stub dependencies on "debug.inc" -----------------------------------------------------------------
+sys.provides("debug")
+Dim debug.enabled% = 0
 
 ' End of stubs -------------------------------------------------------------------------------------
 
@@ -254,7 +258,14 @@ Sub test_do_command_61() ' DEAD
   assert_false(bits.get%(sf, state.DARK_BIT%))
   assert_hex_equals(&b11110000111100000111000011110000, sf)
   assert_int_equals(10, r)
-  assert_string_equals("I'm dead..." + sys.CRLF$, con.buf$)
+  Local expected$ = "I'm dead..." + sys.CRLF$
+  Cat expected$, sys.CRLF$
+  Cat expected$, "I'm in a " + sys.CRLF$
+  Cat expected$, "Obvious exits: None." + sys.CRLF$
+  Cat expected$, "Visible items: None." + sys.CRLF$
+  Cat expected$, "<-------------------------------------------------------------->" + sys.CRLF$
+  Cat expected$, sys.CRLF$
+  assert_string_equals(expected$, con.buf$)
 End Sub
 
 Sub test_do_command_63() ' FINI
@@ -407,7 +418,9 @@ Sub test_go_direction_given_dark()
   r = 1
   go_direction(1)
   assert_int_equals(2, r)
-  assert_string_equals("Dangerous to move in the dark!" + sys.CRLF$, con.buf$)
+  Local expected$ = "Dangerous to move in the dark!" + sys.CRLF$
+  Cat expected$, "I can't see, it's too dark!" + sys.CRLF$
+  assert_string_equals(expected$, con.buf$)
 
   ' Given exit does not exist.
   con.buf$ = ""
@@ -416,8 +429,14 @@ Sub test_go_direction_given_dark()
   assert_int_equals(10, r)
   assert_false(bits.get%(sf, state.DARK_BIT%))
   assert_hex_equals(&b11110000111100000111000011110000, sf)
-  Local expected$ = "Dangerous to move in the dark!" + sys.CRLF$
+  expected$ = "Dangerous to move in the dark!" + sys.CRLF$
   Cat expected$, "I fell down and broke my neck." + sys.CRLF$
+  Cat expected$, sys.CRLF$
+  Cat expected$, "I'm in a " + sys.CRLF$
+  Cat expected$, "Obvious exits: None." + sys.CRLF$
+  Cat expected$, "Visible items: None." + sys.CRLF$
+  Cat expected$, "<-------------------------------------------------------------->" + sys.CRLF$
+  Cat expected$, sys.CRLF$
   assert_string_equals(expected$, con.buf$)
 End Sub
 
