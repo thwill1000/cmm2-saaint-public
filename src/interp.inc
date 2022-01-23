@@ -100,7 +100,7 @@ Sub describe_room(always%)
 
   If is_dark%() Then
     If debug.enabled% Then con.print("[" + Str$(r) + "] ")
-    con.println("I can't see, its too dark!")
+    con.println("I can't see, it's too dark!")
     Exit Sub
   EndIf
 
