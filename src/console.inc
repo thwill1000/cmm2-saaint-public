@@ -40,7 +40,7 @@ Function con.in$(p$, echo)
     Line Input #con.fd_in, s$
     If s$ <> "" Then con.history_put(con.history%(), s$)
   Else
-    s$ = con.readln$("", con.history%())
+    s$ = con.readln$("", con.WIDTH - con.x - Len(p$), con.history%())
   EndIf
 
   ' If we read from a file then echo what we read.
@@ -335,8 +335,9 @@ Sub con.history_put(h%(), s$)
   Memory Copy Peek(VarAddr s$), h_addr%, Len(s$) + 1
 End Sub
 
-Function con.readln$(initial$, history%())
+Function con.readln$(initial$, max_len%, history%())
   Local ch$, hidx%, p%, old$, overwrite%, s$
+  Local max_len_% = Choice(max_len% < 1 Or max_len% > 255, 255, max_len%)
 
   con.readln$ = initial$
   p% = Len(initial$) + 1
@@ -428,21 +429,30 @@ Function con.readln$(initial$, history%())
         ' con.bell()
 
       Case Else
-        If Len(con.readln$) = 255 Then
-          con.bell()
-        ElseIf p% > Len(con.readln$) Then
-          Cat con.readln$, ch$
-          Print ch$;
-          Inc p%
+        If p% > Len(con.readln$) Then
+          ' Append to end of line.
+          If Len(con.readln$) = max_len_% Then
+            con.bell()
+          Else
+            Cat con.readln$, ch$
+            Print ch$;
+            Inc p%
+          EndIf
         ElseIf overwrite% Then
+          ' Overwrite.
           con.readln$ = Left$(con.readln$, p% - 1) + ch$ + Mid$(con.readln$, p% + 1)
           Print ch$;
           Inc p%
         Else
-          s$ = Mid$(con.readln$, p%)
-          con.readln$ = Left$(con.readln$, p% - 1) + ch$ + s$
-          Print ch$ s$ String$(Len(s$), &h08);
-          Inc p%
+          ' Insert.
+          If Len(con.readln$) = max_len_% Then
+            con.bell()
+          Else
+            s$ = Mid$(con.readln$, p%)
+            con.readln$ = Left$(con.readln$, p% - 1) + ch$ + s$
+            Print ch$ s$ String$(Len(s$), &h08);
+            Inc p%
+          EndIf
         EndIf
     End Select
   Loop
