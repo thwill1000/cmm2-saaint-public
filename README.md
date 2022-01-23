@@ -113,7 +113,7 @@ The interpreter includes a number of meta-commands all prefixed with a ```*``` t
 the interpreter itself rather than being specific to an adventure:
 
  - ```*actions <index>```
-     - prints action ```<index>```.
+     - prints details of action ```<index>```.
      - if ```<index>``` is omitted then prints all the actions in the adventure.
      - WARNING! may contain spoilers.
  - ```*debug```
@@ -135,7 +135,7 @@ the interpreter itself rather than being specific to an adventure:
  - ```*more off```
      - disables output paging for this and future sessions.
  - ```*objects <index>```
-     - prints current location and name of object ```<index>```.
+     - prints name and current location of object ```<index>```.
      - if ```<index>``` is omitted then prints all the objects in the adventure.
      - WARNING! may contain spoilers.
  - ```*record```
