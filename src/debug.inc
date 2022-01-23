@@ -267,7 +267,7 @@ Sub debug.dump_rooms(nstr$)
     If i% < 0 Or i% > rl Then
       debug.println("Invalid room index.")
     Else
-      debug.dump_room(idx%)
+      debug.dump_room(i%)
     EndIf
   EndIf
 End Sub
