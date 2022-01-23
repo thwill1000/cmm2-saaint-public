@@ -2,12 +2,15 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For Colour Maximite 2, MMBasic 5.07
 
-Const sys.VERSION$ = "r1b3"
+Const sys.VERSION$ = "2.0.0-a1"
 Const sys.NO_DATA$ = Chr$(&h7F)
-Const sys.MAX_INCLUDES% = 20
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
 
+Dim sys.break_flag%
 Dim sys.err$
+
+'!remove_if NO_INCLUDE_GUARDS
+Const sys.MAX_INCLUDES% = 20
 Dim sys.includes$(sys.MAX_INCLUDES%) Length 20
 
 Sub sys.provides(f$)
@@ -53,6 +56,7 @@ Sub sys.requires(f1$, f2$, f3$, f4$, f5$, f6$, f7$, f8$, f9$, f10$)
     EndIf
   Next
 End Sub
+'!endif
 
 ' Formats a firmware version as a 5-digit number, e.g.
 '   5.05.06 => 50506
@@ -68,4 +72,45 @@ Function sys.firmware_version%(version$)
   Next
   Do While Len(s$) < 5 : s$ = s$ + "0" : Loop
   sys.firmware_version% = Val(s$)
+End Function
+
+' Overrides Ctrl-C behaviour such that:
+'   - Ctrl-C will call sys.break_handler()
+'   - Ctrl-D will perform an actual MMBasic break
+Sub sys.override_break()
+  sys.break_flag% = 0
+  Option Break 4
+  On Key 3, sys.break_handler()
+End Sub
+
+' Called as an ON KEY interrupt when Ctrl-C is overridden by sys.override_break().
+' Increments the sys.break_flag%, if the flag is then > 1 then END the program.
+Sub sys.break_handler()
+  Inc sys.break_flag%
+  If sys.break_flag% > 1 Then
+    sys.restore_break()
+    End
+  EndIf
+End Sub
+
+' Restores default Ctrl-C behaviour.
+Sub sys.restore_break()
+  sys.break_flag% = 0
+  On Key 3, 0
+  Option Break 3
+End Sub
+
+Function sys.string_prop$(key$)
+  Select Case LCase$(key$)
+    Case "home"
+      sys.string_prop$ = Choice(Mm.Device$ = "MMB4L", Mm.Info$(EnvVar "HOME"), "A:")
+    Case "tmpdir"
+      If Mm.Device$ = "MMB4L" Then
+        sys.string_prop$ = Choice(Mm.Info$(EnvVar "TMPDIR") = "", "/tmp", Mm.Info$(EnvVar "TMPDIR"))
+      Else
+        sys.string_prop$ = "A:/tmp"
+      EndIf
+    Case Else
+      Error "Unknown property: " + key$
+  End Select
 End Function

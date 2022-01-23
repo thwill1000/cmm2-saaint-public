@@ -348,7 +348,7 @@ Function con.readln$(initial$, history%())
 
   Do While Inkey$ <>  "" : Loop ' Discard anything else in the keyboard buffer.
 
-  Do ' While Not sys.break_flag%
+  Do While Not sys.break_flag%
     If Timer > t% Then show% = Not show% : t% = Timer + 500
     con.show_cursor(show%)
 
@@ -447,7 +447,7 @@ Function con.readln$(initial$, history%())
     End Select
   Loop
 
-  ' If sys.break_flag% Then con.readln$ = ""
+  If sys.break_flag% Then con.readln$ = ""
 End Function
 
 ' Hide/show cursor on the VGA/LCD screen.
