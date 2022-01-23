@@ -462,12 +462,8 @@ End Function
 
 ' Hide/show cursor on the VGA/LCD screen.
 Sub con.show_cursor(show%)
-  Local type% = con.get_type%()
-  If type% And con.SCREEN% Then
-    con.set_type(con.SCREEN%)
-    Local w% = Mm.Info(Font Width), x% = Mm.HPos, y% = Mm.VPos
-    Text x%, y% + 1, "_", , , , Choice(show%, RGB(White), RGB(Black)), -1
-    Text x% - w% + 1, y%, ""
-    con.set_type(type%)
+  If con.get_type%() And con.SCREEN% Then
+    Local x% = Mm.HPos, y% = Mm.VPos + Mm.Info(FontHeight) - 1
+    Line x%, y%, x% + Mm.Info(FontWidth), y%, 1, Choice(show%, RGB(White), RGB(Black))
   EndIf
 End Sub
