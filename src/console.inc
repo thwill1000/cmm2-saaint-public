@@ -113,7 +113,7 @@ Sub con.flush()
       If con.more Then
         Print "[MORE] ";
         Do While Inkey$ <> "" : Loop
-        Do While Inkey$ = "" : Loop
+        Do While Inkey$ = "" : Pause 1 : Loop
         Print
       EndIf
       con.lines = 0
@@ -354,7 +354,7 @@ Function con.readln$(initial$, max_len%, history%())
     con.show_cursor(show%)
 
     ch$ = Inkey$
-    If ch$ = "" Then Continue Do
+    If ch$ = "" Then Pause 1 : Continue Do
     con.show_cursor(0)
 
     Select Case Asc(ch$)

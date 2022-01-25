@@ -44,7 +44,7 @@ Function menus.main$(advent$)
       Case "i" : menus.main$ = "#instructions"
       Case "q", "escape" : menus.main$ = "#quit"
       Case "s" : menus.main$ = "#select"
-      Case Else : k$ = ""
+      Case Else : k$ = "" : Pause 1
     End Select
   Loop Until k$ <> ""
 
@@ -85,7 +85,7 @@ Function menus.adventure$()
       Case "q" : menus.adventure$ = "#quit"
       Case "r" : menus.adventure$ = "#restore"
       Case "s" : menus.adventure$ = "#start"
-      Case Else : k$ = ""
+      Case Else : k$ = "" : Pause 1
     End Select
   Loop Until k$ <> ""
 
@@ -111,7 +111,7 @@ Sub menus.credits(top%)
   con.println("Press any key to continue", 1)
   con.foreground("green")
   Do While Inkey$ <> "" : Loop
-  Do While Inkey$ = "" : Loop
+  Do While Inkey$ = "" : Pause 1 : Loop
 End Sub
 
 Sub menus.instructions(top%)
@@ -133,7 +133,7 @@ Sub menus.instructions(top%)
   con.println("Press any key to continue", 1)
   con.foreground("green")
   Do While Inkey$ <> "" : Loop
-  Do While Inkey$ = "" : Loop
+  Do While Inkey$ = "" : Pause 1 : Loop
 End Sub
 
 Function menus.choose_advent$()
@@ -207,6 +207,7 @@ Function menus.choose_advent$()
           menus.paint_description(right%, map.get$(m$(), m$(sel%)))
           requires_update% = 0
         EndIf
+        Pause 1
     End Select
 
     ' Clear the keyboard buffer without blocking when it is empty.
