@@ -22,6 +22,7 @@ Version 2.0.5 - ??-????-????:
   - Added 'counter', 'alternate counters' and 'alternate room registers' to
     output of *STATE meta-command.
   - Added destination room number to each exit in output from "dump.bas".
+  - Added encrypted walkthrough for SACA #8 "Pyramid of Doom".
   - Changed adventure start behaviour so that initial actions are processed and
     messages printed before the first room is described.
   - Changed format of object lists from comma separated to one object per line,
