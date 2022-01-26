@@ -72,8 +72,8 @@ Dim interp.room_state%(9) ' Encodes the state of the last described room:
 Dim interp.obj_list_fmt% = OBJ_LIST_FMT_NEWLINE%
 
 Dim message_count%  ' Number of messages since the last room description or prompt.
-Dim describe_flag%  ' If set then when message() is called describe the room
-                    ' before displaying the message.
+Dim describe_flag%  ' If set then when message_string() is called
+                    ' first describe the room before displaying the message.
 
 Sub game_loop()
   Local i%, noun, nstr$, verb
@@ -113,7 +113,7 @@ Sub describe_room(always%)
     ' Desperate hack! to avoid duplicate messages in SACA #8 "Pyramid of Doom"
     If con.buf$ <> "dark!" Then
       If debug.enabled% Then con.print("[" + Str$(r) + "] ")
-      message(-1, "I can't see, it's too dark!")
+      message_string("I can't see, it's too dark!")
     EndIf
     Exit Sub
   EndIf
@@ -318,9 +318,9 @@ Sub do_player_actions(verb, noun, nstr$)
   EndIf
 
   Select Case result
-    Case ACTION_UNKNOWN : message(-1, "I don't understand your command.")
-    Case ACTION_NOT_YET : message(-1, "I can't do that yet.")
-    Case Else           : If message_count% = 0 Then message(-1, MSG_OK$)
+    Case ACTION_UNKNOWN : message_string("I don't understand your command.")
+    Case ACTION_NOT_YET : message_string("I can't do that yet.")
+    Case Else           : If message_count% = 0 Then message_string(MSG_OK$)
   End Select
 
 End Sub
@@ -358,21 +358,21 @@ End Sub
 
 Sub go_direction(noun)
   Local dark% = is_dark%()
-  If dark% Then message(-1, "Dangerous to move in the dark!")
-  If noun < 1 Then message(-1, "Give me a direction too.") : Exit Sub
+  If dark% Then message_string("Dangerous to move in the dark!")
+  If noun < 1 Then message_string("Give me a direction too.") : Exit Sub
   Local k = rm(r, noun - 1)
   If k < 1 Then
     If dark% Then
-      message(-1, "I fell down and broke my neck.")
+      message_string("I fell down and broke my neck.")
       k = rl
       bits.clear(sf, state.DARK_BIT%)
     Else
-      message(-1, "I can't go in that direction.")
+      message_string("I can't go in that direction.")
       Exit Sub
     EndIf
   EndIf
   r = k
-  message(-1, MSG_OK$)
+  message_string(MSG_OK$)
   describe_flag% = 1
 End Sub
 
@@ -462,7 +462,7 @@ Sub do_command(a, cmd, nstr$)
 
     Case 1 To 51
       ' Display corresponding message.
-      message(cmd)
+      message_id(cmd)
 
     Case 52
       ' GETx
@@ -470,7 +470,7 @@ Sub do_command(a, cmd, nstr$)
       ' The object may be in this room, or in any other room.
       p = get_parameter(a)
       If count_carried%() >= mx Then
-        message(-1, "I've too much to carry. Try " + Chr$(34) + "Inventory" + Chr$(34) + ".")
+        message_string("I've too much to carry. Try " + Chr$(34) + "Inventory" + Chr$(34) + ".")
       Else
         state.obj_rm%(p) = ROOM_CARRIED%
       EndIf
@@ -530,7 +530,7 @@ Sub do_command(a, cmd, nstr$)
       ' Tell the player they are dead,
       ' Goto the last room (usually some form of limbo),
       ' make it DAY and display the room.
-      message(-1, "I'm dead...")
+      message_string("I'm dead...")
       bits.clear(sf, state.DARK_BIT%)
       r = rl
       describe_flag% = 1
@@ -570,11 +570,11 @@ Sub do_command(a, cmd, nstr$)
       For i = 1 To il
         If state.obj_rm%(i) = tr And Left$(ia_str$(i), 1) = "*" Then Inc x
       Next
-      message(-1, "I've stored " + Str$(x) + " of " + Str$(tt) + " treasures.")
+      message_string("I've stored " + Str$(x) + " of " + Str$(tt) + " treasures.")
       If tt > 0 Then
-        message(-1, "On a scale of 0 to 100 that rates a " + Str$(Int(x / tt * 100)) + ".")
+        message_string("On a scale of 0 to 100 that rates a " + Str$(Int(x / tt * 100)) + ".")
         If x = tt Then
-          message(-1, "WELL DONE !!!")
+          message_string("WELL DONE !!!")
           do_command(a, 63, nstr$)
         EndIf
       EndIf
@@ -582,7 +582,7 @@ Sub do_command(a, cmd, nstr$)
     Case 66
       ' INV
       ' Tells the player what objects they are carrying.
-      message(-1, "I'm carrying: ")
+      message_string("I'm carrying: ")
       print_object_list(ROOM_CARRIED%, "Nothing")
 
     Case 67
@@ -613,7 +613,7 @@ Sub do_command(a, cmd, nstr$)
       ' SAVEz
       ' This command saves the current game state to a file.
       x = state.save%()
-      If Not x Then message(-1, "Cancelled.")
+      If Not x Then message_string("Cancelled.")
 
     Case 72
       ' EXx,x
@@ -663,7 +663,7 @@ Sub do_command(a, cmd, nstr$)
     Case 78
       ' DspCT
       ' This displays the current value of the counter.
-      message(-1, Str$(counter))
+      message_string(Str$(counter))
 
     Case 79
       ' CT<-n
@@ -714,12 +714,12 @@ Sub do_command(a, cmd, nstr$)
     Case 84
       ' SAYw
       ' This says the noun (second word) input by the player.
-      message(-1, Chr$(34) + nstr$ + Chr$(34))
+      message_string(Chr$(34) + nstr$ + Chr$(34))
 
     Case 85
       ' SAYwCR
       ' This says the noun (second word) input by the player and starts a new line.
-      message(-1, Chr$(34) + nstr$ + Chr$(34))
+      message_string(Chr$(34) + nstr$ + Chr$(34))
       con.println()
 
     Case 86
@@ -744,7 +744,7 @@ Sub do_command(a, cmd, nstr$)
 
     Case 102 To 149
       ' Display messages 52-99.
-      message(cmd - 50)
+      message_id(cmd - 50)
 
     Case Else
       Error "Unknown command: " + Str$(cmd)
@@ -780,10 +780,10 @@ Sub prompt_for_command(verb, noun, nstr$)
     parse(s$, verb, noun, nstr$)
 
     Select Case verb
-      Case 0                   : message(-1, "You use word(s) I don't know!")
+      Case 0                   : message_string("You use word(s) I don't know!")
       Case VERB_NONE%          : ' Do nothing, user will be prompted for command again.
-      Case VERB_TOO_MANY%      : message(-1, "I only understand two word commands!")
-      Case VERB_DEBUG%         : message(-1, MSG_OK$) : debug.enabled% = (nstr$ = "on")
+      Case VERB_TOO_MANY%      : message_string("I only understand two word commands!")
+      Case VERB_DEBUG%         : message_string(MSG_OK$) : debug.enabled% = (nstr$ = "on")
       Case VERB_DUMP_ACTIONS%  : debug.dump_actions(nstr$)
       Case VERB_DUMP_MESSAGES% : debug.dump_messages(nstr$)
       Case VERB_DUMP_OBJECTS%  : debug.dump_objects(nstr$)
@@ -791,7 +791,7 @@ Sub prompt_for_command(verb, noun, nstr$)
       Case VERB_DUMP_STATE%    : debug.dump_state()
       Case VERB_DUMP_VOCAB%    : debug.dump_vocabulary()
       Case VERB_LOOK%          : describe_room(1)
-      Case VERB_MORE%          : message(-1, MSG_OK$) : con.more = (nstr$ = "on")
+      Case VERB_MORE%          : message_string(MSG_OK$) : con.more = (nstr$ = "on")
       Case VERB_RECORD%
         flush_messages()
         If nstr$ = "on" Then
@@ -817,7 +817,17 @@ Sub prompt_for_command(verb, noun, nstr$)
 
 End Sub
 
-' Outputs a message.
+Sub message_id(id%)
+  Local msg$ = ms$(id%)
+  If msg$ = "OK" Then msg$ = MSG_OK$
+  If debug.enabled% Then
+    message_string("[" + Str$(id%) + "] " + msg$)
+  Else
+    message_string(msg$)
+  EndIf
+End Sub
+
+' Outputs a message string.
 '
 ' It's a bit of a crap-shoot to work with various idiosyncracies mostly
 ' surrounding when a room needs to be redescribed.
@@ -825,24 +835,20 @@ End Sub
 ' 1) if the current room is dark or the message is "OK." output the message.
 ' 2) then if the describe_flag% is set and the message is not "OK."
 '    redescribe the current room.
-' 3) output the message if it didn't happen at (1).
+' 3) then output the message if it wasn't output at (1).
 '
 ' @param  id%   message id to lookup, if -1 then ...
 ' @param  msg$  ... use this string for the message.
-Sub message(id%, msg$)
-  Local msg_$ = Choice(id% = -1, msg$, ms$(id%))
-  Select Case msg_$
-    Case ""   : Error "Unexpected empty message"
-    Case "OK" : msg_$ = MSG_OK$
-  End Select
+Sub message_string(msg$)
+  If msg$ = "" Then Error "Unexpected empty message"
 
-  Local msg_first% = is_dark%() Or (msg_$ = MSG_OK$)
-  If msg_first% Then message_internal(id%, msg_$)
-  If describe_flag% And Not (msg_$ = MSG_OK$) Then describe_room(1)
-  If Not msg_first% Then message_internal(id%, msg_$)
+  Local msg_first% = is_dark%() Or (msg$ = MSG_OK$)
+  If msg_first% Then message_internal(msg$)
+  If describe_flag% And Not (msg$ = MSG_OK$) Then describe_room(1)
+  If Not msg_first% Then message_internal(msg$)
 End Sub
 
-Sub message_internal(id%, msg$)
+Sub message_internal(msg$)
   ' Handle appending this message to a previous one,
   ' or if not then output a CRLF.
   If message_count% > 0 Then
@@ -852,7 +858,6 @@ Sub message_internal(id%, msg$)
     If is_lower% Or is_number% Then con.print(" ") Else con.println()
   EndIf
 
-  If debug.enabled% Then con.print("[" + Str$(id%) + "] ")
   con.print(msg$)
   Inc message_count%
 End Sub
@@ -865,7 +870,7 @@ Sub flush_messages()
 End Sub
 
 Function prompt$(s$, echo)
-  message(-1, s$)
+  message_string(s$)
   message_count% = 0
 
   con.foreground("white")
@@ -1000,9 +1005,9 @@ Sub seed_random_number_generator(s$)
 
   If seed% > 0 Then
     Local _ = math.pseudo_rnd%(-seed%)
-    If s$ = Str$(seed%) Then message(-1, MSG_OK$)
+    If s$ = Str$(seed%) Then message_string(MSG_OK$)
   Else
-    message(-1, "Invalid seed, should be integer > 0.")
+    message_string("Invalid seed, should be integer > 0.")
   EndIf
 End Sub
 
@@ -1010,10 +1015,10 @@ End Sub
 Sub do_get(noun, nstr$)
   Local i, k, obj$ = obj_name$(noun, nstr$)
 
-  If nstr$ = "" Then message(-1, "What?") : Exit Sub
+  If nstr$ = "" Then message_string("What?") : Exit Sub
 
   If count_carried%() >= mx Then
-    message(-1, "I've too much to carry!")
+    message_string("I've too much to carry!")
     Exit Sub
   EndIf
 
@@ -1030,9 +1035,9 @@ Sub do_get(noun, nstr$)
   Next
 
   Select Case k
-    Case 0 : message(-1, "It's beyond my power to do that.")
-    Case 2 : message(-1, "I don't see it here.")
-    Case 3 : message(-1, MSG_OK$)
+    Case 0 : message_string("It's beyond my power to do that.")
+    Case 2 : message_string("I don't see it here.")
+    Case 3 : message_string(MSG_OK$)
     Case Else : Error "Unknown GET state, k = " + Str$(k)
   End Select
 
@@ -1076,9 +1081,9 @@ Sub do_drop(noun, nstr$)
   Next
 
   Select Case k
-    Case 0 : message(-1, "It's beyond my power to do that.")
-    Case 1 : message(-1, "I'm not carrying it!")
-    Case 3 : message(-1, MSG_OK$)
+    Case 0 : message_string("It's beyond my power to do that.")
+    Case 1 : message_string("I'm not carrying it!")
+    Case 3 : message_string(MSG_OK$)
     Case Else : Error "Unknown DROP state, k = " + Str$(k)
   End Select
 
@@ -1101,9 +1106,9 @@ Sub interp.update_lamp()
   Local lamp_room% = state.obj_rm%(OBJ_LIT_LAMP%)
   If lamp_room% = ROOM_CARRIED% Or lamp_room% = r Then
     If lx = 0 Then
-      message(-1, "Light has run out!")
+      message_string("Light has run out!")
     Else
-      message(-1, "Light runs out in " + Str$(lx) + " turns!")
+      message_string("Light runs out in " + Str$(lx) + " turns!")
     EndIf
   EndIf
 
