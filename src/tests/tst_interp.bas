@@ -121,6 +121,7 @@ Sub setup_test()
   con.buf$ = ""
   con.in_buf$ = ""
   script.buf$ = ""
+  describe_flag% = 0
 End Sub
 
 Sub teardown_test()
@@ -258,13 +259,7 @@ Sub test_do_command_61() ' DEAD
   assert_false(bits.get%(sf, state.DARK_BIT%))
   assert_hex_equals(&b11110000111100000111000011110000, sf)
   assert_int_equals(10, r)
-  Local expected$ = "I'm dead..." + sys.CRLF$
-  Cat expected$, sys.CRLF$
-  Cat expected$, "I'm in a " + sys.CRLF$
-  Cat expected$, "Obvious exits: None." + sys.CRLF$
-  Cat expected$, "Visible items: None." + sys.CRLF$
-  Cat expected$, "<-------------------------------------------------------------->" + sys.CRLF$
-  Cat expected$, sys.CRLF$
+  Local expected$ = "I'm dead..."
   assert_string_equals(expected$, con.buf$)
 End Sub
 
@@ -275,7 +270,7 @@ Sub test_do_command_63() ' FINI
   state = STATE_OK
   do_command(0, 63, "")
   assert_string_equals("", script.buf$)
-  assert_string_equals("The game is now over, would you like to play again [Y|n]? ", con.buf$)
+  assert_string_equals(sys.CRLF$ + "The game is now over, would you like to play again [Y|n]? ", con.buf$)
   assert_int_equals(STATE_RESTART, state)
 
   ' Given player answers "n" to play again.
@@ -316,14 +311,14 @@ Sub test_do_command_65() ' SCORE
   ' Given not all treasures stored.
   do_command(0, 65, "")
   Cat expected$, "I've stored 2 of 3 treasures." + sys.CRLF$
-  Cat expected$, "On a scale of 0 to 100 that rates a 66." + sys.CRLF$
+  Cat expected$, "On a scale of 0 to 100 that rates a 66."
   assert_string_equals(expected$, con.buf$)
 
   ' Given all treasures stored.
   state.obj_rm%(3) = tr
   con.buf$ = ""
   do_command(0, 65, "")
-  expected$ = "I've stored 3 of 3 treasures." + sys.CRLF$
+  expected$ = sys.CRLF$ + "I've stored 3 of 3 treasures." + sys.CRLF$
   Cat expected$, "On a scale of 0 to 100 that rates a 100." + sys.CRLF$
   Cat expected$, "WELL DONE !!!" + sys.CRLF$
   Cat expected$, "The game is now over, would you like to play again [Y|n]? "
@@ -336,7 +331,7 @@ Sub test_do_command_65() ' SCORE
   ia_str$(3) = "harry"
   con.buf$ = ""
   do_command(0, 65, "")
-  expected$ = "I've stored 0 of 0 treasures." + sys.CRLF$
+  expected$ = "I've stored 0 of 0 treasures."
   assert_string_equals(expected$, con.buf$)
 End Sub
 
@@ -418,8 +413,7 @@ Sub test_go_direction_given_dark()
   r = 1
   go_direction(1)
   assert_int_equals(2, r)
-  Local expected$ = "Dangerous to move in the dark!" + sys.CRLF$
-  Cat expected$, "I can't see, it's too dark!" + sys.CRLF$
+  Local expected$ = sys.CRLF$ + "Dangerous to move in the dark!" + sys.CRLF$ + "OK."
   assert_string_equals(expected$, con.buf$)
 
   ' Given exit does not exist.
@@ -429,14 +423,9 @@ Sub test_go_direction_given_dark()
   assert_int_equals(10, r)
   assert_false(bits.get%(sf, state.DARK_BIT%))
   assert_hex_equals(&b11110000111100000111000011110000, sf)
-  expected$ = "Dangerous to move in the dark!" + sys.CRLF$
-  Cat expected$, "I fell down and broke my neck." + sys.CRLF$
-  Cat expected$, sys.CRLF$
-  Cat expected$, "I'm in a " + sys.CRLF$
-  Cat expected$, "Obvious exits: None." + sys.CRLF$
-  Cat expected$, "Visible items: None." + sys.CRLF$
-  Cat expected$, "<-------------------------------------------------------------->" + sys.CRLF$
-  Cat expected$, sys.CRLF$
+  expected$ = sys.CRLF$ + "Dangerous to move in the dark!" + sys.CRLF$
+  Cat expected$, "I can't see, it's too dark!" + sys.CRLF$
+  Cat expected$, "I fell down and broke my neck." + sys.CRLF$ + "OK."
   assert_string_equals(expected$, con.buf$)
 End Sub
 
@@ -482,7 +471,7 @@ Sub assert_lamp_state(duration%, lamp_room%, lamp_out%, msg$)
   assert_int_equals(duration%, lx)
   assert_int_equals(lamp_room%, state.obj_rm%(OBJ_LIT_LAMP%))
   assert_int_equals(lamp_out%, bits.get%(sf, state.LAMP_OUT_BIT%))
-  assert_string_equals(Choice(msg$ = "", "", msg$ + sys.CRLF$), con.buf$)
+  assert_string_equals(Choice(msg$ = "", "", sys.CRLF$ + msg$), con.buf$)
 End Sub
 
 ' The light duration is not decreased if it is in the 'store'.

@@ -212,7 +212,7 @@ End Sub
 Sub debug.dump_message(idx%)
   Local s$ = ms$(idx%)
   If s$ = "" Then s$ = "<empty>"
-  debug.println(str.rpad$(Str$(idx%) + ":", 6) + s$)
+  debug.println(str.rpad$(Str$(idx%) + ":", 6) + Chr$(34) + s$ + Chr$(34))
 End Sub
 
 Sub debug.dump_objects(nstr$)

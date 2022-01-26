@@ -59,7 +59,7 @@ Function state.save%()
     If s$ = "" Then game% = 0
   EndIf
 
-  If game% = 0 Then con.println("Cancelled.") : Exit Function
+  If game% = 0 Then Exit Function
 
   con.println("Saving '" + f$ + "' ...")
 
