@@ -19,9 +19,10 @@ Option Default Integer
 
 ' Stub dependencies on "advent.inc" ----------------------------------------------------------------
 sys.provides("advent")
-Dim cl = 100, il = 100, lt, rl = 10, tr, tt
+Dim cl = 100, il = 100, lt, ml = 10, rl = 10, tr, tt
 Dim ca(cl, 7)
 Dim ia_str$(il) Length 64
+Dim ms$(ml)
 Dim rm(rl, 5)
 Dim rs$(rl)
 
@@ -74,6 +75,7 @@ Dim state.obj_rm%(il)
 
 add_test("test_has_changed")
 add_test("test_is_dark")
+add_test("test_do_command_1 (MSG:1)", "test_do_command_1")
 add_test("test_do_command_56 (NIGHT)", "test_do_command_56")
 add_test("test_do_command_57 (DAY)", "test_do_command_57")
 add_test("test_do_command_58 (SETz)", "test_do_command_58")
@@ -84,7 +86,11 @@ add_test("test_do_command_65 (SCORE)", "test_do_command_65")
 add_test("test_do_command_67 (SET0)", "test_do_command_67")
 add_test("test_do_command_68 (CLR0)", "test_do_command_68")
 add_test("test_do_command_69 (FILL)", "test_do_command_69")
+add_test("test_do_command_78 (DspCT)", "test_do_command_78")
 add_test("test_do_command_81 (EXm,CT)", "test_do_command_81")
+add_test("test_do_command_84 (SAYw)", "test_do_command_84")
+add_test("test_do_command_85 (SAYwCR)", "test_do_command_85")
+add_test("test_do_command_86 (SAYCR)", "test_do_command_86")
 add_test("test_evaluate_condition_8 (is flag set)", "test_evaluate_condition_8")
 add_test("test_evaluate_condition_9 (is flag clear)", "test_evaluate_condition_9")
 add_test("test_go_direction_given_dark")
@@ -93,6 +99,7 @@ add_test("test_update_lamp (if stored)", "test_update_lamp_stored")
 add_test("test_update_lamp (if in same room)", "test_update_lamp_same")
 add_test("test_update_lamp (if in different room)", "test_update_lamp_different"))
 add_test("test_update_lamp (non-prehistoric lamp)", "test_update_lamp_modern"))
+add_test("test_multipart_messages")
 
 run_tests()
 
@@ -101,6 +108,7 @@ End
 Sub setup_test()
   Local i%, j%
   r = 1
+  counter = 0
 
   ' Initialise 'sf' with a pattern so we have a chance of
   ' detecting flags being accidentally cleared/set.
@@ -114,6 +122,8 @@ Sub setup_test()
 
   For i% = 0 To il : ia_str$(i%) = "" : state.obj_rm%(i%) = 0 : Next
 
+  For i% = 0 To ml : ms$(i%) = "" : Next
+
   For i% = 0 To rl
     For j% = 0 To 5 : rm(i%, j%) = 0 : Next
   Next
@@ -121,6 +131,7 @@ Sub setup_test()
   con.buf$ = ""
   con.in_buf$ = ""
   script.buf$ = ""
+  message_flag% = 0
   describe_flag% = 0
 End Sub
 
@@ -238,6 +249,14 @@ Sub given_parameter_value(a%, p%, value%)
   ca(a%, p%) = 20 * value%
 End Sub
 
+Sub test_do_command_1() ' MSG:1
+  ms$(1) = "my message"
+
+  do_command(0, 1, "")
+
+  assert_string_equals("my message", con.buf$)
+End Sub
+
 Sub test_do_command_60() 'CLRz
   bits.set(sf, 7)
   ip = 0
@@ -270,10 +289,11 @@ Sub test_do_command_63() ' FINI
   state = STATE_OK
   do_command(0, 63, "")
   assert_string_equals("", script.buf$)
-  assert_string_equals(sys.CRLF$ + "The game is now over, would you like to play again [Y|n]? ", con.buf$)
+  assert_string_equals("The game is now over, would you like to play again [Y|n]? ", con.buf$)
   assert_int_equals(STATE_RESTART, state)
 
   ' Given player answers "n" to play again.
+  message_flag% = 0
   con.buf$ = ""
   con.in_buf$ = "n"
   state = STATE_OK
@@ -366,6 +386,14 @@ Sub test_do_command_69() ' FILL
   assert_false(bits.get%(sf, state.LAMP_OUT_BIT%))
 End Sub
 
+Sub test_do_command_78() ' DspCT
+  counter = 42
+
+  do_command(0, 78, "")
+
+  assert_string_equals("42", con.buf$)
+End Sub
+
 Sub test_do_command_81() ' EXm,CT
   lx = 10
   counter = 25
@@ -377,6 +405,24 @@ Sub test_do_command_81() ' EXm,CT
   ' Expect counter and lx to have been swapped.
   assert_int_equals(10, counter)
   assert_int_equals(25, lx)
+End Sub
+
+Sub test_do_command_84() ' SAYw
+  do_command(0, 84, "foo")
+
+  assert_string_equals(Chr$(34) + "foo" + Chr$(34), con.buf$)
+End Sub
+
+Sub test_do_command_85() ' SAYwCR
+  do_command(0, 85, "foo")
+
+  assert_string_equals(Chr$(34) + "foo" + Chr$(34) + sys.CRLF$, con.buf$)
+End Sub
+
+Sub test_do_command_86() ' SAYCR
+  do_command(0, 86, "foo")
+
+  assert_string_equals(sys.CRLF$, con.buf$)
 End Sub
 
 Sub test_evaluate_condition_8() 'is flag set
@@ -413,17 +459,18 @@ Sub test_go_direction_given_dark()
   r = 1
   go_direction(1)
   assert_int_equals(2, r)
-  Local expected$ = sys.CRLF$ + "Dangerous to move in the dark!" + sys.CRLF$ + "OK."
+  Local expected$ = "Dangerous to move in the dark!" + sys.CRLF$ + "OK."
   assert_string_equals(expected$, con.buf$)
 
   ' Given exit does not exist.
+  message_flag% = 0
   con.buf$ = ""
   r = 1
   go_direction(2)
   assert_int_equals(10, r)
   assert_false(bits.get%(sf, state.DARK_BIT%))
   assert_hex_equals(&b11110000111100000111000011110000, sf)
-  expected$ = sys.CRLF$ + "Dangerous to move in the dark!" + sys.CRLF$
+  expected$ = "Dangerous to move in the dark!" + sys.CRLF$
   Cat expected$, "I can't see, it's too dark!" + sys.CRLF$
   Cat expected$, "I fell down and broke my neck." + sys.CRLF$ + "OK."
   assert_string_equals(expected$, con.buf$)
@@ -464,6 +511,7 @@ Sub setup_update_lamp(duration%, lamp_room%)
   lx = duration%
   state.obj_rm%(OBJ_LIT_LAMP%) = lamp_room%
   bits.clear(sf, state.LAMP_OUT_BIT%)
+  message_flag% = 0
   con.buf$ = ""
 End Sub
 
@@ -471,7 +519,7 @@ Sub assert_lamp_state(duration%, lamp_room%, lamp_out%, msg$)
   assert_int_equals(duration%, lx)
   assert_int_equals(lamp_room%, state.obj_rm%(OBJ_LIT_LAMP%))
   assert_int_equals(lamp_out%, bits.get%(sf, state.LAMP_OUT_BIT%))
-  assert_string_equals(Choice(msg$ = "", "", sys.CRLF$ + msg$), con.buf$)
+  assert_string_equals(Choice(msg$ = "", "", msg$), con.buf$)
 End Sub
 
 ' The light duration is not decreased if it is in the 'store'.
@@ -585,4 +633,46 @@ Sub test_update_lamp_modern()
   setup_update_lamp(0, lamp_room%)
   interp.update_lamp()
   assert_lamp_state(0, lamp_room%, 1, "Light has run out!")
+End Sub
+
+Sub test_multipart_messages()
+  ' Initial setup.
+  con.buf$ = "" : message_flag% = 0
+  message_string("foo")
+  assert_string_equals("foo", con.buf$)
+  assert_int_equals(1, message_flag%)
+
+  ' Sending another message starting with lower-case appends the new message.
+  message_string("aaa")
+  message_string("zzz")
+  assert_string_equals("foo aaa zzz", con.buf$)
+  assert_int_equals(1, message_flag%)
+
+  ' Sending another message starting with a number appends the new message.
+  message_string("0 wombat")
+  message_string("9 snafu")
+  assert_string_equals("foo aaa zzz 0 wombat 9 snafu", con.buf$)
+  assert_int_equals(1, message_flag%)
+
+  ' Sending another message starting with a capital letter starts a new line.
+  message_string("Starts with a capital")
+  assert_string_equals("foo aaa zzz 0 wombat 9 snafu" + sys.CRLF$ + "Starts with a capital", con.buf$)
+  assert_int_equals(1, message_flag%)
+
+  ' Start again.
+  con.buf$ = "" : message_flag% = 0
+  message_string("foo")
+  assert_string_equals("foo", con.buf$)
+  assert_int_equals(1, message_flag%)
+
+  ' Sending another message beginning with a CRLF appends the new message including the CRLF.
+  message_string(sys.CRLF$ + "starts with a CRLF")
+  assert_string_equals("foo" + sys.CRLF$ + "starts with a CRLF", con.buf$)
+  assert_int_equals(1, message_flag%)
+
+  ' Sending another message beginning with a single-quote appends the new message.
+  message_string("'Hello'")
+  message_string("`Goodbye`")
+  assert_string_equals("foo" + sys.CRLF$ + "starts with a CRLF 'Hello' `Goodbye`", con.buf$)
+  assert_int_equals(1, message_flag%)
 End Sub

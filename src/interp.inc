@@ -71,7 +71,8 @@ Dim interp.room_state%(9) ' Encodes the state of the last described room:
 
 Dim interp.obj_list_fmt% = OBJ_LIST_FMT_NEWLINE%
 
-Dim message_count%  ' Number of messages since the last room description or prompt.
+Dim message_flag%   ' If set then we are constructing a message that might be appended to
+                    ' by another message without a CRLF.
 Dim describe_flag%  ' If set then when message_string() is called
                     ' first describe the room before displaying the message.
 
@@ -86,7 +87,7 @@ Sub game_loop()
   Next
 
   debug.print_flags% = debug.TWO_LINES% Or debug.NO_STARS%
-  message_count% = 0
+  message_flag% = 0
 
   Do
     do_automatic_actions()
@@ -320,7 +321,7 @@ Sub do_player_actions(verb, noun, nstr$)
   Select Case result
     Case ACTION_UNKNOWN : message_string("I don't understand your command.")
     Case ACTION_NOT_YET : message_string("I can't do that yet.")
-    Case Else           : If message_count% = 0 Then message_string(MSG_OK$)
+    Case Else           : If Not message_flag% Then message_string(MSG_OK$)
   End Select
 
 End Sub
@@ -719,13 +720,12 @@ Sub do_command(a, cmd, nstr$)
     Case 85
       ' SAYwCR
       ' This says the noun (second word) input by the player and starts a new line.
-      message_string(Chr$(34) + nstr$ + Chr$(34))
-      con.println()
+      message_string(Chr$(34) + nstr$ + Chr$(34) + sys.CRLF$)
 
     Case 86
       ' SAYCR
       ' This just starts a new line on the display.
-      con.println()
+      message_string(sys.CRLF$)
 
     Case 87
       ' EXc,CR
@@ -849,29 +849,38 @@ Sub message_string(msg$)
 End Sub
 
 Sub message_internal(msg$)
-  ' Handle appending this message to a previous one,
-  ' or if not then output a CRLF.
-  If message_count% > 0 Then
-    Local ch% = Asc(Left$(msg$, 1))
-    Local is_lower% = (ch% >= Asc("a") And ch% <= Asc("z"))
-    Local is_number% = (ch% >= Asc("0") And ch% <= Asc("9"))
-    If is_lower% Or is_number% Then con.print(" ") Else con.println()
+  ' Handle appending this message to a previous one.
+  If message_flag% Then
+    If Left$(msg$, 2) = sys.CRLF$ Then
+      ' If new message starts CRLF then do nothing, it will be appended verbatim.
+    Else
+      Select Case Asc(Left$(msg$, 1))
+        Case Asc("'"), Asc("`")    ' New message starts with single quote.
+          con.print(" ")
+        Case Asc("a") To Asc("z")  ' New message starts lower-case.
+          con.print(" ")
+        Case Asc ("0") To Asc("9") ' New message starts number.
+          con.print(" ")
+        Case Else
+          con.println()
+      End Select
+    EndIf
   EndIf
 
   con.print(msg$)
-  Inc message_count%
+  message_flag% = 1
 End Sub
 
 Sub flush_messages()
-  If message_count% > 0 Then
+  If message_flag% Then
     con.println()
-    message_count%  = 0
+    message_flag% = 0
   EndIf
 End Sub
 
 Function prompt$(s$, echo)
   message_string(s$)
-  message_count% = 0
+  message_flag% = 0
 
   con.foreground("white")
   prompt$ = con.in$("", echo)
