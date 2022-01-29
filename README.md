@@ -18,6 +18,11 @@ The authors would also like to thank:
 **IMPORTANT!** Game data (.dat) file are copyright their respective authors and should not be
 distributed without permission.
 
+![Screenshot 1](/resources/screenshot-1.png)
+![Screenshot 3](/resources/screenshot-3.png)
+![Screenshot 2](/resources/screenshot-2.png)
+![Screenshot 4](/resources/screenshot-4.png)
+
 Please read the [LICENSE](LICENSE) file for further details about modifying and distributing this
 program.
 
