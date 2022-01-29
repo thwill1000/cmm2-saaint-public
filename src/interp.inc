@@ -471,7 +471,7 @@ Sub do_command(a, cmd, nstr$)
       ' The object may be in this room, or in any other room.
       p = get_parameter(a)
       If count_carried%() >= mx Then
-        message_string("I've too much to carry. Try " + Chr$(34) + "Inventory" + Chr$(34) + ".")
+        message_string("I've too much to carry. Try 'Inventory'.")
       Else
         state.obj_rm%(p) = ROOM_CARRIED%
       EndIf
@@ -715,12 +715,12 @@ Sub do_command(a, cmd, nstr$)
     Case 84
       ' SAYw
       ' This says the noun (second word) input by the player.
-      message_string(Chr$(34) + nstr$ + Chr$(34))
+      message_string("'" + nstr$ + "'")
 
     Case 85
       ' SAYwCR
       ' This says the noun (second word) input by the player and starts a new line.
-      message_string(Chr$(34) + nstr$ + Chr$(34) + sys.CRLF$)
+      message_string("'" + nstr$ + "'" + sys.CRLF$)
 
     Case 86
       ' SAYCR
