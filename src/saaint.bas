@@ -87,11 +87,13 @@ select_adventure:
 
   f$ = menus.choose_advent$()
   If f$ = "" Then Goto main_menu
-  Cls
   f$ = catalogue.find$(f$)
 
 read_adventure:
 
+  Cls
+  con.foreground("white")
+  con.println("Loading " + file.get_canonical$(f$) + " ...")
   advent.read_dat(f$)
   metadata.read_ext(f$)
 
