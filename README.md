@@ -3,7 +3,7 @@
 
 An interpreter allowing the classic works of Interactive Fiction (a.k.a. Text Adventures) by Scott
 Adams, Brian Howarth and others to be played on the
-[Colour Maximite 2](http://geoffg.net/maximite.html).
+[Colour Maximite 2](http://geoffg.net/maximite.html) and also on [Linux using MMB4L](https://github.com/thwill1000/mmb4l).
 
 Written in MMBasic 5.07 by Thomas Hugo Williams with the assistance of Bill McKinley in 2020-2021.
 
@@ -32,11 +32,18 @@ SAAINT is distributed for free but if you enjoy it then perhaps you would like t
 ## How do I install it ?
 
  - Download the [latest release](https://github.com/thwill1000/cmm2-saaint-public/releases/latest)
- - Extract to a directory of your choice, e.g. ```/saaint/```
+ - Extract to a directory of your choice, e.g.
+     -  CMM2: ```/saaint/```
+     -  Linux: ```~/mmbasic/saaint/```
 
-## How do I run it ?
- - Type ```chdir "/saaint"```
- - Type ```*saaint```
+## How do I run it on
+
+ - On the CMM2
+     - ```chdir "/saaint"```
+     - ```*saaint```
+ - On Linux using MMB4L
+     - ```cd ~/mmbasic/saaint```
+     - ```mmbasic saaint.bas``` 
 
 ## What adventures does it come with ?
 
@@ -129,14 +136,14 @@ the interpreter itself rather than being specific to an adventure:
  - ```*debug off```
      - disables debug diagnostics.
  - ```*look```
-     - redescribes the current room. Useful for those adventures that don't implement the ```look``` verb without a noun as a standard command.
+     - redescribes the current room. Useful for those adventures that don't support using the ```look``` verb without a noun.
  - ```*messages <index>```
      - prints content of message ```<index>```.
      - if ```<index>``` is omitted then prints all the messages in the adventure.
      - WARNING! may contain spoilers.
  - ```*more```
      - enables output paging so that a ```[MORE]``` prompt is shown whenever more output than can be shown on a single screen is generated; this is only likely to happen when replaying a script, see ```*replay``` below.
-     - this initially defaults to ```on```, but is persisted across SAAINT sessions.
+     - this initially defaults to ```on```, if changed it is persisted across SAAINT sessions.
  - ```*more off```
      - disables output paging for this and future sessions.
  - ```*objects <index>```
