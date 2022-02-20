@@ -740,6 +740,7 @@ Sub do_command(a, cmd, nstr$)
     Case 88
       ' DELAY
       ' This command delays about 1 second before going on to the next command.
+      con.flush()
       Pause 1000
 
     Case 102 To 149

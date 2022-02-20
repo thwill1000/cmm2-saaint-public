@@ -30,7 +30,7 @@ Option Explicit On
 #Include "debug.inc"
 #Include "interp.inc"
 
-Const SAAINT_VERSION$ = "2.0.5"
+Const SAAINT_VERSION$ = "2.0.6"
 Const ROOT_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/..")
 Const TMP_DIR$ = ROOT_DIR$ + "/tmp"
 Const INI_FILE$ = ROOT_DIR$ + "/saaint.ini"
