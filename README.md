@@ -1,5 +1,5 @@
 # SAAINT
-**Scott Adams Adventure Interpreter for the Colour Maximite 2**
+**Scott Adams Adventure Interpreter for MMBasic**
 
 An interpreter allowing the classic works of Interactive Fiction (a.k.a. Text Adventures) by Scott
 Adams, Brian Howarth and others to be played on the
@@ -56,6 +56,9 @@ here:
  - https://www.clopas.net
  - http://www.AdventurelandXL.com
  - https://www.EscapeTheGloomer.com
+
+In addition SAAINT comes with:
+ - "The Great Blackberry Adventure", (c) 2022 Bill McKinley.
 
 ## How do I play a text adventure ?
 
