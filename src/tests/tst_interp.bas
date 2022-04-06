@@ -15,7 +15,7 @@ Option Default Integer
 #Include "../splib/math.inc"
 #Include "../splib/set.inc"
 #Include "../splib/vt100.inc"
-#Include "../../../sptools/src/sptest/unittest.inc"
+#Include "../../../cmm2-sptools/src/sptest/unittest.inc"
 
 ' Stub dependencies on "advent.inc" ----------------------------------------------------------------
 sys.provides("advent")
@@ -410,13 +410,13 @@ End Sub
 Sub test_do_command_84() ' SAYw
   do_command(0, 84, "foo")
 
-  assert_string_equals(Chr$(34) + "foo" + Chr$(34), con.buf$)
+  assert_string_equals("'foo'", con.buf$)
 End Sub
 
 Sub test_do_command_85() ' SAYwCR
   do_command(0, 85, "foo")
 
-  assert_string_equals(Chr$(34) + "foo" + Chr$(34) + sys.CRLF$, con.buf$)
+  assert_string_equals("'foo'" + sys.CRLF$, con.buf$)
 End Sub
 
 Sub test_do_command_86() ' SAYCR

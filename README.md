@@ -2,10 +2,12 @@
 **Scott Adams Adventure Interpreter for MMBasic**
 
 An interpreter allowing the classic works of Interactive Fiction (a.k.a. Text Adventures) by Scott
-Adams, Brian Howarth and others to be played on the
-[Colour Maximite 2](http://geoffg.net/maximite.html) and also on [Linux using MMB4L](https://github.com/thwill1000/mmb4l).
+Adams, Brian Howarth and others to be played on:
+ - [Colour Maximite 2](http://geoffg.net/maximite.html)
+ - [Linux using MMB4L](https://github.com/thwill1000/mmb4l)
+ - [Windows using MMBasic for Windows](https://github.com/UKTailwind/MMB4W)
 
-Written in MMBasic 5.07 by Thomas Hugo Williams with the assistance of Bill McKinley in 2020-2021.
+Written in MMBasic 5.07 by Thomas Hugo Williams with the assistance of Bill McKinley in 2020-2022.
 
 Although it consists almost entirely of new code it is derived *with permission* from:
  - Scott Adams' "Pirate Adventure" for TRS-80 published in BYTE Magazine Volume 05 Number 12 - December 1980
@@ -33,17 +35,22 @@ SAAINT is distributed for free but if you enjoy it then perhaps you would like t
 
  - Download the [latest release](https://github.com/thwill1000/cmm2-saaint-public/releases/latest)
  - Extract to a directory of your choice, e.g.
-     -  CMM2: ```/saaint/```
-     -  Linux: ```~/mmbasic/saaint/```
+     -  CMM2: `/saaint/`
+     -  Linux: `~/mmbasic/saaint/`
+     -  Windows: `C:\Users\myname\mmbasic\saaint\`
 
 ## How do I run it on
 
  - On the CMM2
-     - ```chdir "/saaint"```
-     - ```*saaint```
+     - `chdir "/saaint"`
+     - `*saaint`
  - On Linux using MMB4L
-     - ```cd ~/mmbasic/saaint```
-     - ```mmbasic saaint.bas``` 
+     - `cd ~/mmbasic/saaint`
+     - `mmbasic saaint.bas`
+ - On Windows using MMBasic for Windows
+     - Start `mmbasic.exe`
+     - `chdir "C:\Users\myname\mmbasic\saaint"`
+     - `*saaint`
 
 ## What adventures does it come with ?
 

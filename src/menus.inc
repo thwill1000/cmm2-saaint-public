@@ -1,5 +1,5 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.07
+' Copyright (c) 2020-2022 Thomas Hugo Williams
+' For MMBasic 5.07.03
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -144,7 +144,10 @@ Function menus.choose_advent$()
   Option Console Serial
   twm.enable_cursor(0)
 
-  twm.init(3, 10075)
+  Local twm_sz% = 7 + 2 * (con.WIDTH * con.HEIGHT)
+  Inc twm_sz%, 7 + 2 * (MENU_WIDTH * MENU_HEIGHT)
+  Inc twm_sz%, 7 + 2 * ((MENU_WIDTH + 1) * MENU_HEIGHT)
+  twm.init(3, twm_sz%)
   Local win0% = twm.new_win%(0, 0, con.WIDTH, con.HEIGHT)
   Local left% = twm.new_win%(2, 4, MENU_WIDTH%, MENU_HEIGHT%)
   Local right% = twm.new_win%(con.WIDTH / 2 + 1, 4, MENU_WIDTH% + 1, MENU_HEIGHT%)
@@ -157,7 +160,12 @@ Function menus.choose_advent$()
   twm.switch(left%)
   twm.print_at(0, 0, "Reading adventures...")
 
-  Local m$(map.new%(50)) Length 64
+  Select Case Mm.Device$
+    Case "MMB4L", "MMBasic for Windows"
+      Local m$(map.new%(50))
+    Case Else
+      Local m$(map.new%(50)) Length 64
+  End Select
   map.init(m$())
   catalogue.get_all(m$())
 

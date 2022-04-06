@@ -1,5 +1,5 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.07
+' Copyright (c) 2020-2022 Thomas Hugo Williams
+' For MMBasic 5.07.03
 
 ' This file contains functions for finding and listing '.dat' files.
 
@@ -56,7 +56,12 @@ End Function
 ' Fills a map of (adventure name -> filename) for all the adventures in the
 ' "adventures/" directory.
 Sub catalogue.get_all(m$())
-  Local dirs$(list.new%(10)) Length 64
+  Select Case Mm.Device$
+    Case "MMB4L", "MMBasic for Windows"
+      Local dirs$(list.new%(10))
+    Case Else:
+      Local dirs$(list.new%(10)) Length 64
+  End Select
   list.init(dirs$())
   list.add(dirs$(), ".")
   Local f$ = Dir$(catalogue.DIR$ + "/*", Dir)

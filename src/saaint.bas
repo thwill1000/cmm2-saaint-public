@@ -1,6 +1,6 @@
 ' Scott Adams Adventure Game Interpreter
-' For Colour Maximite 2, MMBasic 5.07
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For MMBasic 5.07.03
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' Developed with the assistance of Bill McKinley
 ' Based on original TRS-80 Level II BASIC code (c) 1978 Scott Adams
 
@@ -30,25 +30,40 @@ Option Explicit On
 #Include "debug.inc"
 #Include "interp.inc"
 
-Const SAAINT_VERSION$ = "2.0.6"
+Const SAAINT_VERSION$ = "2.0.7"
 Const ROOT_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/..")
 Const TMP_DIR$ = ROOT_DIR$ + "/tmp"
 Const INI_FILE$ = ROOT_DIR$ + "/saaint.ini"
 
-con.HEIGHT% = 33
-con.WIDTH%  = 80
-
-If Left$(Mm.Device$, 17) = "Colour Maximite 2" Then
-  Mode 2
-ElseIf Mm.Device$ = "MMB4L" Then
-  Option CodePage "MMB4L"
-  On Error Skip 1 ' CONSOLE SETSIZE can fail, but keep going if it does.
-  Console SetSize con.WIDTH%, con.HEIGHT%
-  Console SetTitle "SAAINT v" + SAAINT_VERSION$
-EndIf
-
+configure_console()
 main()
 End
+
+Sub configure_console()
+  con.HEIGHT% = 33
+  con.WIDTH%  = 80
+
+  Select Case Mm.Device$
+    Case "Colour Maximite 2", "Colour Maximite 2 G2"
+      Mode 2
+    Case "MMB4L"
+      Option CodePage "MMB4L"
+      On Error Skip 1 ' CONSOLE SETSIZE can fail, but keep going if it does.
+      Console SetSize con.WIDTH%, con.HEIGHT%
+      Console SetTitle "SAAINT v" + SAAINT_VERSION$
+    Case "MMBasic for Windows"
+      ' Use the current mode/font and scale the console appropriately.
+      Local h% = Mm.VRes \ Mm.Info(FontHeight)
+      Local w% = Mm.HRes \ Mm.Info(FontWidth)
+      If h% < con.HEIGHT% Or w% < con.WIDTH% Then
+        Local errmsg$ = "Invalid mode/font SAAINT requires at least "
+        Cat errmsg$, Str$(con.WIDTH%) + "x" + Str$(con.HEIGHT%) + " characters."
+        Error errmsg$
+      EndIf
+      con.HEIGHT% = h%
+      con.WIDTH%  = w%
+  End Select
+End Sub
 
 Sub main()
   file.mkdir(TMP_DIR$)

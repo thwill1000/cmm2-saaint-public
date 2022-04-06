@@ -1,5 +1,5 @@
-' Copyright (c) 2019-22 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.07
+' Copyright (c) 2019-2022 Thomas Hugo Williams
+' For MMBasic 5.07.03
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -107,6 +107,12 @@ End Sub
 ' con.buf$ contains non-spaces write con.buf$ to the console.
 Sub con.flush()
   If con.spin Then Print Chr$(8); " "; Chr$(8); : con.spin = 0
+
+  ' If the buffer is wider than the console then clip the buffer.
+  ' An alternative would be to insert a newline, but in reality the only time
+  ' this can happen is if we try to print a very long string with no spaces,
+  ' e.g. a file-path.
+  con.buf$ = Left$(con.buf$, con.WIDTH)
 
   Do
     If con.x = 1 And con.lines > con.HEIGHT - 2 Then
@@ -266,9 +272,17 @@ End Function
 Sub con.set_type(type%)
   Select Case type%
     Case con.SCREEN% : Option Console Screen
-    Case con.SERIAL% : Option Console Serial
-    Case &h03        : Option Console Both
-    Case Else        : Error "Unknown console type"
+    Case con.SERIAL%
+      ' Note MMB4W cannot call OPTION CONSOLE SERIAL if it is on the same line
+      ' as a CASE clause. This is because in MMB4W this OPTION checks
+      ' 'CurrentLinePtr' to make sure it is only being used from within a
+      ' program. However due to a long-standing and gnarly bug in the MMBasic
+      ' core 'CurrentLinePtr' is not correctly set when processing a command on
+      ' the same line as a CASE clause.
+      Option Console Serial
+    Case &h03 : Option Console Both
+    Case Else
+      Error "Unknown console type"
   End Select
 End Sub
 
