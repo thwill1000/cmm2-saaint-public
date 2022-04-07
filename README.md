@@ -17,7 +17,7 @@ The authors would also like to thank:
  - Alan Moluf and Bruce Hanson for documenting the data file format used by Scott Adams' adventure games: https://github.com/pdxiv/LuaScott/blob/master/doc/The_ADVENTURE_Data_Base_Format_(1980).md
  - @hope1 for porting "Pirate Adventure" to the BBC Micro which served to show that the task was not as daunting as it first appeared: https://github.com/ahope1/Beeb-Pirate-Adventure.
 
-**IMPORTANT!** Game data (.dat) file are copyright their respective authors and should not be
+**IMPORTANT!** Game data (.dat) files are copyright their respective authors and should not be
 distributed without permission.
 
 ![Screenshot 1](/resources/screenshot-1.png)
@@ -39,15 +39,15 @@ SAAINT is distributed for free but if you enjoy it then perhaps you would like t
      -  Linux: `~/mmbasic/saaint/`
      -  Windows: `C:\Users\myname\mmbasic\saaint\`
 
-## How do I run it on
+## How do I run it ?
 
- - On the CMM2
+ - On the CMM2:
      - `chdir "/saaint"`
      - `*saaint`
- - On Linux using MMB4L
+ - On Linux using MMB4L:
      - `cd ~/mmbasic/saaint`
-     - `mmbasic saaint.bas`
- - On Windows using MMBasic for Windows
+     - `mmbasic saaint`
+ - On Windows using MMBasic for Windows:
      - Start `mmbasic.exe`
      - `chdir "C:\Users\myname\mmbasic\saaint"`
      - `*saaint`
