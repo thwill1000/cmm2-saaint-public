@@ -66,7 +66,7 @@ Sub dump_all(raw%)
 End Sub
 
 Sub dump_file(in$, raw%)
-  Const fd = 1
+  Const fd% = 1
   Local out$ = file.trim_extension$(in$) + ".dmp"
 
   Print "Reading '" in$ "' ... ";
@@ -74,9 +74,9 @@ Sub dump_file(in$, raw%)
   state.reset()
   Print "OK"
   Print "Writing '" out$ "' ... ";
-  Open out$ For Output As #fd
-  If raw% Then dump_raw(fd) Else dump(in$, fd)
-  Close #fd
+  Open out$ For Output As #fd%
+  If raw% Then dump_raw(fd%) Else dump(in$, fd%)
+  Close #fd%
   Print "OK"
   advent.free()
 End Sub
@@ -87,7 +87,7 @@ Sub dump(f$, fd%)
   Print #fd%
   Print #fd%, "Min text size (bytes):  " Str$(advent.txt_sz%)
   Print #fd%, "Max object index:       " Str$(il)
-  Print #fd, "Max action index:       " Str$(cl)
+  Print #fd%, "Max action index:       " Str$(cl)
   Print #fd%, "Max vocabulary index:   " Str$(nl)
   Print #fd%, "Max room index:         " Str$(rl)
   Print #fd%, "Max objects carried:    " Str$(mx)
@@ -112,51 +112,51 @@ Sub dump(f$, fd%)
 End Sub
 
 ' Dumps adventure data in raw TRS-80 / ScottFree ".dat" format.
-Sub dump_raw(fd)
+Sub dump_raw(fd%)
   Local i%, j%
 
   ' Header
-  Print #fd, Str$(advent.txt_sz%)
-  Print #fd, Str$(il)
-  Print #fd, Str$(cl)
-  Print #fd, Str$(nl)
-  Print #fd, Str$(rl)
-  Print #fd, Str$(mx)
-  Print #fd, Str$(ar)
-  Print #fd, Str$(tt)
-  Print #fd, Str$(ln)
-  Print #fd, Str$(lt)
-  Print #fd, Str$(ml)
-  Print #fd, Str$(tr)
+  Print #fd%, Str$(advent.txt_sz%)
+  Print #fd%, Str$(il)
+  Print #fd%, Str$(cl)
+  Print #fd%, Str$(nl)
+  Print #fd%, Str$(rl)
+  Print #fd%, Str$(mx)
+  Print #fd%, Str$(ar)
+  Print #fd%, Str$(tt)
+  Print #fd%, Str$(ln)
+  Print #fd%, Str$(lt)
+  Print #fd%, Str$(ml)
+  Print #fd%, Str$(tr)
 
   ' Action table
   For i% = 0 To cl
     For j% = 0 To 7
-      Print #fd, Str$(ca(i%, j%))
+      Print #fd%, Str$(ca(i%, j%))
     Next j%
   Next i%
 
   ' Vocabulary
   For i% = 0 To nl
-    Print #fd, str.quote$(nv_str$(i%, 0))
-    Print #fd, str.quote$(nv_str$(i%, 1))
+    Print #fd%, str.quote$(nv_str$(i%, 0))
+    Print #fd%, str.quote$(nv_str$(i%, 1))
   Next
 
   ' Rooms
   For i% = 0 To rl
     For j% = 0 To 5
-      Print #fd, Str$(rm(i%, j%))
+      Print #fd%, Str$(rm(i%, j%))
     Next j%
-    Print #fd, str.quote$(rs$(i%))
+    Print #fd%, str.quote$(rs$(i%))
   Next i%
 
   ' Messages
   For i% = 0 To ml
-    Print #fd, str.quote$(ms$(i%))
+    Print #fd%, str.quote$(ms$(i%))
   Next
 
   ' Objects
   For i% = 0 To il
-    Print #fd, str.quote$(ia_str$(i%)) " " Str$(i2(i%))
+    Print #fd%, str.quote$(ia_str$(i%)) " " Str$(i2(i%))
   Next
 End Sub
