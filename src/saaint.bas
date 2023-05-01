@@ -1,6 +1,6 @@
 ' Scott Adams Adventure Game Interpreter
-' For MMBasic 5.07.03
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' For MMBasic 5.07
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' Developed with the assistance of Bill McKinley
 ' Based on original TRS-80 Level II BASIC code (c) 1978 Scott Adams
 
@@ -31,7 +31,7 @@ Option Explicit On
 #Include "interp.inc"
 
 Const SAAINT_VERSION$ = "2.0.7"
-Const ROOT_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/..")
+Const ROOT_DIR$ = file.get_canonical$(Mm.Info$(Path) + "..")
 Const TMP_DIR$ = ROOT_DIR$ + "/tmp"
 Const INI_FILE$ = ROOT_DIR$ + "/saaint.ini"
 
@@ -66,7 +66,7 @@ Sub configure_console()
 End Sub
 
 Sub main()
-  file.mkdir(TMP_DIR$)
+  If file.mkdir%(TMP_DIR$) <> sys.SUCCESS Then Error sys.err$
   read_inifile()
 
   ' Allow an adventure file to be specified at the command line.

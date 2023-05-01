@@ -1,6 +1,6 @@
-' For Colour Maximite 2, MMBasic 5.07
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' Developed with the assistance of Bill McKinley
+' For MMBasic 5.07
 
 ' Implementation of script/walkthrough record and replay.
 
@@ -10,7 +10,7 @@ sys.requires("advent", "crypt", "console", "file")
 sys.provides("script")
 If sys.err$ <> "" Then Error sys.err$
 
-Const script.DIR$ = file.get_canonical$(file.PROG_DIR$ + "/../scripts")
+Const script.DIR$ = file.get_canonical$(Mm.Info$(Path) + "../scripts")
 Const script.FD_IN% = 2
 Const script.FD_OUT% = 3
 
@@ -40,7 +40,7 @@ Sub script.record_on()
 
   con.println("Recording to '" + f$ + "' ...")
 
-  file.mkdir(file.get_parent$(f$))
+  If file.mkdir%(file.get_parent$(f$)) <> sys.SUCCESS Then Error sys.err$
 
   Const fd_out% = script.FD_OUT%
   con.open_out(fd_out%, f$)

@@ -1,5 +1,5 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
-' For MMBasic 5.07.03
+' Copyright (c) 2020-2023 Thomas Hugo Williams
+' For MMBasic 5.07
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -12,7 +12,7 @@ If sys.err$ <> "" Then Error sys.err$
 ' instructions.
 
 Function menus.main$(advent$)
-  Local f$ = file.PROG_DIR$ + "/title.txt")
+  Local f$ = Mm.Info$(Path) + "title.txt")
 
   Cls
   twm.enable_cursor(0)
@@ -94,7 +94,7 @@ End Function
 
 Sub menus.credits(top%)
   Local f$ = Choice(top%, "", metadata.credits_file$)
-  f$ = Choice(f$ <> "", f$, file.PROG_DIR$ + "/credits.txt")
+  f$ = Choice(f$ <> "", f$, Mm.Info$(Path) + "credits.txt")
 
   Cls
   twm.enable_cursor(0)
@@ -116,7 +116,7 @@ End Sub
 
 Sub menus.instructions(top%)
   Local f$ = Choice(top%, "", metadata.instructions_file$)
-  f$ = Choice(f$ <> "", f$, file.PROG_DIR$ + "/instructions.txt")
+  f$ = Choice(f$ <> "", f$, Mm.Info$(Path) + "instructions.txt")
 
   Cls
   twm.enable_cursor(0)

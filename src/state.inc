@@ -1,5 +1,5 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.07
+' Copyright (c) 2020-2023 Thomas Hugo Williams
+' For MMBasic 5.07
 
 ' Current game state.
 
@@ -9,7 +9,7 @@ sys.requires("advent", "bits", "console", "file", "string")
 sys.provides("state")
 If sys.err$ <> "" Then Error sys.err$
 
-Const state.SAVE_DIR$ = file.get_canonical$(file.PROG_DIR$ + "/../saves")
+Const state.SAVE_DIR$ = file.get_canonical$(Mm.Info$(Path) + "../saves")
 Const state.FD% = 1
 Const state.DARK_BIT%     = 15 ' The status flag that is set when it is dark.
 Const state.LAMP_OUT_BIT% = 16 ' The status flag that is set when the lamp goes out.
@@ -63,7 +63,7 @@ Function state.save%()
 
   con.println("Saving '" + f$ + "' ...")
 
-  file.mkdir(file.get_parent$(f$))
+  If file.mkdir%(file.get_parent$(f$)) <> sys.SUCCESS Then Error sys.err$
 
   Const fd% = state.FD%
   Open f$ For Output As #fd%

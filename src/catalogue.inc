@@ -1,5 +1,5 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
-' For MMBasic 5.07.03
+' Copyright (c) 2020-2023 Thomas Hugo Williams
+' For MMBasic 5.07
 
 ' This file contains functions for finding and listing '.dat' files.
 
@@ -9,7 +9,7 @@ sys.requires("file", "string", "metadata")
 sys.provides("catalogue")
 If sys.err$ <> "" Then Error sys.err$
 
-Const catalogue.DIR$ = file.PROG_DIR$ + "/../adventures"
+Const catalogue.DIR$ = Mm.Info$(Path) + "../adventures"
 Const catalogue.FD_IN% = 1
 
 ' Finds and returns the full path to a named adventure.
