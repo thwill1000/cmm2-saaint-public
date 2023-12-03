@@ -3,8 +3,8 @@
 
 ' This file contains functions for finding and listing '.dat' files.
 
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("file", "string", "metadata")
 sys.provides("catalogue")
 If sys.err$ <> "" Then Error sys.err$

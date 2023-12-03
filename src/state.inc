@@ -3,8 +3,8 @@
 
 ' Current game state.
 
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("advent", "bits", "console", "file", "string")
 sys.provides("state")
 If sys.err$ <> "" Then Error sys.err$

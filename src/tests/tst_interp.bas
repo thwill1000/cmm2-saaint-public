@@ -15,7 +15,7 @@ Option Default Integer
 #Include "../splib/math.inc"
 #Include "../splib/set.inc"
 #Include "../splib/vt100.inc"
-#Include "../../../cmm2-sptools/src/sptest/unittest.inc"
+#Include "../../../mmbasic-sptools/src/sptest/unittest.inc"
 
 ' Stub dependencies on "advent.inc" ----------------------------------------------------------------
 sys.provides("advent")
