@@ -1,10 +1,10 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.07
+' Copyright (c) 2020-2023 Thomas Hugo Williams
+' For MMBasic 5.07
 
 ' This file provides subroutines to output debugging information.
 
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("advent", "bits", "console", "state", "string")
 sys.provides("debug")
 If sys.err$ <> "" Then Error sys.err$

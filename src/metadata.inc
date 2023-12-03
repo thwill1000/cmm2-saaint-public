@@ -1,11 +1,11 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.07
+' Copyright (c) 2020-2023 Thomas Hugo Williams
+' For MMBasic 5.07
 
 ' This file contains functions for reading SAAINT metadata '.ext'
 ' files.
 
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("file", "string")
 sys.provides("metadata")
 If sys.err$ <> "" Then Error sys.err$

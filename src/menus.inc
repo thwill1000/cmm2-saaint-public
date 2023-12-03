@@ -1,8 +1,8 @@
 ' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' For MMBasic 5.07
 
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("catalogue", "console", "file", "map", "metadata", "txtwm")
 sys.provides("menus")
 If sys.err$ <> "" Then Error sys.err$
