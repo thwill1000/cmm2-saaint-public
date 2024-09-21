@@ -1,3 +1,8 @@
 Cls
 Print "SAAINT is loading, please wait ..."
-Execute "run " + Chr$(34) + Mm.Info$(Path) + "src/saaint.bas" + Chr$(34) + ", " + Mm.CmdLine$
+Const file$ = Mm.Info$(Path) + "src/saaint.bas"
+If InStr(Mm.Device$, "Colour Maximite 2") Then
+  Execute "Run " + Chr$(34) + file$ + Chr$(34) + ", " + Mm.CmdLine$
+Else
+  Run file$, Mm.CmdLine$
+EndIf
