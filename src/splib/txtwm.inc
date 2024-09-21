@@ -327,8 +327,10 @@ Sub twm.putc(ch%)
   Print Chr$(27) "[" Str$(by%) ";" Str$(ax%) "H" s$;
 
   ' Update VGA display:
-  Text (ax%-1)*twm.fw%,(by%-1)*twm.fh%,s$,,,,twm.fg%(at%),twm.bg%(at%)
-  If at% And &b01000000 Then Text (ax%-1)*twm.fw%+1,(by%-1)*twm.fh%,s$,,,,twm.fg%(at%),-1
+  If Mm.Device$ <> "MMB4L" Then
+    Text (ax%-1)*twm.fw%,(by%-1)*twm.fh%,s$,,,,twm.fg%(at%),twm.bg%(at%)
+    If at% And &b01000000 Then Text (ax%-1)*twm.fw%+1,(by%-1)*twm.fh%,s$,,,,twm.fg%(at%),-1
+  EndIf
 End Sub
 
 Sub twm.print(s$)
@@ -379,8 +381,10 @@ Sub twm.print(s$)
     Print Chr$(27) "[" Str$(by%) ";" Str$(ax%) "H" seg$;
 
     ' Update VGA display:
-    Text (ax% - 1) * twm.fw%, (by% - 1) * twm.fh%, seg$,,,, fg%, bg%
-    If at% And &b01000000 Then Text (ax% - 1) * twm.fw% + 1, (by% - 1) * twm.fh%, seg$,,,, fg%, -1
+    If Mm.Device$ <> "MMB4L" Then
+      Text (ax% - 1) * twm.fw%, (by% - 1) * twm.fh%, seg$,,,, fg%, bg%
+      If at% And &b01000000 Then Text (ax% - 1) * twm.fw% + 1, (by% - 1) * twm.fh%, seg$,,,, fg%, -1
+    EndIf
 
     Inc is%, nc%
     Inc twm.x%, nc%
@@ -661,6 +665,8 @@ Sub twm.lock_vga_cursor(lock%)
   Local ch% = Peek(Byte twm.pc% + of%)
   Local at% = Peek(Byte twm.pa% + of%)
   Local fg% = twm.fg%(at%)
-  Text (ax%-1)*twm.fw%,(by%-1)*twm.fh%,Chr$(ch%),,,,fg%,twm.bg%(at%)
+  If Mm.Device$ <> "MMB4L" Then
+    Text (ax%-1)*twm.fw%,(by%-1)*twm.fh%,Chr$(ch%),,,,fg%,twm.bg%(at%)
+  EndIf
   If at% And &b01000000 Then Text (ax%-1)*twm.fw%+1,(by%-1)*twm.fh%,Chr$(ch%),,,,fg%,-1
 End Sub
