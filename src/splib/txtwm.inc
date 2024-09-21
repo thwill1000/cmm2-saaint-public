@@ -2,9 +2,9 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
-'!ifndef NO_INCLUDE_GUARDS
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.provides("txtwm")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
@@ -63,8 +63,8 @@ Dim twm.pa% ' pointer to the attribute data
 '                   Each window requires 7 + 2 * (width * height) bytes.
 Sub twm.init(max_num%, mem_sz%)
   If twm.max_num% > 0 Then Error "'txtwm' already initialised"
-  If max_num% < 1 Or max_num% > 10 Then Error "invalid max number of windows: " + Str$(max_num%)
-  If mem_sz% < 100 Then Error "invalid memory size: " + Str$(mem_sz%)
+  If max_num% < 1 Or max_num% > 10 Then Error "Invalid 'max_num'; must be between 1 and 10: " + Str$(max_num%)
+  If mem_sz% < 100 Then Error "Invalid 'mem_sz'; must be >= 100: " + Str$(mem_sz%)
 
   twm.max_num% = max_num%
   twm.id%      = -1
@@ -72,8 +72,8 @@ Sub twm.init(max_num%, mem_sz%)
   twm.fw%      = Mm.Info(FontWidth)
   twm.fh%      = Mm.Info(FontHeight)
 
-  ' Allocate data buffer.
-  Dim twm.data%(mem_sz% - 1)
+  ' Allocate data buffer (possibly with a few extra bytes).
+  Dim twm.data%((mem_sz% \ 8) + 1)
 
   ' Allocate array of pointers (one for each window) into the data buffer.
   ' Because MMBasic can't have 1 element arrays we always allocate space for at least 2 windows.
@@ -216,19 +216,18 @@ End Sub
 Function twm.new_win%(x%, y%, w%, h%)
   If twm.num% > Bound(twm.ptr%(), 1) Then Error "maximum number of windows reached: " + Str$(twm.num%)
 
-  Local ptr%
-
   ' Store pointer into the data buffer for the new window.
+  Local ptr%
   If twm.num% = 0 Then
     ptr% = Peek(VarAddr twm.data%())
   Else
     ptr% = twm.ptr%(twm.num% - 1)
-    ptr% = ptr% + 7 + Peek(Byte ptr% + 2) * Peek(Byte ptr% + 3) * 2
+    Inc ptr%, 7 + Peek(Byte ptr% + 2) * Peek(Byte ptr% + 3) * 2
   EndIf
   twm.ptr%(twm.num%) = ptr%
 
-  Local reqd% = ptr% + 7 + w% * h% * 2 - twm.ptr%(0)
-  Local alloc% = Bound(twm.data%(), 1) + 1
+  Const reqd% = ptr% + 7 + w% * h% * 2 - twm.ptr%(0)
+  Const alloc% = (Bound(twm.data%(), 1) - Bound(twm.data%(), 0)) * 8
   If reqd% > alloc% Then
     Error "out of txtwm memory: " + Str$(alloc%) + " bytes allocated, " + Str$(reqd%) + " required"
   EndIf
@@ -468,26 +467,25 @@ Sub twm.redraw()
       Text vx%, vy%, ch$,,,, twm.fg%(at%), twm.bg%(at%)
       If at% And &b01000000 Then Text vx%+1, vy%, ch$,,,, twm.fg%(at%), -1
       Inc vx%, twm.fw%
-    Next x%
+    Next ' x%
     Inc pa%, twm.w%
     Inc pc%, twm.w%
     Inc vy%, twm.fh%
-  Next y%
+  Next ' y%
 End Sub
 
-Sub twm.cls()
+Sub twm.cls(x%, y%, w%, h%)
   twm.lock_vga_cursor(1)
-  Memory Set twm.pc%, 32, twm.w% * twm.h%
-  Memory Set twm.pa%, twm.at%, twm.w% * twm.h%
-  twm.redraw()
+  Local s$ = Space$(Choice(w%, w%, twm.w%)), yy%
+  For yy% = y% To y% + Choice(h%, h%, twm.h%) - 1
+    twm.x% = x% : twm.y% = yy%
+    twm.print(s$)
+  Next
   twm.lock_vga_cursor(0)
 End Sub
 
 Sub twm.box(x%, y%, w%, h%)
-  Local i%
-  Local pc% = twm.pc%
-  Local s$
-  Local ad%
+  Local ad%, i%, pc% = twm.pc%, s$
 
   twm.lock_vga_cursor(1)
 
@@ -522,6 +520,44 @@ Sub twm.box(x%, y%, w%, h%)
   twm.lock_vga_cursor(0)
 End Sub
 
+' TODO: Implement intersections of boxes as was done for the original
+'       twm.box() command above.
+Sub twm.box1(x%, y%, w%, h%)
+  Local ad%, i%, pc% = twm.pc%, s$
+
+  twm.lock_vga_cursor(1)
+
+  ' Top
+  Poke Var s$, 0, w%
+  ad% = pc% + twm.w% * y% + x%
+  Poke Var s$, 1, twm.box_or%(&hDA, Peek(Byte ad%))
+  For i% = 2 To w% - 1
+    Poke Var s$, i%, twm.box_or%(&hC4, Peek(Byte ad% + i% - 1))
+  Next
+  Poke Var s$, w%, twm.box_or%(&hBF, Peek(Byte ad% + w% - 1))
+  twm.print_at(x%, y%, s$)
+
+  ' Sides
+  For twm.y% = y% + 1 To y% + h% - 2
+    Inc ad%, twm.w%
+    twm.x% = x%
+    twm.putc(twm.box_or%(&hB3, Peek(Byte ad%)))
+    twm.x% = x% +  w% - 1
+    twm.putc(twm.box_or%(&hB3, Peek(Byte ad% + w% - 1)))
+  Next
+
+  ' Bottom
+  Inc ad%, twm.w%
+  Poke Var s$, 1, twm.box_or%(&hC0, Peek(Byte ad%))
+  For i% = 2 To w% - 1
+    Poke Var s$, i%, twm.box_or%(&hC4, Peek(Byte ad% + i% - 1))
+  Next
+  Poke Var s$, w%, twm.box_or%(&hD9, Peek(Byte ad% + w% - 1))
+  twm.print_at(x%, y% + h% - 1, s$)
+
+  twm.lock_vga_cursor(0)
+End Sub
+
 ' Combines a new character 'ch%' and an existing character 'ex%'.
 ' If they are both 'box-drawing' characters then returns an appropriate junction character,
 ' otherwise returns the new character 'ch%'.
@@ -536,6 +572,7 @@ End Function
 
 ' Sends VT100 control-code to hide/show cursor to the serial console.
 Sub twm.enable_cursor(z%)
+'!if !defined(PICOMITE) && !defined(GAMEMITE)
   Local s$ = LCase$(Mm.Info$(Option Console))
   Select Case s$
     Case "screen" : Exit Sub
@@ -548,8 +585,11 @@ Sub twm.enable_cursor(z%)
       ' the same line as a CASE clause.
       Option Console Serial
   End Select
+'!endif
   Print Chr$(27) Choice(z%, "[?25h", "[?25l");
+'!if !defined(PICOMITE) && !defined(GAMEMITE)
   If s$ = "both" Then Option Console Both
+'!endif
 
   If z% = twm.cursor_enabled% Then Exit Sub
   twm.cursor_enabled% = z%
@@ -563,6 +603,7 @@ End Sub
 ' Sounds the console "bell".
 Sub twm.bell()
   Play Tone 800, 800, 200
+'!if !defined(PICOMITE) && !defined(GAMEMITE)
   Local s$ = LCase$(Mm.Info$(Option Console))
   Select Case s$
     Case "screen" : Exit Sub
@@ -572,6 +613,7 @@ Sub twm.bell()
   End Select
   Print Chr$(7);
   If s$ = "both" Then Option Console Both
+'!endif
 End Sub
 
 ' Toggle whether the VGA cursor is lit or not,
@@ -600,10 +642,13 @@ Sub twm.lock_vga_cursor(lock%)
   Inc twm.cursor_locked%, Choice(lock%, 1, -1))
   If twm.id% = -1 Then Exit Sub
 
-  If lock% < 0 Then Error "Unbalanced cursor lock/unlock."
+  If twm.cursor_locked% < 0 Then Error "Unbalanced cursor lock/unlock."
+
+  ' No need to restore cell contents if unlocking.
+  If Not lock% Then Exit Sub
 
   ' Character cell contents has already been restored and we are just counting up.
-  If lock% > 1 Then Exit Sub
+  If twm.cursor_locked% > 1 Then Exit Sub
 
   ' Do not restore character cell contents if cursor is out of bounds,
   ' if there are issues may need to check for < 0 too.

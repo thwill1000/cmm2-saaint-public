@@ -2,14 +2,14 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
-'!ifndef NO_INCLUDE_GUARDS
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.provides("file")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-Const file.SEPARATOR = sys.string_prop$("separator")
+Const file.SEPARATOR = sys.SEPARATOR$()
 
 ' Gets the number of files in directory d$ whose names match pattern$.
 '
@@ -90,7 +90,7 @@ Function file.find$(path$, pattern$, type$)
     On Error Skip
     Erase file.find_stack$()
     On Error Clear
-    If sys.is_device%("mmb4l", "mmb4w") Then
+    If sys.is_platform%("mmb4l", "mmb4w") Then
       Dim file.find_stack$(1000) Length 255
     Else
       Dim file.find_stack$(500) Length 128
@@ -255,9 +255,9 @@ Function file.get_canonical$(f$)
       tmp$ = "A:" + tmp$
     Case "~"
       If tmp$ = "~" Then
-        tmp$ = sys.string_prop$("home")
+        tmp$ = sys.HOME$()
       ElseIf Left$(tmp$, 2) = "~/" Or Left$(tmp$, 2) = "~\" Then
-        tmp$ = sys.string_prop$("home") + Mid$(tmp$, 2)
+        tmp$ = sys.HOME$() + Mid$(tmp$, 2)
       Else
         tmp$ = Cwd$ + "/" + tmp$
       EndIf
@@ -343,6 +343,9 @@ End Function
 ' @param       pattern$  file pattern to match on, e.g. "*.bas".
 ' @param       type$     type of files to return: "dir", "file" or "all".
 ' @param[out]  out$()    the names of matching files are copied into this array.
+'                        If there are too many matching files then this array
+'                        will be incomplete, but the returned number of files
+'                        will be correct.
 ' @return                the number of files matching the pattern.
 Function file.get_files%(d$, pattern$, type$, out$())
   If Not file.is_directory%(d$) Then
@@ -360,39 +363,50 @@ Function file.get_files%(d$, pattern$, type$, out$())
       Exit Function
   End Select
 
+  Local i% = Mm.Info(Option Base)
   Do While f$ <> ""
     If file.fnmatch%(pattern$, f$) Then
-      out$(file.get_files% + Mm.Info(Option Base)) = f$
+      If i% <= Bound(out$(), 1) Then out$(i%) = f$ : Inc i%
       Inc file.get_files%
     EndIf
     f$ = Dir$()
   Loop
 
   If file.get_files% > 0 Then
-    Sort out$(), , &b10, Mm.Info(Option Base), file.get_files%
+    Sort out$(), , &b10, Mm.Info(Option Base), i% - Mm.Info(Option Base)
   EndIf
 End Function
 
 ' Gets the name of file/directory 'f$' minus any path information.
 Function file.get_name$(f$)
   Local i%
-
   For i% = Len(f$) To 1 Step -1
     If InStr("/\", Mid$(f$, i%, 1)) > 0 Then Exit For
-  Next i%
-
+  Next
   file.get_name$ = Mid$(f$, i% + 1)
 End Function
 
 ' Gets the parent directory of 'f$', or the empty string if it does not have one.
 Function file.get_parent$(f$)
+  Select Case Len(f$)
+    Case 1
+      If f$ = "/" Or f$ = "\" Then Exit Function
+    Case 2
+      If Mid$(f$, 2, 1) = ":" Then Exit Function
+    Case 3
+      Select Case Right$(f$, 2)
+        Case ":/", ":\"
+          Exit Function
+      End Select
+  End Select
   Local i%
-
   For i% = Len(f$) To 1 Step -1
     If InStr("/\", Mid$(f$, i%, 1)) > 0 Then Exit For
-  Next i%
-
+  Next
   If i% > 0 Then file.get_parent$ = Left$(f$, i% - 1)
+  If file.get_parent$ = "" Then
+    If InStr("/\", Left$(f$, 1)) Then file.get_parent$ = Left$(f$, 1)
+  EndIf
 End Function
 
 Function file.is_absolute%(f$)
