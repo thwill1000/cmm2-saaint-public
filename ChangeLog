@@ -1,6 +1,13 @@
 ChangeLog
 ---------
 
+Version 2.0.8 - 15-Dec-2024:
+  - Added support for running on MMB4L 0.7.0.
+  - Added support for running from MMBasic Game*Pack.
+  - Added support for running on PicoMite (RP2350 only for the moment) using
+    the CMM2 RUN command.
+  - Updated to use latest version of 'splib'.
+
 Version 2.0.7 - 6-Apr-2022:
   - Added support for SAAINT running on MMBasic for Windows (5.07.03b8).
 

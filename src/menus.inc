@@ -31,7 +31,7 @@ Function menus.main$(advent$)
   con.println(str.rpad$("C  Credits & License", width%), 1)
   con.println(str.rpad$("Q  Quit",              width%), 1)
   con.println()
-  con.println("Version " + SAAINT_VERSION$, 1)
+  con.println("Version " + sys.format_version$(SAAINT_VERSION), 1)
 
   Do While Inkey$ <> "" : Loop
   Local k$
@@ -148,6 +148,7 @@ Function menus.choose_advent$()
   Inc twm_sz%, 7 + 2 * (MENU_WIDTH * MENU_HEIGHT)
   Inc twm_sz%, 7 + 2 * ((MENU_WIDTH + 1) * MENU_HEIGHT)
   twm.init(3, twm_sz%)
+  twm.console_only% = 1
   Local win0% = twm.new_win%(0, 0, con.WIDTH, con.HEIGHT)
   Local left% = twm.new_win%(2, 4, MENU_WIDTH%, MENU_HEIGHT%)
   Local right% = twm.new_win%(con.WIDTH / 2 + 1, 4, MENU_WIDTH% + 1, MENU_HEIGHT%)
