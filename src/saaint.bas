@@ -1,12 +1,14 @@
 ' Scott Adams Adventure Game Interpreter
 ' For MMBasic 5.07
-' Copyright (c) 2020-2023 Thomas Hugo Williams
+' Copyright (c) 2020-2024 Thomas Hugo Williams
 ' Developed with the assistance of Bill McKinley
 ' Based on original TRS-80 Level II BASIC code (c) 1978 Scott Adams
 
 Option Base 0
 Option Default Integer
 Option Explicit On
+
+Const SAAINT_VERSION = 200308 ' 2.0.8
 
 #Include "splib/system.inc"
 #Include "splib/array.inc"
@@ -30,10 +32,12 @@ Option Explicit On
 #Include "debug.inc"
 #Include "interp.inc"
 
-Const SAAINT_VERSION$ = "2.0.7"
 Const ROOT_DIR$ = file.get_canonical$(Mm.Info$(Path) + "..")
 Const TMP_DIR$ = ROOT_DIR$ + "/tmp"
 Const INI_FILE$ = ROOT_DIR$ + "/saaint.ini"
+
+Option Break 4
+On Key 3, end_game()
 
 configure_console()
 main()
@@ -50,7 +54,7 @@ Sub configure_console()
       Option CodePage "MMB4L"
       On Error Skip 1 ' CONSOLE SETSIZE can fail, but keep going if it does.
       Console SetSize con.WIDTH%, con.HEIGHT%
-      Console SetTitle "SAAINT v" + SAAINT_VERSION$
+      Console SetTitle "SAAINT v" + sys.format_version$(SAAINT_VERSION)
     Case "MMBasic for Windows"
       ' Use the current mode/font and scale the console appropriately.
       Local h% = Mm.VRes \ Mm.Info(FontHeight)
@@ -72,6 +76,7 @@ Sub main()
   ' Allow an adventure file to be specified at the command line.
   Local f$
   If str.trim$(Mm.CmdLine$) <> "" Then
+    If Left$(str.trim$(Mm.CmdLine$), 7) = "--shell" Then Goto main_menu
     f$ = catalogue.find$(str.trim$(Mm.CmdLine$))
     If f$ = "" Then
       Print "File not found: " + str.trim$(Mm.CmdLine$)
@@ -150,11 +155,7 @@ play_game:
 
 quit_game:
 
-  con.endl()
-  con.println("Goodbye!", 1)
-  con.close_all()
-  Pause 2000
-
+  end_game()
 End Sub
 
 ' Reads contents of options$() map from .ini file.
@@ -207,4 +208,13 @@ Sub write_inifile()
   Local ok% = inifile.write%(1, options$())
   Close #1
   If Not ok% Then Error "write_inifile: " + sys.err$
+End Sub
+
+Sub end_game()
+  con.endl()
+  con.println("Goodbye!", 1)
+  con.close_all()
+  Pause 2000
+  If InStr(Mm.CmdLine$, "--shell") Then sys.run_shell()
+  End
 End Sub
