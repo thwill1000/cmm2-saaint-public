@@ -1,6 +1,5 @@
-' Copyright (c) 2020-2024 Thomas Hugo Williams
+' Copyright (c) 2020-2026 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07
 
 '!info defined CMM2
 '!info defined GAMEMITE
@@ -58,9 +57,16 @@ xyz_not_declared% = 1
 If Not Mm.ErrNo Then Error "OPTION EXPLICIT is required by splib"
 On Error Clear
 
-Const sys.VERSION = 102301 ' 1.2.1
-Const sys.NO_DATA$ = Chr$(&h7F)
-Const sys.CRLF$ = Chr$(13) + Chr$(10)
+Const sys.VERSION = 103300 ' 1.3.0
+
+'!if defined(INLINE_CONSTANTS)
+  '!replace sys.NO_DATA$  Chr$(&h7F)
+  '!replace sys.CRLF$     { Chr$(13) + Chr$(10) }
+'!else
+  Const sys.NO_DATA$ = Chr$(&h7F)
+  Const sys.CRLF$ = Chr$(13) + Chr$(10)
+'!endif
+
 '!if defined(GAMEMITE)
   '!uncomment_if true
   ' Const sys.FIRMWARE = Int(1000000 * Mm.Info(Version))
@@ -224,18 +230,34 @@ Sub sys.restore_break()
   Option Break 3
 End Sub
 
-'!if defined(GAMEMITE)
+Function sys.is_windows%()
+  If Mm.Device$ = "MMB4L" Then
+    sys.is_windows% = (Mm.Info$(Arch) = "Windows x86_64")
+  Else
+    sys.is_windows% = (Mm.Device$ = "MMBasic for Windows")
+  EndIf
+End Function
+
+Sub sys.normalize_separators(path$)
+  Local i%
+  For i% = 1 To Len(path$)
+    If Peek(Var path$, i%) = Asc("\") Then Poke Var path$, i%, Asc("/")
+  Next
+End Sub
+
+'!if defined(REAL_GAMEMITE)
   '!replace { sys.HOME$ ( ) } { "A:" }
 '!else
 Function sys.HOME$()
-  Select Case Mm.Device$
-    Case "MMB4L"
-      sys.HOME$ = Mm.Info$(EnvVar "HOME")
-    Case "MMBasic for Windows"
-      sys.HOME$ = Mm.Info$(EnvVar "HOMEDIR") + Mm.Info$(EnvVar "HOMEPATH")
-    Case Else
-      sys.HOME$ = "A:"
-  End Select
+  If sys.is_windows%() Then
+    sys.HOME$ = Mm.Info$(EnvVar "USERPROFILE")
+    If sys.HOME$ = "" Then sys.HOME$ = Mm.Info$(EnvVar "HOMEDIR") + Mm.Info$(EnvVar "HOMEPATH")
+    sys.normalize_separators(sys.HOME$)
+  ElseIf Mm.Info$(Device X) = "MMB4L" Then
+    sys.HOME$ = Mm.Info$(EnvVar "HOME")
+  Else
+    sys.HOME$ = "A:"
+  EndIf
 End Function
 '!endif
 
@@ -263,18 +285,21 @@ Function sys.SEPARATOR$()
 End Function
 '!endif
 
-'!if defined(GAMEMITE)
+'!if defined(REAL_GAMEMITE)
   '!replace { sys.TMPDIR$ ( ) } { "A:/tmp" }
 '!else
 Function sys.TMPDIR$()
-  Select Case Mm.Device$
-    Case "MMB4L"
-      sys.TMPDIR$ = Choice(Mm.Info$(EnvVar "TMPDIR") = "", "/tmp", Mm.Info$(EnvVar "TMPDIR"))
-    Case "MMBasic for Windows"
-      sys.TMPDIR$ = Mm.Info$(EnvVar "TMP")
-    Case Else
-      sys.TMPDIR$ = "A:/tmp"
-  End Select
+  If sys.is_windows%() Then
+    sys.TMPDIR$ = Mm.Info$(EnvVar "TMP")
+    If sys.TMPDIR$ = "" Then sys.TMPDIR$ = Mm.Info$(EnvVar "TEMP")
+    If sys.TMPDIR$ = "" Then sys.TMPDIR$ = sys.HOME$() + "/AppData/Local/Temp"
+    sys.normalize_separators(sys.TMPDIR$)
+  ElseIf Mm.Info$(Device X) = "MMB4L" Then
+    sys.TMPDIR$ = Mm.Info$(EnvVar "TMPDIR")
+    If sys.TMPDIR$ = "" Then sys.TMPDIR$ = "/tmp"
+  Else
+    sys.TMPDIR$ = "A:/tmp"
+  EndIf
 End Function
 '!endif
 
@@ -326,3 +351,41 @@ Function sys.error%(code%, msg$)
   sys.error% = code%
   sys.err$ = msg$
 End Function
+
+' Reads the '.mmbasic-shell' file.
+'
+' @param  exist%  If 1 then ERROR if file does not exist, otherwise return empty string.
+' @param  fnbr%   File number to use for accessing the file, if unspecified/0 then uses #9.
+' @return         The contents of the first line of the file.
+Function sys.read_shell_file$(exist%, fnbr%)
+  Const f$ = sys.HOME$() + "/.mmbasic-shell"
+  If Not exist% And Not Mm.Info(Exists f$) Then Exit Function
+  Const _fnbr% = Choice(fnbr%, fnbr%, 9)
+  Open f$ For Input As _fnbr%
+  Line Input #_fnbr%, sys.read_shell_file$
+  Close _fnbr%
+End Function
+
+' Writes the '.mmbasic-shell' file for later reading by sys.run_shell().
+'
+' @param  s$     Contents to write to the file, if empty then writes path of current program.
+' @param  fnbr%  File number to use for accessing the file, if unspecified/0 then uses #9.
+Sub sys.write_shell_file(s$, fnbr%)
+  Const f$ = sys.HOME$() + "/.mmbasic-shell"
+  Const _s$ = Choice(s$ = "", Mm.Info(Current), s$)
+  Const _fnbr% = Choice(fnbr%, fnbr%, 9)
+  If sys.read_shell_file$(0, _fnbr%) <> _s$ Then
+    ' Only write if content has changed.
+    Open f$ For Output As _fnbr%
+    Print #_fnbr%, _s$
+    Close _fnbr%
+  EndIf
+End Sub
+
+' Runs the program specified by the '.mmbasic-shell' file.
+'
+' @param  fnbr%  File number to use for accessing the file, if unspecified/0 then uses #9.
+Sub sys.run_shell(fnbr%)
+  Const prog$ = sys.read_shell_file$(1, fnbr%)
+  If prog$ <> "" Then Run prog$
+End Sub
