@@ -7,7 +7,7 @@ Adams, Brian Howarth and others to be played on:
  - [Linux using MMB4L](https://github.com/thwill1000/mmb4l)
  - [Windows using MMBasic for Windows](https://github.com/UKTailwind/MMB4W)
 
-Written in MMBasic 5.07 by Thomas Hugo Williams with the assistance of Bill McKinley in 2020-2022.
+Written in MMBasic 5.07 by Thomas Hugo Williams with the assistance of Bill McKinley in 2020-2026.
 
 Although it consists almost entirely of new code it is derived *with permission* from:
  - Scott Adams' "Pirate Adventure" for TRS-80 published in BYTE Magazine Volume 05 Number 12 - December 1980
