@@ -1,5 +1,5 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
-' For MMBasic 5.07
+' Copyright (c) 2020-2026 Thomas Hugo Williams
+' For MMBasic 6
 
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
@@ -139,9 +139,10 @@ End Sub
 Function menus.choose_advent$()
   Const MENU_WIDTH% = Int(con.WIDTH / 2) - 4
   Const MENU_HEIGHT% = con.HEIGHT - 6
+  Const ORIGINAL_TYPE% = con.get_type%()
 
   Cls
-  Option Console Serial
+  con.set_type(con.SERIAL%) ' Why do we only show menu on serial console?
   twm.enable_cursor(0)
 
   Local twm_sz% = 7 + 2 * (con.WIDTH * con.HEIGHT)
@@ -263,7 +264,7 @@ Function menus.choose_advent$()
     Case 10, 13, 32 : menus.choose_advent$ = map.get$(m$(), m$(sel%))
   End Select
 
-  Option Console Both
+  con.set_type(ORIGINAL_TYPE%)
   twm.free()
 
 End Function
