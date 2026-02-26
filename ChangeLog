@@ -1,6 +1,11 @@
 ChangeLog
 ---------
 
+Version 2.0.9 - 26-Feb-2026:
+  - Fixed bug in restoring original console type after showing
+    adventure selection menu.
+  - Updated to use latest version of 'splib'.
+
 Version 2.0.8 - 15-Dec-2024:
   - Added support for running on MMB4L 0.7.0.
   - Added support for running from MMBasic Game*Pack.

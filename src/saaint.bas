@@ -1,6 +1,6 @@
 ' Scott Adams Adventure Game Interpreter
-' For MMBasic 5.07
-' Copyright (c) 2020-2024 Thomas Hugo Williams
+' For MMBasic 6
+' Copyright (c) 2020-2026 Thomas Hugo Williams
 ' Developed with the assistance of Bill McKinley
 ' Based on original TRS-80 Level II BASIC code (c) 1978 Scott Adams
 
@@ -8,7 +8,7 @@ Option Base 0
 Option Default Integer
 Option Explicit On
 
-Const SAAINT_VERSION = 200308 ' 2.0.8
+Const SAAINT_VERSION = 200309 ' 2.0.9
 
 #Include "splib/system.inc"
 #Include "splib/array.inc"
