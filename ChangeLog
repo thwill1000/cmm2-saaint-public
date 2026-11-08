@@ -1,6 +1,9 @@
 ChangeLog
 ---------
 
+Version 2.1-alpha.1 - 8-Nov-2026:
+  - Initial hacked together support for PicoCalc.
+
 Version 2.0.9 - 26-Feb-2026:
   - Fixed bug in restoring original console type after showing
     adventure selection menu.

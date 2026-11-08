@@ -1,18 +1,22 @@
 ' Copyright (c) 2020-2026 Thomas Hugo Williams
 ' For MMBasic 6
 
+'!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("catalogue", "console", "file", "map", "metadata", "txtwm")
 sys.provides("menus")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
+
+Const RESOURCES_DIR$ = Mm.Info(Path) + "../resources"
 
 ' This file contains functions to show the main, adventure selection
 ' and adventure specific menus as well as the credits and
 ' instructions.
 
 Function menus.main$(advent$)
-  Local f$ = Mm.Info$(Path) + "title.txt")
+  Local f$ = RESOURCES_DIR$ + "/title.txt"
 
   Cls
   twm.enable_cursor(0)
@@ -94,7 +98,7 @@ End Function
 
 Sub menus.credits(top%)
   Local f$ = Choice(top%, "", metadata.credits_file$)
-  f$ = Choice(f$ <> "", f$, Mm.Info$(Path) + "credits.txt")
+  f$ = Choice(f$ <> "", f$, RESOURCES_DIR$ + "/credits.txt")
 
   Cls
   twm.enable_cursor(0)
@@ -116,7 +120,7 @@ End Sub
 
 Sub menus.instructions(top%)
   Local f$ = Choice(top%, "", metadata.instructions_file$)
-  f$ = Choice(f$ <> "", f$, Mm.Info$(Path) + "instructions.txt")
+  f$ = Choice(f$ <> "", f$, RESOURCES_DIR$ + "/instructions.txt")
 
   Cls
   twm.enable_cursor(0)

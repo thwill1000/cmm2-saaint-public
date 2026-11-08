@@ -1,13 +1,15 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
-' For MMBasic 5.07
+' Copyright (c) 2020-2026 Thomas Hugo Williams
+' For MMBasic 6
 
 ' Current game state.
 
+'!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("advent", "bits", "console", "file", "string")
 sys.provides("state")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 Const state.SAVE_DIR$ = file.get_canonical$(Mm.Info$(Path) + "../saves")
 Const state.FD% = 1

@@ -1,13 +1,15 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
-' For MMBasic 5.07
+' Copyright (c) 2020-2026 Thomas Hugo Williams
+' For MMBasic 6
 
 ' This file implements the actual interpreter loop.
 
+'!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("advent", "bits", "console", "debug", "map", "math", "script", "state", "string")
 sys.provides("interp")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 Const STATE_OK      = 0
 Const STATE_QUIT    = 1

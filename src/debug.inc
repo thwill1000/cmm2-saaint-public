@@ -1,13 +1,15 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
-' For MMBasic 5.07
+' Copyright (c) 2020-2026 Thomas Hugo Williams
+' For MMBasic 6
 
 ' This file provides subroutines to output debugging information.
 
+'!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("advent", "bits", "console", "state", "string")
 sys.provides("debug")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 Const debug.NEW_LINES% = &h01  ' Put a new line before and after each table dump.
 Const debug.TWO_LINES% = &h02  ' Dump each action on two lines rather than one.

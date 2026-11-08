@@ -1,13 +1,15 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
-' For MMBasic 5.07
+' Copyright (c) 2020-2026 Thomas Hugo Williams
+' For MMBasic 6
 
 ' This file contains functions for finding and listing '.dat' files.
 
+'!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("file", "string", "metadata")
 sys.provides("catalogue")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 Const catalogue.DIR$ = Mm.Info$(Path) + "../adventures"
 Const catalogue.FD_IN% = 1

@@ -8,7 +8,7 @@ Option Base 0
 Option Default Integer
 Option Explicit On
 
-Const SAAINT_VERSION = 200309 ' 2.0.9
+Const SAAINT_VERSION = 201001 ' 2.1 alpha 1
 
 #Include "splib/system.inc"
 #Include "splib/array.inc"
@@ -44,8 +44,14 @@ main()
 End
 
 Sub configure_console()
-  con.HEIGHT% = 33
-  con.WIDTH%  = 80
+  If Mm.VRes = 320 And Mm.HRes = 320 Then
+    ' PicoCalc
+    con.HEIGHT% = Mm.VRes / Mm.Info(FontHeight)
+    con.WIDTH% = Mm.HRes / Mm.Info(FontWidth)
+  Else
+    con.HEIGHT% = 33
+    con.WIDTH%  = 80
+  EndIf
 
   Select Case Mm.Device$
     Case "Colour Maximite 2", "Colour Maximite 2 G2"

@@ -1,17 +1,19 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
+' Copyright (c) 2020-2026 Thomas Hugo Williams
 ' Developed with the assistance of Bill McKinley
 ' Based on original TRS-80 Level II BASIC code (c) 1978 Scott Adams
-' For MMBasic 5.07
+' For MMBasic 6
 
 ' This file declares the variables that hold the (read-only) adventure
 ' data/structure and contains the subroutines that fill those
 ' variables from '.dat' files in ScottFree format.
 
+'!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("file")
 sys.provides("advent")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 Const advent.FD_IN% = 1
 

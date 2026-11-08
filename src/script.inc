@@ -1,14 +1,16 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
+' Copyright (c) 2020-2026 Thomas Hugo Williams
 ' Developed with the assistance of Bill McKinley
-' For MMBasic 5.07
+' For MMBasic 6
 
 ' Implementation of script/walkthrough record and replay.
 
+'!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("advent", "crypt", "console", "file")
 sys.provides("script")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 Const script.DIR$ = file.get_canonical$(Mm.Info$(Path) + "../scripts")
 Const script.FD_IN% = 2

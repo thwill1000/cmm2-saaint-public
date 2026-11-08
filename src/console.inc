@@ -1,11 +1,13 @@
-' Copyright (c) 2019-2023 Thomas Hugo Williams
-' For MMBasic 5.07
+' Copyright (c) 2019-2026 Thomas Hugo Williams
+' For MMBasic 6
 
+'!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("vt100")
 sys.provides("console")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 Const con.SCREEN% = &h01
 Const con.SERIAL% = &h02

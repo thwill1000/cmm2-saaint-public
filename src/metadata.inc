@@ -1,14 +1,16 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
-' For MMBasic 5.07
+' Copyright (c) 2020-2026 Thomas Hugo Williams
+' For MMBasic 6
 
 ' This file contains functions for reading SAAINT metadata '.ext'
 ' files.
 
+'!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("file", "string")
 sys.provides("metadata")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 Const metadata.FD_IN% = 1
 Const metadata.FD_OUT% = 2
