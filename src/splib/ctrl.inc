@@ -1,4 +1,4 @@
-' Copyright (c) 2022-2025 Thomas Hugo Williams
+' Copyright (c) 2022-2026 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 
 ' MMBasic Controller Library
@@ -599,7 +599,7 @@ Sub snes_dx(x%)
   End Select
 End Sub
 
-Sub wii_internal(i2c%, x%, type%)
+Sub wii_internal(i2c%, x%, wii_type%)
   Static is_open%(3)
   If is_open%(i2c%) = -1 Then Error "I2C" + Str$(i2c%) + " failed to open" : Exit Sub
 
@@ -654,14 +654,14 @@ Sub wii_internal(i2c%, x%, type%)
       is_open%(i2c%) = Nunchuk(T, i2c%)
       Select Case is_open%(i2c%)
         Case &hA4200000
-          If Not(type% And &h01) Then
+          If Not(wii_type% And &h01) Then
             Controller Nunchuk Close i2c%
             is_open%(i2c%) = -1
             Error "Nunchuk controller on I2C" + Str$(i2c%) + " not supported"
           EndIf
         Case &hA4200101
           Controller Nunchuk Close i2c%
-          If Not(type% And &h10) Then
+          If Not(wii_type% And &h10) Then
             is_open%(i2c%) = -1
             Error "Classic controller on I2C" + Str$(i2c%) + " not supported"
           Else

@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2025 Thomas Hugo Williams
+' Copyright (c) 2020-2026 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 6.00
+' For MMBasic 6
 
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
@@ -19,16 +19,16 @@ If sys.err$ <> "" Then Error sys.err$
 '
 ' @param   d$        directory to process.
 ' @param   pattern$  file pattern to match on, e.g. "*.bas".
-' @param   type$     type of files to return: "dir", "file" or "all".
+' @param   ftype$    type of files to return: "dir", "file" or "all".
 ' @return  the number of matching files.
-Function file.count_files%(d$, pattern$, type$)
+Function file.count_files%(d$, pattern$, ftype$)
   If Not file.is_directory%(d$) Then
     file.count_files% = sys.error%(sys.FAILURE, "Not a directory '" + d$ + "'")
     Exit Function
   EndIf
 
   Local f$
-  Select Case LCase$(type$)
+  Select Case LCase$(ftype$)
     Case "all"
       f$ = Dir$(d$ + "/*", All)
     Case "dir"
@@ -36,7 +36,7 @@ Function file.count_files%(d$, pattern$, type$)
     Case "file", ""
       f$ = Dir$(d$ + "/*", File)
     Case Else
-      file.count_files% = sys.error%(sys.FAILURE, "Invalid file type '" + type$ + "'")
+      file.count_files% = sys.error%(sys.FAILURE, "Invalid file type '" + ftype$ + "'")
       Exit Function
     EndIf
   End Select
@@ -49,12 +49,12 @@ End Function
 
 ' Does the file/directory 'f$' exist?
 '
-' @param  f$     name/path of file/directory
-' @param  type$  type of files to check for: "dir", "file" or "all".
-' @return        1 if the file/directory exists, otherwise 0
-Function file.exists%(f$, type$)
+' @param  f$      name/path of file/directory
+' @param  ftype$  type of files to check for: "dir", "file" or "all".
+' @return         1 if the file/directory exists, otherwise 0
+Function file.exists%(f$, ftype$)
   Local f_$ = Choice(Len(f$), f$, "."), i%
-  Local type_$ = "|" + Choice(Len(type$), LCase$(type$), "all") + "|"
+  Const ftype_$ = "|" + Choice(Len(ftype$), LCase$(ftype$), "all") + "|"
   If f_$ = "."  Then f_$ = Cwd$
   If Len(f_$) = 2 Then
     If Mid$(f_$, 2, 1) = ":" Then Cat f_$, "/"
@@ -62,8 +62,8 @@ Function file.exists%(f$, type$)
   For i% = 1 To Len(f_$)
     If Peek(Var f_$, i%) = 92 Then Poke Var f_$, i%, 47
   Next
-  If InStr("|file|all|", type_$) Then Inc file.exists%, Mm.Info(Exists File f_$)
-  If InStr("|dir|all|", type_$) Then Inc file.exists%, Mm.Info(Exists Dir f_$)
+  If InStr("|file|all|", ftype_$) Then Inc file.exists%, Mm.Info(Exists File f_$)
+  If InStr("|dir|all|", ftype_$) Then Inc file.exists%, Mm.Info(Exists Dir f_$)
   file.exists% = file.exists% > 0
 End Function
 
@@ -71,7 +71,7 @@ End Function
 '
 ' @param   path$     root directory to start looking from.
 ' @param   pattern$  file pattern to match on, e.g. "*.bas".
-' @param   type$     type of files to return: "dir", "file" or "all".
+' @param   ftype$    type of files to return: "dir", "file" or "all".
 ' @return  the absolute path to the first match found. To retrieve subsequent
 '          matches call this function with no parameters, i.e. f$ = file.find().
 '          Returns the empty string if there are no more matches.
@@ -83,8 +83,8 @@ End Function
 '       better implemented as a CSUB.
 '       Alternatively need to use a more efficient way to store strings
 '       (a pool?), or take advantage of the fact they have common prefixes.
-Function file.find$(path$, pattern$, type$)
-  Static stack_ptr%, pattern_$, type_$
+Function file.find$(path$, pattern$, ftype$)
+  Static stack_ptr%, pattern_$, ftype_$
   Local f$, is_dir%, lb%, name$, num%
 
   If path$ <> "" Then
@@ -105,11 +105,11 @@ Function file.find$(path$, pattern$, type$)
 
     stack_ptr% = Bound(file.find_stack$(), 0)
     pattern_$ = Choice(pattern$ = "", "*", pattern$)
-    type_$ = Choice(type$ = "", "FILE", LCase$(type$))
+    ftype_$ = Choice(ftype$ = "", "FILE", LCase$(ftype$))
     f$ = file.get_canonical$(path$)
     file.find_stack$(stack_ptr%) = f$ : Inc stack_ptr%
-    If Not InStr("|all|dir|file|", "|" + type_$ + "|") Then
-      Error "Invalid file type '" + type_$ + "'"
+    If Not InStr("|all|dir|file|", "|" + ftype_$ + "|") Then
+      Error "Invalid file type '" + ftype_$ + "'"
       Exit Function ' So we stop even if errors are being ignored.
     EndIf
 
@@ -146,7 +146,7 @@ Function file.find$(path$, pattern$, type$)
         Loop
 
         ' Add all files matching pattern.
-        If type_$ <> "dir" Then
+        If ftype_$ <> "dir" Then
           ' f$ = Dir$(file.find$ + "/*", File)
           f$ = Dir$(file.find$ + "/" + pattern_$, File)
           Do While f$ <> ""
@@ -173,11 +173,11 @@ Function file.find$(path$, pattern$, type$)
     EndIf
 
     If is_dir% Then
-      If InStr("all|dir", type_$) Then
+      If InStr("all|dir", ftype_$) Then
         If file.fnmatch%(pattern_$, name$) Then Exit Do
       EndIf
     Else
-      If InStr("all|file", type_$) Then Exit Do
+      If InStr("all|file", ftype_$) Then Exit Do
     EndIf
 
   Loop
@@ -348,20 +348,20 @@ End Function
 '
 ' @param       d$         directory to process.
 ' @param       pattern$   file pattern to match on, e.g. "*.bas".
-' @param       type$      type of files to return: "dir", "file" or "all".
+' @param       ftype$     type of files to return: "dir", "file" or "all".
 ' @param[out]  onames$()  the names of matching files are copied into this array.
 '                         If there are too many matching files then this array
 '                         will be incomplete, but the returned number of files
 '                         will be correct.
 ' @return                 the number of files matching the pattern.
-Function file.get_files%(d$, pattern$, type$, onames$())
+Function file.get_files%(d$, pattern$, ftype$, onames$())
   If Not file.is_directory%(d$) Then
     file.get_files% = sys.error%(sys.FAILURE, "Not a directory '" + d$ + "'")
     Exit Function
   EndIf
 
   Local f$
-  Select Case LCase$(type$)
+  Select Case LCase$(ftype$)
     Case "all"
       f$ = Dir$(d$ + "/*", All)
     Case "dir"
@@ -369,7 +369,7 @@ Function file.get_files%(d$, pattern$, type$, onames$())
     Case "file", ""
       f$ = Dir$(d$ + "/*", File)
     Case Else
-      file.get_files% = sys.error%(sys.FAILURE, "Invalid file type '" + type$ + "'")
+      file.get_files% = sys.error%(sys.FAILURE, "Invalid file type '" + ftype$ + "'")
       Exit Function
   End Select
 
