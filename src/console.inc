@@ -31,6 +31,12 @@ Dim con.HEIGHT = 50
 Dim con.WIDTH = 100
 '!endif
 
+Sub con.init(width%, height%, spin_enabled%)
+  con.WIDTH = width%
+  con.HEIGHT = height%
+'  con.spin_enabled = spin_enabled%
+End Sub
+
 ' @param  p$  prompt
 Function con.in$(p$, echo)
   Local s$
@@ -166,9 +172,9 @@ End Sub
 Sub con.println(s$, center)
 
   If Len(s$) > 0 Then
-    If center Then
-      If con.x <> 1 Then Error "Cannot center text unless on a new line."
-      If Len(s$) < con.WIDTH Then con.print(Space$((con.WIDTH - Len(s$)) \ 2) + s$)
+    If center And con.x <> 1 Then Error "Cannot center text unless on a new line."
+    If center And Len(s$) < con.WIDTH Then
+      con.print(Space$((con.WIDTH - Len(s$)) \ 2) + s$)
     Else
       con.print(s$)
     EndIf
@@ -185,6 +191,7 @@ Sub con.print_file(f$, center)
     Open f$ For Input As #1
     Do
       Line Input #1, s$
+      s$ = Left$(s$, con.WIDTH)
       w = Max(w, Len(s$))
     Loop While Not Eof(#1)
     Close #1
@@ -193,6 +200,7 @@ Sub con.print_file(f$, center)
   Open f$ For Input As #1
   Do
     Line Input #1, s$
+    s$ = Left$(s$, con.WIDTH)
     If center Then
       con.println(s$ + Space$(w - Len(s$)), center)
     Else

@@ -16,14 +16,14 @@ Const RESOURCES_DIR$ = Mm.Info(Path) + "../resources"
 ' instructions.
 
 Function menus.main$(advent$)
-  Local f$ = RESOURCES_DIR$ + "/title.txt"
+  Const title_file$ = RESOURCES_DIR$ + "/title" + Choice(con.WIDTH <= 40, "_40col", "") + ".txt"
 
   Cls
   twm.enable_cursor(0)
   con.lines = 0
   con.foreground("white")
   con.println()
-  con.print_file(f$, 1)
+  con.print_file(title_file$, 1)
   con.foreground("green")
   con.println()
   Local play_item$ = Choice(advent$ = "", "", "P  Play '" + metadata.read_name$(advent$) + "'")
@@ -98,7 +98,9 @@ End Function
 
 Sub menus.credits(top%)
   Local f$ = Choice(top%, "", metadata.credits_file$)
-  f$ = Choice(f$ <> "", f$, RESOURCES_DIR$ + "/credits.txt")
+  If f$ = "" Then
+    f$ = RESOURCES_DIR$ + "/credits" + Choice(con.WIDTH <= 40, "_40col", "") + ".txt"
+  EndIf
 
   Cls
   twm.enable_cursor(0)
@@ -120,7 +122,9 @@ End Sub
 
 Sub menus.instructions(top%)
   Local f$ = Choice(top%, "", metadata.instructions_file$)
-  f$ = Choice(f$ <> "", f$, RESOURCES_DIR$ + "/instructions.txt")
+  If f$ = "" Then
+    f$ = RESOURCES_DIR$ + "/instructions" + Choice(con.WIDTH <= 40, "_40col", "") + ".txt"
+  EndIf
 
   Cls
   twm.enable_cursor(0)

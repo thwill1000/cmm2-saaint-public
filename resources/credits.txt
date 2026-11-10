@@ -1,5 +1,5 @@
-The Scott Adams Adventure Interpreter (SAAINT) for Colour Maximite 2
-was written by Thomas Hugo Williams with the assistance of Bill
+The Scott Adams Adventure Interpreter (SAAINT) for MMBasic was
+written by Thomas Hugo Williams with the assistance of Bill
 McKinley in 2020-2026.
 
 Although it consists almost entirely of new code it is derived
