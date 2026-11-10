@@ -164,16 +164,14 @@ Sub con.endl()
 End Sub
 
 Sub con.println(s$, center)
-
   If Len(s$) > 0 Then
+    Local txt$ = s$
     If center Then
       If con.x <> 1 Then Error "Cannot center text unless on a new line."
-      If Len(s$) < con.WIDTH Then con.print(Space$((con.WIDTH - Len(s$)) \ 2) + s$)
-    Else
-      con.print(s$)
+      If Len(txt$) < con.WIDTH Then txt$ = Space$((con.WIDTH - Len(txt$)) \ 2) + txt$
     EndIf
+    con.print(txt$)
   EndIf
-
   con.endl()
 End Sub
 
