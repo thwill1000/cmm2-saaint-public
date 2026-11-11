@@ -230,8 +230,8 @@ Sub con.close_all()
 End Sub
 
 Sub con.foreground(c$)
-  Local type% = con.get_type%()
-  If type% And con.SCREEN% Then
+  Const con_type% = con.get_type%()
+  If con_type% And con.SCREEN% Then
     Local scol%
     Select Case LCase$(c$)
       Case "green" : scol% = RGB(Green)
@@ -239,20 +239,20 @@ Sub con.foreground(c$)
     End Select
     Colour scol%
   EndIf
-  If type% And con.SERIAL% Then
+  If con_type% And con.SERIAL% Then
     con.set_type(con.SERIAL%)
     Print vt100.colour$(c$);
-    con.set_type(type%)
+    con.set_type(con_type%)
   EndIf
 End Sub
 
 Sub con.bell()
-  Local type% = con.get_type%()
-  If type% And con.SCREEN% Then Play Tone 329.63, 329.63, 100 ' Note E4
-  If type% And con.SERIAL% Then
+  Const con_type% = con.get_type%()
+  If con_type% And con.SCREEN% Then Play Tone 329.63, 329.63, 100 ' Note E4
+  If con_type% And con.SERIAL% Then
     con.set_type(con.SERIAL%)
     Print Chr$(7);
-    con.set_type(type%)
+    con.set_type(con_type%)
   EndIf
 End Sub
 
@@ -271,8 +271,8 @@ Function con.get_type%()
   End Select
 End Function
 
-Sub con.set_type(type%)
-  Select Case type%
+Sub con.set_type(con_type%)
+  Select Case con_type%
     Case con.SCREEN% : Option Console Screen
     Case con.SERIAL%
       ' Note MMB4W cannot call OPTION CONSOLE SERIAL if it is on the same line

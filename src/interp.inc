@@ -940,21 +940,21 @@ Sub parse(s$, verb, noun, nstr$)
 End Sub
 
 Function lookup_meta_command(vstr$, nstr$)
-  Const TYPE_BOOLEAN% = 1, TYPE_OTHER% = 2
-  Local verb%, type%
+  Const NT_BOOLEAN% = 1, NT_OTHER% = 2
+  Local verb%, noun_type%
 
   Select Case Left$(vstr$, 4)
-    Case "*act" : verb% = VERB_DUMP_ACTIONS%  : type% = TYPE_OTHER%
-    Case "*deb" : verb% = VERB_DEBUG%         : type% = TYPE_BOOLEAN%
+    Case "*act" : verb% = VERB_DUMP_ACTIONS%  : noun_type% = NT_OTHER%
+    Case "*deb" : verb% = VERB_DEBUG%         : noun_type% = NT_BOOLEAN%
     Case "*loo" : verb% = VERB_LOOK%
-    Case "*mes" : verb% = VERB_DUMP_MESSAGES% : type% = TYPE_OTHER%
-    Case "*mor" : verb% = VERB_MORE%          : type% = TYPE_BOOLEAN%
-    Case "*msg" : verb% = VERB_DUMP_MESSAGES% : type% = TYPE_OTHER%
-    Case "*obj" : verb% = VERB_DUMP_OBJECTS%  : type% = TYPE_OTHER%
-    Case "*rec" : verb% = VERB_RECORD%        : type% = TYPE_BOOLEAN%
-    Case "*rep" : verb% = VERB_REPLAY%        : type% = TYPE_BOOLEAN%
-    Case "*roo" : verb% = VERB_DUMP_ROOMS%    : type% = TYPE_OTHER%
-    Case "*see" : verb% = VERB_SEED%          : type% = TYPE_OTHER%
+    Case "*mes" : verb% = VERB_DUMP_MESSAGES% : noun_type% = NT_OTHER%
+    Case "*mor" : verb% = VERB_MORE%          : noun_type% = NT_BOOLEAN%
+    Case "*msg" : verb% = VERB_DUMP_MESSAGES% : noun_type% = NT_OTHER%
+    Case "*obj" : verb% = VERB_DUMP_OBJECTS%  : noun_type% = NT_OTHER%
+    Case "*rec" : verb% = VERB_RECORD%        : noun_type% = NT_BOOLEAN%
+    Case "*rep" : verb% = VERB_REPLAY%        : noun_type% = NT_BOOLEAN%
+    Case "*roo" : verb% = VERB_DUMP_ROOMS%    : noun_type% = NT_OTHER%
+    Case "*see" : verb% = VERB_SEED%          : noun_type% = NT_OTHER%
     Case "*sta" : verb% = VERB_DUMP_STATE%
     Case "*voc" : verb% = VERB_DUMP_VOCAB%
     Case "*wal" : verb% = VERB_WALKTHROUGH%
@@ -962,10 +962,10 @@ Function lookup_meta_command(vstr$, nstr$)
 
   If verb% = 0 Then Exit Function
 
-  Select Case type%
+  Select Case noun_type%
     Case 0
       If nstr$ <> "" Then Exit Function ' Unexpected noun.
-    Case TYPE_BOOLEAN%
+    Case NT_BOOLEAN%
       If nstr$ = "" Then nstr$ = "on"
       If nstr$ <> "on" And nstr$ <> "off" Then Exit Function ' Invalid noun.
   End Select
