@@ -44,35 +44,33 @@ main()
 End
 
 Sub configure_console()
-  If Mm.VRes = 320 And Mm.HRes = 320 Then
-    ' PicoCalc
-    con.HEIGHT% = Mm.VRes / Mm.Info(FontHeight)
-    con.WIDTH% = Mm.HRes / Mm.Info(FontWidth)
-  Else
-    con.HEIGHT% = 33
-    con.WIDTH%  = 80
-  EndIf
+  Const w% = Mm.HRes \ Mm.Info(FontWidth)
+  Const h% = Mm.VRes \ Mm.Info(FontHeight)
+  con.init(w%, h%, InStr(Mm.Device$, "PicoMite"))
+  If Mm.Info(Device X) = "MMB4L" Then Console Resize con.WIDTH, con.HEIGHT
+  ' con.HEIGHT% = 33
+  ' con.WIDTH%  = 80
 
-  Select Case Mm.Device$
-    Case "Colour Maximite 2", "Colour Maximite 2 G2"
-      Mode 2
-    Case "MMB4L"
-      Option CodePage "MMB4L"
-      On Error Skip 1 ' CONSOLE SETSIZE can fail, but keep going if it does.
-      Console SetSize con.WIDTH%, con.HEIGHT%
-      Console SetTitle "SAAINT v" + sys.format_version$(SAAINT_VERSION)
-    Case "MMBasic for Windows"
-      ' Use the current mode/font and scale the console appropriately.
-      Local h% = Mm.VRes \ Mm.Info(FontHeight)
-      Local w% = Mm.HRes \ Mm.Info(FontWidth)
-      If h% < con.HEIGHT% Or w% < con.WIDTH% Then
-        Local errmsg$ = "Invalid mode/font SAAINT requires at least "
-        Cat errmsg$, Str$(con.WIDTH%) + "x" + Str$(con.HEIGHT%) + " characters."
-        Error errmsg$
-      EndIf
-      con.HEIGHT% = h%
-      con.WIDTH%  = w%
-  End Select
+  ' Select Case Mm.Device$
+  '   Case "Colour Maximite 2", "Colour Maximite 2 G2"
+  '     Mode 2
+  '   Case "MMB4L"
+  '     Option CodePage "MMB4L"
+  '     On Error Skip 1 ' CONSOLE SETSIZE can fail, but keep going if it does.
+  '     Console SetSize con.WIDTH%, con.HEIGHT%
+  '     Console SetTitle "SAAINT v" + sys.format_version$(SAAINT_VERSION)
+  '   Case "MMBasic for Windows"
+  '     ' Use the current mode/font and scale the console appropriately.
+  '     Local h% = Mm.VRes \ Mm.Info(FontHeight)
+  '     Local w% = Mm.HRes \ Mm.Info(FontWidth)
+  '     If h% < con.HEIGHT% Or w% < con.WIDTH% Then
+  '       Local errmsg$ = "Invalid mode/font SAAINT requires at least "
+  '       Cat errmsg$, Str$(con.WIDTH%) + "x" + Str$(con.HEIGHT%) + " characters."
+  '       Error errmsg$
+  '     EndIf
+  '     con.HEIGHT% = h%
+  '     con.WIDTH%  = w%
+  ' End Select
 End Sub
 
 Sub main()

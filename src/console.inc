@@ -31,6 +31,12 @@ Dim con.HEIGHT = 50
 Dim con.WIDTH = 100
 '!endif
 
+Sub con.init(width%, height%, spin_enabled%)
+  con.WIDTH = width%
+  con.HEIGHT = height%
+'  con.spin_enabled = spin_enabled%
+End Sub
+
 ' @param  p$  prompt
 Function con.in$(p$, echo)
   Local s$
@@ -183,6 +189,7 @@ Sub con.print_file(f$, center)
     Open f$ For Input As #1
     Do
       Line Input #1, s$
+      s$ = Left$(s$, con.WIDTH)
       w = Max(w, Len(s$))
     Loop While Not Eof(#1)
     Close #1
@@ -191,6 +198,7 @@ Sub con.print_file(f$, center)
   Open f$ For Input As #1
   Do
     Line Input #1, s$
+    s$ = Left$(s$, con.WIDTH)
     If center Then
       con.println(s$ + Space$(w - Len(s$)), center)
     Else
