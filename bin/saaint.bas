@@ -1,4 +1,4 @@
-' Transpiled on 08-11-2026 21:20:54
+' Transpiled on 17-11-2026 20:56:30
 ' Scott Adams Adventure Game Interpreter
 ' For MMBasic 6
 ' Copyright (c) 2020-2026 Thomas Hugo Williams
@@ -7,7 +7,7 @@
 Option Base 0
 Option Default Integer
 Option Explicit On
-Const SAAINT_VERSION=201001 ' 2.1 alpha 1
+Const SAAINT_VERSION=201002 ' 2.1 alpha 2
 ' src/splib/system.inc ++++
 ' Copyright (c) 2020-2026 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
@@ -76,6 +76,17 @@ Function sys.HOME$()
  Else
   sys.HOME$="A:"
  EndIf
+End Function
+
+Function sys.PLATFORM$()
+ sys.PLATFORM$=Choice(InStr(Mm.Device$,"PicoMite"),Mm.Info$(Platform),"")
+ If sys.PLATFORM$="" Then sys.PLATFORM$=Mm.Device$
+ ' Allow platform to be overridden for unit-tests, but not if there is already
+ ' an error because the use of ON ERROR would discard the existing error.
+ If Mm.ErrNo Then Exit Function
+ On Error Skip
+ sys.PLATFORM$=sys.OVERRIDE_PLATFORM$
+ On Error Clear
 End Function
 
 Function sys.SEPARATOR$()
@@ -1005,23 +1016,23 @@ End Sub
 
 ' ---- src/splib/txtwm.inc
 ' src/splib/file.inc ++++
-' Copyright (c) 2020-2025 Thomas Hugo Williams
+' Copyright (c) 2020-2026 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 6.00
+' For MMBasic 6
 Const file.SEPARATOR=sys.SEPARATOR$()
 ' Gets the number of files in directory d$ whose names match pattern$.
 '
 ' @param   d$        directory to process.
 ' @param   pattern$  file pattern to match on, e.g. "*.bas".
-' @param   type$     type of files to return: "dir", "file" or "all".
+' @param   ftype$    type of files to return: "dir", "file" or "all".
 ' @return  the number of matching files.
-Function file.count_files%(d$,pattern$,type$)
+Function file.count_files%(d$,pattern$,ftype$)
  If Not file.is_directory%(d$) Then
   file.count_files%=sys.error%(sys.FAILURE,"Not a directory '"+d$+"'")
   Exit Function
  EndIf
  Local f$
- Select Case LCase$(type$)
+ Select Case LCase$(ftype$)
   Case "all"
    f$=Dir$(d$+"/*",All)
   Case "dir"
@@ -1029,7 +1040,7 @@ Function file.count_files%(d$,pattern$,type$)
   Case "file",""
    f$=Dir$(d$+"/*",File)
   Case Else
-   file.count_files%=sys.error%(sys.FAILURE,"Invalid file type '"+type$+"'")
+   file.count_files%=sys.error%(sys.FAILURE,"Invalid file type '"+ftype$+"'")
    Exit Function
   EndIf
 End Select
@@ -1041,12 +1052,12 @@ End Function
 
 ' Does the file/directory 'f$' exist?
 '
-' @param  f$     name/path of file/directory
-' @param  type$  type of files to check for: "dir", "file" or "all".
-' @return        1 if the file/directory exists, otherwise 0
-Function file.exists%(f$,type$)
+' @param  f$      name/path of file/directory
+' @param  ftype$  type of files to check for: "dir", "file" or "all".
+' @return         1 if the file/directory exists, otherwise 0
+Function file.exists%(f$,ftype$)
  Local f_$=Choice(Len(f$),f$,"."),i%
- Local type_$="|"+Choice(Len(type$),LCase$(type$),"all")+"|"
+ Const ftype_$="|"+Choice(Len(ftype$),LCase$(ftype$),"all")+"|"
  If f_$="." Then f_$=Cwd$
  If Len(f_$)=2 Then
   If Mid$(f_$,2,1)=":" Then Cat f_$,"/"
@@ -1054,8 +1065,8 @@ Function file.exists%(f$,type$)
  For i%=1 To Len(f_$)
   If Peek(Var f_$,i%)=92 Then Poke Var f_$,i%,47
  Next
- If InStr("|file|all|",type_$) Then Inc file.exists%,Mm.Info(Exists File f_$)
- If InStr("|dir|all|",type_$) Then Inc file.exists%,Mm.Info(Exists Dir f_$)
+ If InStr("|file|all|",ftype_$) Then Inc file.exists%,Mm.Info(Exists File f_$)
+ If InStr("|dir|all|",ftype_$) Then Inc file.exists%,Mm.Info(Exists Dir f_$)
  file.exists%=file.exists%>0
 End Function
 
@@ -1204,19 +1215,19 @@ End Function
 '
 ' @param       d$         directory to process.
 ' @param       pattern$   file pattern to match on, e.g. "*.bas".
-' @param       type$      type of files to return: "dir", "file" or "all".
+' @param       ftype$     type of files to return: "dir", "file" or "all".
 ' @param[out]  onames$()  the names of matching files are copied into this array.
 '                         If there are too many matching files then this array
 '                         will be incomplete, but the returned number of files
 '                         will be correct.
 ' @return                 the number of files matching the pattern.
-Function file.get_files%(d$,pattern$,type$,onames$())
+Function file.get_files%(d$,pattern$,ftype$,onames$())
  If Not file.is_directory%(d$) Then
   file.get_files%=sys.error%(sys.FAILURE,"Not a directory '"+d$+"'")
   Exit Function
  EndIf
  Local f$
- Select Case LCase$(type$)
+ Select Case LCase$(ftype$)
   Case "all"
    f$=Dir$(d$+"/*",All)
   Case "dir"
@@ -1224,7 +1235,7 @@ Function file.get_files%(d$,pattern$,type$,onames$())
   Case "file",""
    f$=Dir$(d$+"/*",File)
   Case Else
-   file.get_files%=sys.error%(sys.FAILURE,"Invalid file type '"+type$+"'")
+   file.get_files%=sys.error%(sys.FAILURE,"Invalid file type '"+ftype$+"'")
    Exit Function
  End Select
  Local i%=Mm.Info(Option Base)
@@ -1939,6 +1950,13 @@ Const con.CR$=Chr$(13)
 Const con.LF$=Chr$(10)
 Dim con.HEIGHT=50
 Dim con.WIDTH=100
+
+Sub con.init(width%,height%,spin_enabled%)
+ con.WIDTH=width%
+ con.HEIGHT=height%
+ '  con.spin_enabled = spin_enabled%
+End Sub
+
 ' @param  p$  prompt
 Function con.in$(p$,echo)
  Local s$
@@ -2055,12 +2073,12 @@ End Sub
 
 Sub con.println(s$,center)
  If Len(s$)>0 Then
+  Local txt$=s$
   If center Then
    If con.x<>1 Then Error "Cannot center text unless on a new line."
-   If Len(s$)<con.WIDTH Then con.print(Space$((con.WIDTH-Len(s$))\2)+s$)
-  Else
-   con.print(s$)
+   If Len(txt$)<con.WIDTH Then txt$=Space$((con.WIDTH-Len(txt$))\2)+txt$
   EndIf
+  con.print(txt$)
  EndIf
  con.endl()
 End Sub
@@ -2072,6 +2090,7 @@ Sub con.print_file(f$,center)
   Open f$ For Input As #1
   Do
    Line Input #1,s$
+   s$=Left$(s$,con.WIDTH)
    w=Max(w,Len(s$))
   Loop While Not Eof(#1)
   Close #1
@@ -2079,6 +2098,7 @@ Sub con.print_file(f$,center)
  Open f$ For Input As #1
  Do
   Line Input #1,s$
+  s$=Left$(s$,con.WIDTH)
   If center Then
    con.println(s$+Space$(w-Len(s$)),center)
   Else
@@ -2116,8 +2136,8 @@ Sub con.close_all()
 End Sub
 
 Sub con.foreground(c$)
- Local type%=con.get_type%()
- If type% And con.SCREEN% Then
+ Const con_type%=con.get_type%()
+ If con_type% And con.SCREEN% Then
   Local scol%
   Select Case LCase$(c$)
    Case "green" : scol%=RGB(Green)
@@ -2125,20 +2145,20 @@ Sub con.foreground(c$)
   End Select
   Colour scol%
  EndIf
- If type% And con.SERIAL% Then
+ If con_type% And con.SERIAL% Then
   con.set_type(con.SERIAL%)
   Print vt100.colour$(c$);
-  con.set_type(type%)
+  con.set_type(con_type%)
  EndIf
 End Sub
 
 Sub con.bell()
- Local type%=con.get_type%()
- If type% And con.SCREEN% Then Play Tone 329.63,329.63,100 ' Note E4
- If type% And con.SERIAL% Then
+ Const con_type%=con.get_type%()
+ If con_type% And con.SCREEN% Then Play Tone 329.63,329.63,100 ' Note E4
+ If con_type% And con.SERIAL% Then
   con.set_type(con.SERIAL%)
   Print Chr$(7);
-  con.set_type(type%)
+  con.set_type(con_type%)
  EndIf
 End Sub
 
@@ -2157,8 +2177,8 @@ Function con.get_type%()
  End Select
 End Function
 
-Sub con.set_type(type%)
- Select Case type%
+Sub con.set_type(con_type%)
+ Select Case con_type%
   Case con.SCREEN% : Option Console Screen
   Case con.SERIAL%
    ' Note MMB4W cannot call OPTION CONSOLE SERIAL if it is on the same line
@@ -2566,13 +2586,13 @@ Const RESOURCES_DIR$=Mm.Info(Path)+"../resources"
 ' and adventure specific menus as well as the credits and
 ' instructions.
 Function menus.main$(advent$)
- Local f$=RESOURCES_DIR$+"/title.txt"
+ Const title_file$=RESOURCES_DIR$+"/title"+Choice(con.WIDTH<=40,"_40col","")+".txt"
  Cls
  twm.enable_cursor(0)
  con.lines=0
  con.foreground("white")
  con.println()
- con.print_file(f$,1)
+ con.print_file(title_file$,1)
  con.foreground("green")
  con.println()
  Local play_item$=Choice(advent$="","","P  Play '"+metadata.read_name$(advent$)+"'")
@@ -2642,7 +2662,9 @@ End Function
 
 Sub menus.credits(top%)
  Local f$=Choice(top%,"",metadata.credits_file$)
- f$=Choice(f$<>"",f$,RESOURCES_DIR$+"/credits.txt")
+ If f$="" Then
+  f$=RESOURCES_DIR$+"/credits"+Choice(con.WIDTH<=40,"_40col","")+".txt"
+ EndIf
  Cls
  twm.enable_cursor(0)
  con.lines=0
@@ -2663,7 +2685,9 @@ End Sub
 
 Sub menus.instructions(top%)
  Local f$=Choice(top%,"",metadata.instructions_file$)
- f$=Choice(f$<>"",f$,RESOURCES_DIR$+"/instructions.txt")
+ If f$="" Then
+  f$=RESOURCES_DIR$+"/instructions"+Choice(con.WIDTH<=40,"_40col","")+".txt"
+ EndIf
  Cls
  twm.enable_cursor(0)
  con.lines=0
@@ -2683,7 +2707,7 @@ Sub menus.instructions(top%)
 End Sub
 
 Function menus.choose_advent$()
- Const MENU_WIDTH%=Int(con.WIDTH/2)-4
+ Const MENU_WIDTH%=Choice(con.WIDTH<=40,con.WIDTH-4,Int(con.WIDTH/2)-4)
  Const MENU_HEIGHT%=con.HEIGHT-6
  Const ORIGINAL_TYPE%=con.get_type%()
  Cls
@@ -2691,17 +2715,22 @@ Function menus.choose_advent$()
  twm.enable_cursor(0)
  Local twm_sz%=7+2*(con.WIDTH*con.HEIGHT)
  Inc twm_sz%,7+2*(MENU_WIDTH*MENU_HEIGHT)
- Inc twm_sz%,7+2*((MENU_WIDTH+1)*MENU_HEIGHT)
- twm.init(3,twm_sz%)
- twm.console_only%=1
+ If con.WIDTH>40 Then Inc twm_sz%,7+2*((MENU_WIDTH+1)*MENU_HEIGHT)
+ twm.init(Choice(con.WIDTH<=40,2,3),twm_sz%)
+ If sys.PLATFORM$()<>"PicoCalc" Then twm.console_only%=1
  Local win0%=twm.new_win%(0,0,con.WIDTH,con.HEIGHT)
  Local left%=twm.new_win%(2,4,MENU_WIDTH%,MENU_HEIGHT%)
- Local right%=twm.new_win%(con.WIDTH/2+1,4,MENU_WIDTH%+1,MENU_HEIGHT%)
+ Local right%
+ If con.WIDTH>40 Then right%=twm.new_win%(con.WIDTH/2+1,4,MENU_WIDTH%+1,MENU_HEIGHT%)
  twm.switch(win0%)
  twm.box(0,2,con.WIDTH,con.HEIGHT-2)
- twm.box(0,2,con.WIDTH/2,con.HEIGHT-2)
+ If con.WIDTH>40 Then twm.box(0,2,con.WIDTH/2,con.HEIGHT-2)
  twm.bold(1)
- twm.print_at(0,0,str.centre$("Select adventure using [Up], [Down], [Page Up], [Page Down] and [Enter]",con.WIDTH))
+ If con.WIDTH>40 Then
+  twm.print_at(0,0,str.centre$("Select adventure using [Up], [Down], [Page Up], [Page Down] and [Enter]",con.WIDTH))
+ Else
+  twm.print_at(0,0,str.centre$("Select using Up, Down, PUp, PDown, Enter",con.WIDTH))
+ EndIf
  twm.switch(left%)
  twm.print_at(0,0,"Reading adventures...")
  Select Case Mm.Device$
@@ -2751,7 +2780,7 @@ Function menus.choose_advent$()
      Next
     EndIf
    Case 0
-    If requires_update% Then
+    If con.WIDTH>40 And requires_update% Then
      menus.paint_description(right%,map.get$(m$(),m$(sel%)))
      requires_update%=0
     EndIf
@@ -4314,29 +4343,29 @@ Sub parse(s$,verb,noun,nstr$)
 End Sub
 
 Function lookup_meta_command(vstr$,nstr$)
- Const TYPE_BOOLEAN%=1,TYPE_OTHER%=2
- Local verb%,type%
+ Const NT_BOOLEAN%=1,NT_OTHER%=2
+ Local verb%,noun_type%
  Select Case Left$(vstr$,4)
-  Case "*act" : verb%=VERB_DUMP_ACTIONS% : type%=TYPE_OTHER%
-  Case "*deb" : verb%=VERB_DEBUG% : type%=TYPE_BOOLEAN%
+  Case "*act" : verb%=VERB_DUMP_ACTIONS% : noun_type%=NT_OTHER%
+  Case "*deb" : verb%=VERB_DEBUG% : noun_type%=NT_BOOLEAN%
   Case "*loo" : verb%=VERB_LOOK%
-  Case "*mes" : verb%=VERB_DUMP_MESSAGES% : type%=TYPE_OTHER%
-  Case "*mor" : verb%=VERB_MORE% : type%=TYPE_BOOLEAN%
-  Case "*msg" : verb%=VERB_DUMP_MESSAGES% : type%=TYPE_OTHER%
-  Case "*obj" : verb%=VERB_DUMP_OBJECTS% : type%=TYPE_OTHER%
-  Case "*rec" : verb%=VERB_RECORD% : type%=TYPE_BOOLEAN%
-  Case "*rep" : verb%=VERB_REPLAY% : type%=TYPE_BOOLEAN%
-  Case "*roo" : verb%=VERB_DUMP_ROOMS% : type%=TYPE_OTHER%
-  Case "*see" : verb%=VERB_SEED% : type%=TYPE_OTHER%
+  Case "*mes" : verb%=VERB_DUMP_MESSAGES% : noun_type%=NT_OTHER%
+  Case "*mor" : verb%=VERB_MORE% : noun_type%=NT_BOOLEAN%
+  Case "*msg" : verb%=VERB_DUMP_MESSAGES% : noun_type%=NT_OTHER%
+  Case "*obj" : verb%=VERB_DUMP_OBJECTS% : noun_type%=NT_OTHER%
+  Case "*rec" : verb%=VERB_RECORD% : noun_type%=NT_BOOLEAN%
+  Case "*rep" : verb%=VERB_REPLAY% : noun_type%=NT_BOOLEAN%
+  Case "*roo" : verb%=VERB_DUMP_ROOMS% : noun_type%=NT_OTHER%
+  Case "*see" : verb%=VERB_SEED% : noun_type%=NT_OTHER%
   Case "*sta" : verb%=VERB_DUMP_STATE%
   Case "*voc" : verb%=VERB_DUMP_VOCAB%
   Case "*wal" : verb%=VERB_WALKTHROUGH%
  End Select
  If verb%=0 Then Exit Function
- Select Case type%
+ Select Case noun_type%
   Case 0
    If nstr$<>"" Then Exit Function ' Unexpected noun.
-  Case TYPE_BOOLEAN%
+  Case NT_BOOLEAN%
    If nstr$="" Then nstr$="on"
    If nstr$<>"on" And nstr$<>"off" Then Exit Function ' Invalid noun.
  End Select
@@ -4495,34 +4524,32 @@ main()
 End
 
 Sub configure_console()
- If Mm.VRes=320 And Mm.HRes=320 Then
-  ' PicoCalc
-  con.HEIGHT%=Mm.VRes/Mm.Info(FontHeight)
-  con.WIDTH%=Mm.HRes/Mm.Info(FontWidth)
- Else
-  con.HEIGHT%=33
-  con.WIDTH%=80
- EndIf
- Select Case Mm.Device$
-  Case "Colour Maximite 2","Colour Maximite 2 G2"
-   Mode 2
-  Case "MMB4L"
-   Option CodePage "MMB4L"
-   On Error Skip 1 ' CONSOLE SETSIZE can fail, but keep going if it does.
-   Console SetSize con.WIDTH%,con.HEIGHT%
-   Console SetTitle "SAAINT v"+sys.format_version$(SAAINT_VERSION)
-  Case "MMBasic for Windows"
-   ' Use the current mode/font and scale the console appropriately.
-   Local h%=Mm.VRes\Mm.Info(FontHeight)
-   Local w%=Mm.HRes\Mm.Info(FontWidth)
-   If h%<con.HEIGHT% Or w%<con.WIDTH% Then
-    Local errmsg$="Invalid mode/font SAAINT requires at least "
-    Cat errmsg$,Str$(con.WIDTH%)+"x"+Str$(con.HEIGHT%)+" characters."
-    Error errmsg$
-   EndIf
-   con.HEIGHT%=h%
-   con.WIDTH%=w%
- End Select
+ Const w%=Mm.HRes\Mm.Info(FontWidth)
+ Const h%=Mm.VRes\Mm.Info(FontHeight)
+ con.init(w%,h%,InStr(Mm.Device$,"PicoMite"))
+ If Mm.Info(Device X)="MMB4L" Then Console Resize con.WIDTH,con.HEIGHT
+ ' con.HEIGHT% = 33
+ ' con.WIDTH%  = 80
+ ' Select Case Mm.Device$
+ '   Case "Colour Maximite 2", "Colour Maximite 2 G2"
+ '     Mode 2
+ '   Case "MMB4L"
+ '     Option CodePage "MMB4L"
+ '     On Error Skip 1 ' CONSOLE SETSIZE can fail, but keep going if it does.
+ '     Console SetSize con.WIDTH%, con.HEIGHT%
+ '     Console SetTitle "SAAINT v" + sys.format_version$(SAAINT_VERSION)
+ '   Case "MMBasic for Windows"
+ '     ' Use the current mode/font and scale the console appropriately.
+ '     Local h% = Mm.VRes \ Mm.Info(FontHeight)
+ '     Local w% = Mm.HRes \ Mm.Info(FontWidth)
+ '     If h% < con.HEIGHT% Or w% < con.WIDTH% Then
+ '       Local errmsg$ = "Invalid mode/font SAAINT requires at least "
+ '       Cat errmsg$, Str$(con.WIDTH%) + "x" + Str$(con.HEIGHT%) + " characters."
+ '       Error errmsg$
+ '     EndIf
+ '     con.HEIGHT% = h%
+ '     con.WIDTH%  = w%
+ ' End Select
 End Sub
 
 Sub main()
