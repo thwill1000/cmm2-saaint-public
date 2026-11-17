@@ -8,7 +8,7 @@ Option Base 0
 Option Default Integer
 Option Explicit On
 
-Const SAAINT_VERSION = 201001 ' 2.1 alpha 1
+Const SAAINT_VERSION = 201002 ' 2.1 alpha 2
 
 #Include "splib/system.inc"
 #Include "splib/array.inc"
