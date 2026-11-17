@@ -145,7 +145,7 @@ Sub menus.instructions(top%)
 End Sub
 
 Function menus.choose_advent$()
-  Const MENU_WIDTH% = Int(con.WIDTH / 2) - 4
+  Const MENU_WIDTH% = Choice(con.WIDTH <= 40, con.WIDTH - 4, Int(con.WIDTH / 2) - 4)
   Const MENU_HEIGHT% = con.HEIGHT - 6
   Const ORIGINAL_TYPE% = con.get_type%()
 
@@ -155,18 +155,23 @@ Function menus.choose_advent$()
 
   Local twm_sz% = 7 + 2 * (con.WIDTH * con.HEIGHT)
   Inc twm_sz%, 7 + 2 * (MENU_WIDTH * MENU_HEIGHT)
-  Inc twm_sz%, 7 + 2 * ((MENU_WIDTH + 1) * MENU_HEIGHT)
-  twm.init(3, twm_sz%)
-  twm.console_only% = 1
+  If con.WIDTH > 40 Then Inc twm_sz%, 7 + 2 * ((MENU_WIDTH + 1) * MENU_HEIGHT)
+  twm.init(Choice(con.WIDTH <= 40, 2, 3), twm_sz%)
+  If sys.PLATFORM$() <> "PicoCalc" Then twm.console_only% = 1
   Local win0% = twm.new_win%(0, 0, con.WIDTH, con.HEIGHT)
   Local left% = twm.new_win%(2, 4, MENU_WIDTH%, MENU_HEIGHT%)
-  Local right% = twm.new_win%(con.WIDTH / 2 + 1, 4, MENU_WIDTH% + 1, MENU_HEIGHT%)
+  Local right%
+  If con.WIDTH > 40 Then right% = twm.new_win%(con.WIDTH / 2 + 1, 4, MENU_WIDTH% + 1, MENU_HEIGHT%)
 
   twm.switch(win0%)
   twm.box(0, 2, con.WIDTH, con.HEIGHT - 2)
-  twm.box(0, 2, con.WIDTH / 2, con.HEIGHT - 2)
+  If con.WIDTH > 40 Then twm.box(0, 2, con.WIDTH / 2, con.HEIGHT - 2)
   twm.bold(1)
-  twm.print_at(0, 0, str.centre$("Select adventure using [Up], [Down], [Page Up], [Page Down] and [Enter]", con.WIDTH))
+  If con.WIDTH > 40 Then
+    twm.print_at(0, 0, str.centre$("Select adventure using [Up], [Down], [Page Up], [Page Down] and [Enter]", con.WIDTH))
+  Else
+    twm.print_at(0, 0, str.centre$("Select using Up, Down, PUp, PDown, Enter", con.WIDTH))
+  EndIf
   twm.switch(left%)
   twm.print_at(0, 0, "Reading adventures...")
 
@@ -221,7 +226,7 @@ Function menus.choose_advent$()
           Next
         EndIf
       Case 0
-        If requires_update% Then
+        If con.WIDTH > 40 And requires_update% Then
           menus.paint_description(right%, map.get$(m$(), m$(sel%)))
           requires_update% = 0
         EndIf
